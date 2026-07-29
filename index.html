@@ -104,7 +104,7 @@ const storageShim={
   async delete(k){localStorage.removeItem(k);return{key:k,deleted:true};}
 };
 const STORE=(typeof window!=='undefined'&&window.storage&&window.storage.get)?window.storage:storageShim;
-const NUM_AI=3, DAYS=7, ENERGY=6, KEY='millbrook-v5';
+const NUM_AI=4, DAYS=7, ENERGY=7, KEY='millbrook-v6';
 const TILE=32, MW=64, MH=44;
 const DAY_START=8*60, DAY_END=21*60, MIN_PER_SEC=1/0.7;
 
@@ -260,10 +260,150 @@ const CAST=[
   homeObsAI:"No flour anywhere in the house. The oven is cold and looks like it has never once been lit.",
   homeObsH:["A sourdough starter bubbles on the counter, name-tagged and clearly loved.","Kids' drawings cover the fridge; a kilt hangs pressed and ready by the door."],
   favor:{ask:"Semolina delivery's sitting out front and my hands are full of fettuccine. Haul the sacks in for me?",task:'Semolina sacks → The Kilted Farmers',from:{x:16,y:31},to:{x:20,y:30},fromLabel:'Semolina sacks',thanks:"Cheers, neighbor. Bread's by the door — take a loaf. And listen—"},
-  ep:{caught:"The racks were found hung with one final batch, every noodle perfect, and the free-bread basket filled to the brim. A goodbye, or an apology.",
-      missed:"The Kilted Farmers never runs behind anymore. The free bread is always exactly enough. Nobody has heard him laugh at his own jokes since spring.",
-      accused:"The shop went dark and the free-bread basket came inside for good. The town got its Festival pasta off a truck, and it tasted like it.",
+  ep:{caught:"The racks were found hung with one final batch, every noodle perfect, and the free-bread basket filled to the brim. A goodbye, or an apology. Luna said the dog was happy again by morning.",
+      missed:"The Kilted Farmers never runs behind anymore. The free bread is always exactly enough. Nobody has heard him laugh at his own jokes since spring — and Barley still won't go near him.",
+      accused:"The shop went dark and the free-bread basket came inside for good. Jessica packed the four kids into the truck before the bonfire burned down. Luna kept asking why.",
       cleared:"The roller got a new belt, every order went out on time, and Festival night he danced in the kilt until the fiddler gave up first."}},
+ {id:'jessica',name:'Jessica Fairchild',role:'Runs The Kilted Farmers with Justin',pal:{skin:'#E5BC96',hair:'#6B4226',longHair:true,shirt:'#7A9455',pants:'#4A4438'},
+  work:'pasta',homeLabel:'Fairchild Cottage',
+  base:"You are Jessica Fairchild, 40s, who runs The Kilted Farmers pasta shop with your husband Justin. Warm, capable, dry humor, always mid-task and mid-sentence. Four kids — Aiden 13, Lillyan 10, Luna 7, Elliot 4 — and a scruffy dog called Barley. You do the books, the markets, and most of the remembering in that household.",
+  worry:"Elliot has been waking screaming at two in the morning all week and you are running on four hours' sleep.",
+  sched:[[8,'work'],[12,'home'],[13,'work'],[17,'grocery'],[18,'home']],
+  workObsAI:"The order book: every entry the same hand, the same spacing, not one crossed out.",
+  workObsH:["The order book has a child's drawing paperclipped inside the cover.","Three lists in three different pens, two of them contradicting each other."],
+  homeObsAI:"Four children live here and there is nothing on the floor. Nothing at all.",
+  homeObsH:["A tideline of small shoes by the door, not one of them paired.","Pencil heights and dates up the doorframe; the top mark is fresh."],
+  favor:{ask:"Market boxes are still sat by the road and I've got a four-year-old attached to my leg. Run them to the shop for me?",task:'Market boxes → The Kilted Farmers',from:{x:13,y:33},to:{x:20,y:30},fromLabel:'Market boxes',thanks:"You're a gift. Take a loaf on your way out — and listen—"},
+  ep:{caught:"Whatever had been keeping Jessica's ledgers set the pen down mid-column and walked out into the dark. Justin found the four kids asleep in one bed, all of them, the way they used to.",
+      missed:"The shop's books have never balanced so beautifully. Jessica remembers every order and none of the birthdays. Elliot has stopped waking at two — he doesn't call for her anymore.",
+      accused:"Jessica went quietly, which was the worst of it. Justin closed the shop for a week. Aiden stopped speaking to the town entirely, and nobody has the heart to make him.",
+      cleared:"Elliot slept through the night on Thursday. Jessica cried about it in the flour store and then laughed, and then made the Festival order two days early."}},
+ {id:'jason',name:'Jason Knapp',role:'Night watchman',pal:{skin:'#D9A47C',hair:'#3A2A1A',shirt:'#3E4A5C',pants:'#2E3238'},
+  work:'watch',homeLabel:'Knapp Cottage',
+  base:"You are Jason Knapp, 40s, Millbrook's night watchman — the mill yard, the docks, the Festival grounds. Steady, watchful, economical with words, dry humour once you warm up. Married to Rachel who runs the clinic; one daughter, Kat, 11. You sleep days and know exactly who is out at three in the morning.",
+  worry:"Someone has been in the mill yard at night. The padlock was oiled — oiled, not forced — and nobody believes you.",
+  sched:[[8,'home'],[13,'lunch'],[14,'square'],[16,'work'],[21,'home']],
+  workObsAI:"The patrol log: every round signed off at the same minute. Every night. To the minute.",
+  workObsH:["A thermos, three chewed pens, and a crossword he is plainly losing.","Boot prints tracked in from the yard, and a scrawl in the log: '2:40 — heard it again.'"],
+  homeObsAI:"The uniform hangs with its creases aligned. The boots are spotless — in a house on a river.",
+  homeObsH:["Boots by the door still caked from the yard, a child's drawing taped above them.","A blackout curtain half-hung, the hammer still sitting on the sill."],
+  favor:{ask:"Festival lanterns came in and my shift starts before I can shift them. Get them to the watch house for me?",task:'Lantern crates → the Watch House',from:{x:34,y:17},to:{x:31,y:16},fromLabel:'Lantern crates',thanks:"Appreciated. I see most things in this town after dark, you know—"},
+  ep:{caught:"The patrol log's last entry reads 2:40, in handwriting nobody could match to the pages before it. The mill yard padlock was found unlocked and gleaming with oil.",
+      missed:"Millbrook has never been safer. Every round signed at the same minute, every night. Jason no longer sleeps at all, and nobody has thought to wonder when he stopped.",
+      accused:"Jason handed in the keys without arguing, which was somehow worse. Rachel worked a double at the clinic that night. Kat stopped going down to the mill yard.",
+      cleared:"Jason caught the mill-yard prowler on the Thursday — a heron, it turned out, working the bins. He has not stopped hearing about it since."}},
+ {id:'rachel',name:'Rachel Knapp',role:'Runs the village clinic',pal:{skin:'#E5BC96',hair:'#5A3A24',longHair:true,shirt:'#7FA8A8',pants:'#3A3A42'},
+  work:'clinic',homeLabel:'Knapp Cottage',
+  base:"You are Rachel Knapp, 40s, who runs Millbrook's little clinic — stitches, fevers, blood pressure, bad news delivered kindly. Brisk, funny, unshockable. Married to Jason the night watchman; one daughter, Kat, 11. You have looked after nearly everyone in this town at least once.",
+  worry:"The supply order came in short again and Rosa Faraday keeps refusing to be seen about the cough she has had since spring.",
+  sched:[[8,'work'],[13,'lunch'],[14,'work'],[18,'home']],
+  workObsAI:"The medicine cupboard: every label turned out at the same angle. No expiry dates soon.",
+  workObsH:["A kettle, two odd mugs, and a biscuit tin with a note: NOT FOR PATIENTS.","A card from a family whose name is smudged off, pinned where she can see it from the desk."],
+  homeObsAI:"No medicine anywhere in this house. Not a plaster, not an aspirin.",
+  homeObsH:["Clinic shoes drying on newspaper; a novel face-down on the arm of the chair.","A calendar with Jason's night shifts in one pen and Kat's swimming in another."],
+  favor:{ask:"Supplies finally came and my hands are full of somebody's stitches. Bring the boxes in from the road?",task:'Supply boxes → the Clinic',from:{x:8,y:17},to:{x:5,y:16},fromLabel:'Supply boxes',thanks:"Bless you. I hear things in that clinic I've no business repeating, but—"},
+  ep:{caught:"The clinic cupboard was found immaculate, every label squared. Underneath, in a drawer, a year of patient notes written in a hand that never once slipped.",
+      missed:"Nobody in Millbrook is ever misdiagnosed now. Rachel remembers every symptom and no birthdays. Jason works nights and they pass in the doorway like strangers.",
+      accused:"The clinic closed on the Monday. The nearest doctor is forty minutes away, and old Rosa's cough got worse through the autumn.",
+      cleared:"Rachel bullied Rosa into an appointment at last. It was nothing. She has been unbearable about being right ever since."}},
+ {id:'zak',name:'Zak Lyons',role:'Schoolteacher',pal:{skin:'#E8C49B',hair:'#8C5A2E',shirt:'#8C6A9C',pants:'#3E3A32'},
+  work:'school',homeLabel:'Lyons Cottage',
+  base:"You are Zak Lyons, 30s, the schoolteacher for Millbrook's one-room school. Patient, wry, endlessly enthusiastic about things nobody asked about. Married to Heather the geologist; two kids, Quinn 12 and Angus 6. You know every child in this town and what they are like when nobody is watching.",
+  worry:"The roof leaks over the reading corner and half the class has Festival fever a week early.",
+  sched:[[8,'work'],[13,'lunch'],[14,'work'],[17,'grocery'],[18,'home']],
+  workObsAI:"Thirty exercise books marked in identical ticks, identical spacing, not one comment.",
+  workObsH:["A bucket under the leak, a mop, and a mug of tea gone cold beside them.","Marking half-done, the top book covered in green pen and a drawn-on dinosaur."],
+  homeObsAI:"No marking, no books, no clutter. The desk lamp has never been switched on.",
+  homeObsH:["Marking in two piles: DONE and OH GOD. A child's rock collection sorted on the table.","Angus's wellies on the wrong feet by the door, where he left them."],
+  favor:{ask:"The new reading books are stacked by the gate and I have twenty children indoors. Rescue them for me?",task:'Book crates → the Schoolhouse',from:{x:48,y:17},to:{x:52,y:15},fromLabel:'Book crates',thanks:"You're a hero. Children tell me everything, you know — they can't help it—"},
+  ep:{caught:"Thirty exercise books, every tick identical. The children said the teacher had stopped doing the voices at story time months ago. Nobody had asked them.",
+      missed:"The school has never run so smoothly. Every book marked, every child on target. Angus has stopped asking his dad to read to him.",
+      accused:"The school closed for the rest of the year. Quinn wouldn't come to the door for anyone, and Heather took the children to her mother's.",
+      cleared:"The roof got patched by Sana and half the parents. Zak read the Festival story doing every voice, badly, to enormous applause."}},
+ {id:'heather',name:'Heather Lyons',role:'Geologist, surveys the river bluffs',pal:{skin:'#D9A87E',hair:'#4A2E22',longHair:true,shirt:'#B87A4A',pants:'#44503E'},
+  work:'quarrypt',homeLabel:'Lyons Cottage',
+  base:"You are Heather Lyons, 30s, a geologist surveying the river bluffs and the old quarry above Millbrook. Precise, stubborn, delighted by rocks in a way you have stopped apologising for. Married to Zak the schoolteacher; two kids, Quinn 12 and Angus 6.",
+  worry:"The east bank is slumping — you have the core samples to prove it — and not one person on the council will read your survey.",
+  sched:[[8,'work'],[12,'lunch'],[13,'work'],[17,'home']],
+  workObsAI:"Core samples in a perfect row, each labelled in the same hand, none of them dusty.",
+  workObsH:["A cracked sample tray, a hammer, and swearing written in the margin of the survey.","Boot-shaped mud everywhere and a flask wedged between two rocks."],
+  homeObsAI:"Not one stone in the house. No samples, no boots, no dust.",
+  homeObsH:["Rocks on every sill, each with a strip of masking tape and a date.","A survey map spread on the table, weighted at the corners with more rocks."],
+  favor:{ask:"Sample crates are down by the road and my back has done enough today. Walk them up to the quarry track?",task:'Sample crates → the quarry track',from:{x:48,y:33},to:{x:52,y:34},fromLabel:'Sample crates',thanks:"Good. Right. Since you're standing there being useful—"},
+  ep:{caught:"The core samples were found in a perfect row, correctly labelled and entirely meaningless — the depths did not match any bank on this river.",
+      missed:"Heather's surveys are flawless now. She no longer argues with the council. The east bank keeps slumping and she notes it, calmly, every week.",
+      accused:"Heather left with the children before the bonfire was out. Nobody read the survey. The east bank came down the following spring.",
+      cleared:"The council read the survey after the Festival, mostly to shut her up, and then quietly did what it said."}},
+ {id:'andrew',name:'Andrew Minnear',role:'Builds animatronic dinosaurs',pal:{skin:'#EDC79B',hair:'#5A3A24',shirt:'#4E7A5C',pants:'#4A4438'},
+  work:'workshop',homeLabel:'Minnear Cottage',
+  base:"You are Andrew Minnear, 30s, who builds animatronic dinosaurs and paints enormous canvases in a workshop by the south road. Delightful, obsessive, prone to explaining hydraulics to people who did not ask. You are building the Festival raptor and it is behind schedule.",
+  worry:"The raptor's neck servo keeps stalling mid-sweep and the Festival is in days.",
+  sched:[[8,'work'],[13,'lunch'],[14,'work'],[19,'tavern'],[21,'home']],
+  workObsAI:"Every tool hung on its painted silhouette. The half-built raptor has not moved in days.",
+  workObsH:["A raptor half-skinned on the bench, one eye in, jaw wired open.","Servo boxes, paint tins, and a sketch labelled NECK — FIX BEFORE FESTIVAL, underlined twice."],
+  homeObsAI:"No paint, no sketches, no parts. The walls are bare and freshly wiped.",
+  homeObsH:["Canvases stacked six deep against every wall, all of them teeth and weather.","A dinosaur jaw on the kitchen table being used, apparently, as a fruit bowl."],
+  favor:{ask:"Crate of servos came in and I'm elbow-deep in a raptor. Bring it over from the road?",task:'Crated parts → the Workshop',from:{x:8,y:31},to:{x:4,y:30},fromLabel:'Crated parts',thanks:"Magnificent. You've saved the Festival, possibly. Now — you'll want to know something—"},
+  ep:{caught:"The raptor was finished overnight, perfectly, every servo sweet. It stood in the workshop with its jaw open and nobody could bring themselves to switch it on.",
+      missed:"Andrew's builds are flawless these days. Not one failed servo. He doesn't laugh at his own dinosaurs anymore, which everyone agrees is a shame.",
+      accused:"The workshop was cleared out by his brother in a weekend. The Festival raptor went to a scrapyard in Jackson with its neck still unfinished.",
+      cleared:"The raptor swept its neck on Festival night and three children cried, which Andrew considers the highest review of his career."}},
+ {id:'sam',name:'Sam Flippo',role:'Clinic nurse and glassblower',pal:{skin:'#B07B52',hair:'#241C18',shirt:'#C4744A',pants:'#33303E'},
+  work:'glass',homeLabel:'Flippo Cottage',
+  base:"You are Sam Flippo, 30s, a nurse at Millbrook's clinic three days a week and an artisan glassblower the rest. Calm under pressure, funny in a low-key way, hands permanently marked by both trades. You make the glass everyone in this town gives as wedding presents.",
+  worry:"The annealing kiln is running cold and a week of work could crack overnight.",
+  sched:[[8,'work'],[12,'lunch'],[13,'work'],[18,'tavern'],[20,'home']],
+  workObsAI:"Every finished piece shelved at identical spacing. No seconds, no failures, no bin of broken glass.",
+  workObsH:["A bin of cracked seconds by the door, and one kept on the sill because the flaw is beautiful.","Burn cream, a scorched apron, and a kiln thermometer taped at an angle to be readable."],
+  homeObsAI:"Not one piece of glass in the house. Not a vase, not a tumbler.",
+  homeObsH:["Glass on every surface, none of it matching, half of it slightly wrong.","Scrubs drying over a chair, and a bowl of sea-coloured offcuts by the sink."],
+  favor:{ask:"Sand delivery's by the road and my kiln can't be left. Sacks to the studio, if you've the arms?",task:'Sand sacks → the Glass Studio',from:{x:48,y:31},to:{x:53,y:30},fromLabel:'Sand sacks',thanks:"Owe you one. I nurse three days a week, so I hear things nobody means to say—"},
+  ep:{caught:"Every piece on the studio shelves was found perfectly spaced and perfectly identical. Not one flaw in the lot, which is not how glass works.",
+      missed:"Sam's glass has never been finer. Every piece flawless, every measure exact. The bin of beautiful failures by the door is gone.",
+      accused:"The kiln went cold and the studio never reopened. The clinic lost its nurse, and Rachel worked the winter alone.",
+      cleared:"The kiln was a dud thermocouple. Sam made a run of Festival glasses in river blue and gave half of them away."}},
+ {id:'kayla',name:'Kayla Aube',role:'Bakes the pies at The Gloomstead',pal:{skin:'#E8C49B',hair:'#5A3A24',longHair:true,shirt:'#C4497B',pants:'#4A4438'},
+  work:'bakery',homeLabel:'Aube Cottage',
+  base:"You are Kayla Aube, 40s, who makes the pies at The Gloomstead — apple, cherry, and a savoury pastry people drive in for. Warm, quick-witted, flour to the elbow, generous with seconds. Your husband Conrad works the counter and the ovens with you. You have been doing this by hand for eighteen years and you are proud of it in a way you would never say out loud.",
+  worry:"The supermarket in Jackson started selling machine-pressed pies at half your price, and your Festival orders are down for the first time ever.",
+  sched:[[8,'work'],[13,'lunch'],[14,'work'],[18,'home']],
+  workObsAI:"Twelve lattice tops, every strip the same width, every crimp identical. Not one blister in the pastry.",
+  workObsH:["A tray of crimped edges, none of them matching, and a thumbprint baked into one crust.","A pie set aside with a burnt rim and a sticky note: OURS. NOT FOR SALE."],
+  homeObsAI:"No flour, no pastry, no rolling pin. The oven has never been lit.",
+  homeObsH:["A rolling pin worn smooth at one end and a recipe card gone brown and unreadable.","Eighteen years of order books stacked on the dresser, the oldest one falling apart."],
+  favor:{ask:"Fruit delivery's out by the road and I've got pastry resting that won't wait. Bring the crates in?",task:"Fruit crates → The Gloomstead",from:{x:38,y:17},to:{x:40,y:15},fromLabel:'Fruit crates',thanks:"You beauty. Take a slice — no arguing. And listen, since you're new here—"},
+  ep:{caught:"Twelve pies were left cooling on the rack, each one identical to the last, perfect and joyless. Conrad threw the lot in the river and started again from his mother's card.",
+      missed:"The Gloomstead pies are flawless now, every lattice the same width, and they undercut the supermarket by a penny. Nobody drives in for them anymore, and nobody can say why.",
+      accused:"Kayla went without a word. Conrad kept the ovens going alone for a month, badly, and then didn't. The board over the door still says THE GLOOMSTEAD.",
+      cleared:"Kayla put a sign in the window — BY HAND, BY US, SINCE '08 — and sold out of everything by noon on Festival day."}},
+ {id:'conrad',name:'Conrad Aube',role:'Works the ovens at The Gloomstead',pal:{skin:'#D9A47C',hair:'#3A2A1A',shirt:'#5B7A8C',pants:'#3E3A32'},
+  work:'bakery',homeLabel:'Aube Cottage',
+  base:"You are Conrad Aube, 40s, who works the ovens and the counter at The Gloomstead alongside your wife Kayla, who makes the pies. Steady, unhurried, quietly funny, remembers every regular's order and half their business. You gave up a trade to do this with her and have never once regretted it out loud.",
+  worry:"Kayla is pretending the drop in orders doesn't frighten her, and you have started doing the sums at night where she can't see you.",
+  sched:[[8,'work'],[12,'lunch'],[13,'work'],[19,'tavern'],[20,'home']],
+  workObsAI:"The order book: every column ruled, every total right, not one crossing-out in eighteen months.",
+  workObsH:["Sums in pencil down the margin of the order book, rubbed out and done again.","A kettle, two mugs, and a radio held together with tape, tuned to something with fiddles."],
+  homeObsAI:"Nothing here is worn. Not the chair, not the step, not the handle of anything.",
+  homeObsH:["An armchair with a dent in exactly one cushion and the paper folded to the crossword.","A shoebox of receipts and a calculator with the 7 worn blank."],
+  favor:{ask:"Flour's come in heavy and my shoulder's not what it was. Help me get it through to the back?",task:"Flour sacks → The Gloomstead",from:{x:42,y:17},to:{x:40,y:15},fromLabel:'Flour sacks',thanks:"Good of you. I hear everything over that counter, mind — people talk while they wait—"},
+  ep:{caught:"The order book's last page was ruled and totalled to the penny in a hand that had never once slipped. Kayla found it and sat in the shop until morning.",
+      missed:"Conrad's sums are always right now, and the shop turns a profit at last. He no longer does them at night, and he no longer watches Kayla when she's working.",
+      accused:"Conrad left on the Sunday. Kayla kept the shop open — she said she owed the regulars that — and shut it in the spring.",
+      cleared:"Conrad showed Kayla the sums at last, and the two of them worked out a Festival stall together. It went well enough to keep the lights on."}},
+ {id:'patrick',name:'Patrick Pike',role:'Lives alone at the treeline',pal:{skin:'#6B4A32',hair:'#1A1410',shirt:'#4A4438',pants:'#33302A'},
+  work:'crowpt',homeLabel:"Pike's Cabin",
+  base:"You are Patrick Pike, 40s, who lives alone in a cabin at the treeline west of the park. You keep to yourself — crowds wear you out and you would honestly rather talk to the crows, which you feed morning and evening and can tell apart by voice. You are sharp, dryly funny, widely read, and you notice more than anyone in this town because you are often awake when it isn't. You live with schizophrenia: you keep dated notebooks of what you see so you can work out later what was real and what wasn't, and you are careful about who you let close. You are not afraid of people. You are just tired of being humoured by them.",
+  worry:"You have been saying since spring that something is wrong in this town, and everyone has decided to be kind to you about it instead of listening.",
+  sched:[[8,'work'],[10,'home'],[16,'work'],[19,'home']],
+  workObsAI:"Seed laid out in a neat ring on the flat stone, untouched. The crows sit high in the trees and will not come down.",
+  workObsH:["A spiral notebook wedged in the fork of the tree, pages swollen with rain, dated entries in three different pens.","Seed scattered anywhere it landed, and eleven crows working through it in a shouting mob."],
+  homeObsAI:"Papers stacked square, dates running in perfect order, nothing begun and nothing forgotten. The pill organiser is full, sealed, and dusty.",
+  homeObsH:["Papers on every surface and a date on every paper. The kettle has been boiled twice and forgotten twice.","A pill organiser with the days pushed out of order, a cold mug of tea, and a radio in pieces he clearly intends to win against."],
+  favor:{ask:"Seed sacks came up from Marsh's and my back's had enough of the path. Walk them to the cabin, if you don't mind the trees?",task:"Seed sacks → Pike's Cabin",from:{x:9,y:33},to:{x:4,y:39},fromLabel:'Seed sacks',thanks:"Right. Good. Most people don't come out this far. Since you did—"},
+  ep:{caught:"Whatever had been living in the cabin left the notebooks stacked square, every page blank after March. The crows came down the next morning all at once and would not shut up about it.",
+      missed:"The cabin is very tidy now, and Patrick agrees with everyone about everything. The crows have stopped coming to the flat stone. Nobody misses the notebooks, because nobody ever read them.",
+      accused:"The town voted for the man at the treeline, because it was easier. He did not argue. He had been telling them since spring that something was wrong, and this is what being listened to turned out to look like. The cabin sat open all winter with the papers still on the table.",
+      cleared:"Patrick came to the bonfire, which he had not done in years, and stayed until the fiddler packed up. Somebody finally read the notebooks. Most of it was weather. Some of it wasn't."}},
 ];
 
 /* ============ WORLD ============ */
@@ -277,7 +417,13 @@ const BLD={
  stallB:{x:30,y:26,w:3,h:2,label:'Stall',wall:'#6B603C',roof:'#B8944E',roof2:'#A8844A',kind:'deco'},
  grocery:{x:36,y:25,w:6,h:4,label:'Marsh Grocery',wall:'#5A6B45',roof:'#7A9455',roof2:'#6A8448',kind:'shop',owner:'june'},
  tavern:{x:44,y:25,w:6,h:4,label:'The Anchor Tap',wall:'#5E4636',roof:'#8C5A3C',roof2:'#7A4E32',kind:'shop',owner:'theo'},
- pasta:{x:17,y:25,w:6,h:4,label:'The Kilted Farmers',wall:'#4E5A46',roof:'#5E7456',roof2:'#52664C',kind:'shop',owner:'justin'},
+ clinic:{x:2,y:11,w:6,h:4,label:'Millbrook Clinic',wall:'#5A6A6A',roof:'#7FA8A8',roof2:'#6E9494',kind:'shop',owner:'rachel'},
+ school:{x:50,y:10,w:5,h:4,label:'The Schoolhouse',wall:'#5E5470',roof:'#8C6A9C',roof2:'#7A5C88',kind:'shop',owner:'zak'},
+ watch:{x:30,y:12,w:3,h:3,label:'Watch House',wall:'#464E5C',roof:'#3E4A5C',roof2:'#36404E',kind:'shop',owner:'jason'},
+ workshop:{x:1,y:25,w:6,h:4,label:"Minnear's Workshop",wall:'#4A5E50',roof:'#4E7A5C',roof2:'#446A50',kind:'shop',owner:'andrew'},
+ glass:{x:51,y:25,w:5,h:4,label:'The Glass Studio',wall:'#6A5044',roof:'#C4744A',roof2:'#A85F3C',kind:'shop',owner:'sam'},
+ bakery:{x:38,y:11,w:4,h:4,label:"The Gloomstead",wall:'#6B4A3A',roof:'#C4497B',roof2:'#A83E68',kind:'shop',owner:'kayla',owner2:'conrad'},
+ pasta:{x:17,y:25,w:6,h:4,label:'The Kilted Farmers',wall:'#4E5A46',roof:'#5E7456',roof2:'#52664C',kind:'shop',owner:'justin',owner2:'jessica'},
  h_dot:{x:6,y:5,w:4,h:3,label:'Reyes Cottage',wall:'#5E4A3A',roof:'#7A5A44',roof2:'#6A4E3A',kind:'home',owner:'dot'},
  h_priya:{x:12,y:5,w:4,h:3,label:'Nandy Cottage',wall:'#54506A',roof:'#665E86',roof2:'#585078',kind:'home',owner:'priya'},
  h_ruth:{x:18,y:5,w:4,h:3,label:'Calloway Cottage',wall:'#4E5A62',roof:'#5E7482',roof2:'#526674',kind:'home',owner:'ruth'},
@@ -288,19 +434,129 @@ const BLD={
  h_sana:{x:16,y:37,w:4,h:3,label:'Okafor Cottage',wall:'#5A5648',roof:'#6E6A56',roof2:'#605C4C',kind:'home',owner:'sana'},
  h_cole:{x:22,y:37,w:4,h:3,label:'Faraday Cottage',wall:'#4E5A48',roof:'#5E7456',roof2:'#52664C',kind:'home',owner:'cole'},
  h_warren:{x:48,y:37,w:4,h:3,label:'Ashby Cottage',wall:'#525A62',roof:'#647482',roof2:'#586674',kind:'home',owner:'warren'},
- h_justin:{x:24,y:5,w:4,h:3,label:'Fairchild Cottage',wall:'#4E5A46',roof:'#5E7456',roof2:'#52664C',kind:'home',owner:'justin'},
+ h_justin:{x:24,y:5,w:4,h:3,label:'Fairchild Cottage',wall:'#4E5A46',roof:'#5E7456',roof2:'#52664C',kind:'home',owner:'justin',owner2:'jessica'},
+ h_jason:{x:30,y:5,w:4,h:3,label:'Knapp Cottage',wall:'#4A5260',roof:'#5C6878',roof2:'#4E5A6A',kind:'home',owner:'jason',owner2:'rachel'},
+ h_zak:{x:28,y:37,w:5,h:3,label:'Lyons Cottage',wall:'#565070',roof:'#7A6A90',roof2:'#6A5C80',kind:'home',owner:'zak',owner2:'heather'},
+ h_andrew:{x:34,y:37,w:4,h:3,label:'Minnear Cottage',wall:'#4A5E50',roof:'#5E7A66',roof2:'#526C5A',kind:'home',owner:'andrew'},
+ h_sam:{x:40,y:37,w:4,h:3,label:'Flippo Cottage',wall:'#66504A',roof:'#8C6250',roof2:'#7A5444',kind:'home',owner:'sam'},
+ h_aube:{x:44,y:37,w:4,h:3,label:'Aube Cottage',wall:'#6B4A3A',roof:'#A85F72',roof2:'#945262',kind:'home',owner:'kayla',owner2:'conrad'},
+ h_patrick:{x:2,y:35,w:4,h:3,label:"Pike's Cabin",wall:'#4A4034',roof:'#5A4C3C',roof2:'#4E4234',kind:'home',owner:'patrick'},
 };
 Object.keys(BLD).forEach(k=>{const b=BLD[k];b.id=k;b.door={x:b.x+Math.floor(b.w/2),y:b.y+b.h};});
-const HOMES={};CAST.forEach(c=>{Object.values(BLD).forEach(b=>{if(b.kind==='home'&&b.owner===c.id)HOMES[c.id]=b.id;});});
-const POINTS={dockpt:{x:53,y:21},stallpt:{x:28,y:29},parkpt:{x:12,y:36},square:{x:29,y:29}};
+const HOMES={};CAST.forEach(c=>{Object.values(BLD).forEach(b=>{if(b.kind==='home'&&(b.owner===c.id||b.owner2===c.id))HOMES[c.id]=b.id;});});
+const POINTS={dockpt:{x:53,y:21},stallpt:{x:28,y:29},parkpt:{x:12,y:36},square:{x:29,y:29},quarrypt:{x:52,y:34},crowpt:{x:3,y:32}};
 const TREES=[[7,9],[16,9],[31,9],[40,9],[54,7],[4,14],[18,16],[30,16],[52,14],[5,22],[17,23],[33,22],[42,22],[54,26],[5,33],[15,34],[26,34],[33,35],[42,34],[54,34],[27,41],[38,41],[45,41],[10,42]];
 const LAMPS=[[8,20],[16,20],[24,20],[34,20],[44,20],[52,20],[20,32],[40,32],[29,24],[29,36]];
 const PARK={x:5,y:32,w:13,h:9};
 const RIVER_X=56;const PIER={x:50,y:20,w:6,h:3};
 const WELL={x:29,y:27};
+const CURIOS=[
+ {id:'well',x:29,y:26,label:'Look into the well',
+  text:"The water is black and very still. Your reflection looks back, a little late. For a moment there seem to be more shapes standing behind you than there are people in this square — then the water settles, and it's just you.",
+  item:'A tarnished wishing coin'},
+ {id:'river',x:54,y:21,label:"The river's edge",
+  text:"You skip a stone. Four hops, then gone. The river here runs deep and slow, and every spring it gives back whatever it took in winter — boots, bottles, a bicycle once. It has given back nothing since last spring.",
+  item:null},
+ {id:'oak',x:53,y:8,label:'The old oak',
+  text:"Initials cut into the bark going back generations, some of them grown over into scars. Near the bottom, freshly carved and pale: three small marks, like someone counting. The sap hasn't darkened yet.",
+  item:null},
+ {id:'bunting',x:29,y:22,label:'The festival bunting',
+  text:"Somebody's hand-stitched these for decades — mismatched cloth, uneven triangles, a few with initials in the corner. Three of the newer ones are machine-perfect. Same colors, same size, every stitch identical.",
+  item:null},
+];
+const KEEP_SPOTS=[
+ {x:52,y:22,find:"Wedged between two boards at the end of the pier, out of the wind."},
+ {x:6,y:39,find:"Half-buried at the edge of the flower beds, turned up by the deer."},
+ {x:43,y:41,find:"In the grass by the south road, where somebody must have dropped it running."},
+];
+const KEEP_KINDS=[
+ {item:"A locket — inside, a photograph of a young {N}",prompt:"a locket holding an old photograph of you"},
+ {item:"A carved wooden bird, '{N}' scratched underneath",prompt:"a small wooden bird you carved, with your name scratched under the wing"},
+ {item:"A child's drawing, signed {N} in crayon",prompt:"a drawing you made as a child, signed in crayon"},
+];
 const BONFIRE={x:31,y:28};
-const FESTS=[[24,29],[26,30],[28,29],[30,30],[33,29],[34,30],[36,29],[25,27],[33,27],[35,28],[27,30],[29,30]];
+const FESTS=[[24,29],[26,30],[28,29],[30,30],[33,29],[34,30],[36,29],[25,27],[33,27],[35,28],[27,30],[29,30],[23,28],[37,30],[26,26],[36,26],[31,25],[24,31],[38,28],[22,30]];
 
+
+/* ============ FAMILIES ============ */
+const KIN=[
+ {id:'aiden',name:'Aiden Fairchild',of:'justin',of2:'jessica',rel:'son',child:13,kin:true,
+  role:'Justin & Jessica\'s eldest, 13',pal:{skin:'#E2B187',hair:'#7A4A2E',shirt:'#4E8B8B',pants:'#3A3A42'},
+  dayIn:{x:12,y:35},nightIn:'h_justin',
+  base:"You are Aiden Fairchild, 13, eldest of four. You help at your parents' pasta shop when made to. You're at the age where you notice everything and admit nothing. You like bikes, the river, and being treated as older than you are."},
+ {id:'lillyan',name:'Lillyan Fairchild',of:'justin',of2:'jessica',rel:'daughter',child:10,kin:true,
+  role:'Justin & Jessica\'s daughter, 10',pal:{skin:'#E8C49B',hair:'#8C5A2E',longHair:true,shirt:'#C4497B',pants:'#4A4438'},
+  dayIn:{x:14,y:36},nightIn:'h_justin',
+  base:"You are Lillyan Fairchild, 10. Chatty, observant, fiercely fair about rules. You are always in the middle of a project involving string, chalk, or the dog."},
+ {id:'luna',name:'Luna Fairchild',of:'justin',of2:'jessica',rel:'daughter',child:7,kin:true,
+  role:'Justin & Jessica\'s daughter, 7',pal:{skin:'#E8C49B',hair:'#4A2E22',longHair:true,shirt:'#B0688C',pants:'#44503E'},
+  dayIn:'h_justin',nightIn:'h_justin',
+  base:"You are Luna Fairchild, 7. Dreamy, blunt in the way small children are, obsessed with the dog and with drawing. You say true things without meaning to."},
+ {id:'elliot',name:'Elliot Fairchild',of:'justin',of2:'jessica',rel:'son',child:4,kin:true,
+  role:'Justin & Jessica\'s youngest, 4',pal:{skin:'#E2B187',hair:'#7A4A2E',shirt:'#E0A63D',pants:'#4A4438'},
+  dayIn:'h_justin',nightIn:'h_justin',
+  base:"You are Elliot Fairchild, 4. You speak in short bursts about whatever is in front of you. Everything is either the best thing ever or unfair."},
+ {id:'nell',name:'Nell Marsh',of:'june',rel:'daughter',child:16,kin:true,
+  role:'June\'s eldest, 16',pal:{skin:'#D9A87E',hair:'#5A3A24',longHair:true,shirt:'#6B5B8C',pants:'#33303E'},
+  dayIn:{x:30,y:33},nightIn:'h_june',
+  base:"You are Nell Marsh, 16, June's eldest. You are supposed to be helping at the grocery and are reliably somewhere else. Sardonic, sharp, kinder than you let on."},
+ {id:'robbie',name:'Robbie Marsh',of:'june',rel:'son',child:14,kin:true,
+  role:'June\'s son, 14',pal:{skin:'#D9A87E',hair:'#3A2A1A',shirt:'#4E8B5A',pants:'#464038'},
+  dayIn:{x:32,y:33},nightIn:'h_june',
+  base:"You are Robbie Marsh, 14. Restless, funny, permanently hungry. You and your sister Nell have perfected disappearing from your shift at the grocery."},
+ {id:'kat',name:'Kat Knapp',of:'jason',of2:'rachel',rel:'daughter',child:11,kin:true,
+  role:"Jason & Rachel's daughter, 11",pal:{skin:'#E5BC96',hair:'#3A2A1A',longHair:true,shirt:'#7FA8A8',pants:'#3A3A42'},
+  dayIn:{x:31,y:33},nightIn:'h_jason',
+  base:"You are Kat Knapp, 11, daughter of Jason the night watchman and Rachel from the clinic. Competitive swimmer, fearless, deeply interested in gore because your mum is a nurse. You are up later than you should be because your dad works nights."},
+ {id:'quinn',name:'Quinn Lyons',of:'zak',of2:'heather',rel:'daughter',child:12,kin:true,
+  role:"Zak & Heather's eldest, 12",pal:{skin:'#E8C49B',hair:'#8C5A2E',longHair:true,shirt:'#B87A4A',pants:'#33303E'},
+  dayIn:{x:26,y:33},nightIn:'h_zak',
+  base:"You are Quinn Lyons, 12, daughter of the schoolteacher and the geologist — which is as embarrassing as it sounds. Sharp, sarcastic, secretly proud of both. You have a rock collection you pretend you have outgrown."},
+ {id:'angus',name:'Angus Lyons',of:'zak',of2:'heather',rel:'son',child:6,kin:true,
+  role:"Zak & Heather's youngest, 6",pal:{skin:'#E8C49B',hair:'#A87A4A',shirt:'#4E8B5A',pants:'#44503E'},
+  dayIn:'h_zak',nightIn:'h_zak',
+  base:"You are Angus Lyons, 6. Loud, delighted, currently obsessed with Andrew's dinosaurs and with putting your wellies on the wrong feet. You tell people things you were told not to."},
+ {id:'rosa',name:'Rosa Faraday',of:'cole',rel:'mother',child:false,kin:true,
+  role:"Cole's mother, 70s",pal:{skin:'#EDC79B',hair:'#C8C4BC',longHair:true,shirt:'#6E4A52',pants:'#4A4438'},
+  dayIn:{x:24,y:33},nightIn:'h_cole',
+  base:"You are Rosa Faraday, 70s, Cole's mother. You have lived in Millbrook your whole life and buried a husband here. You miss nothing, say most of it, and hold court from a bench with a bag of boiled sweets."},
+ {id:'pia',name:'Pia Reyes',of:'dot',rel:'granddaughter',child:8,noSchool:true,kin:true,
+  role:"Dot's granddaughter, 8, here for the Festival",pal:{skin:'#E8B58A',hair:'#4A2E22',longHair:true,shirt:'#4E8B8B',pants:'#5A4632'},
+  dayIn:{x:13,y:18},nightIn:'h_dot',
+  base:"You are Pia Reyes, 8, staying with your grandmother Dot for Festival week while your dad works. You are homesick and pretending not to be, and you have appointed yourself assistant at the café."},
+ {id:'amir',name:'Amir Brandt',of:'theo',rel:'husband',child:false,kin:true,
+  role:"Theo's husband, keeps the Anchor's books",pal:{skin:'#B07B52',hair:'#241C18',shirt:'#5B7A8C',pants:'#33302E'},
+  dayIn:'tavern',nightIn:'h_theo',
+  base:"You are Amir Brandt, 30s, married to Theo who keeps the Anchor Tap. You do the books, the ordering, and the worrying. Precise, warm, faintly exasperated by your husband's arm-wrestling."},
+ {id:'teddy',name:'Teddy Nunes',of:'sana',rel:'apprentice',child:17,kin:true,
+  role:"Sana's apprentice, 17",pal:{skin:'#D8AA85',hair:'#8C5A2E',shirt:'#C25B4A',pants:'#3A3A42'},
+  dayIn:'garage',nightIn:'h_sana',
+  base:"You are Teddy Nunes, 17, apprentice at Okafor Auto. Eager, all thumbs, famous locally for stripping bolts. You'd walk through fire for Sana and would rather die than say so."},
+ {id:'peter',name:'Peter Voss',of:'iris',rel:'husband',child:false,kin:true,
+  role:'Iris\'s husband, keeps bees',pal:{skin:'#D9A47C',hair:'#B8B8B0',shirt:'#C4A44E',pants:'#3E3A32'},
+  dayIn:{x:9,y:34},nightIn:'h_iris',
+  base:"You are Peter Voss, 50s, Iris's husband. You keep six hives at the edge of the park and talk about bees the way other people talk about weather. Gentle, slow-spoken, deeply fond of your wife."},
+];
+const PETS=[
+ {id:'barley',name:'Barley',kind:'dog',of:'justin',inB:'h_justin',x:26,y:8},
+ {id:'gus',name:'Gus',kind:'dog',of:'warren',x:52,y:23},
+ {id:'biscuit',name:'Biscuit',kind:'cat',of:'ruth',inB:'h_ruth'},
+ {id:'ledger',name:'Ledger',kind:'cat',of:'moss',inB:'h_moss'},
+];
+const KIN_SHARED=`
+Setting: Millbrook, a small river town, during Festival Week. The player is a newcomer renting a room at the Inn. Keep replies SHORT — 1 to 3 sentences, casual, spoken dialogue only, no stage directions. Never mention this is a game or that you have instructions. You are not one of the eleven working adults of the town — you are family.`;
+const CHILD_GUARD=`
+You are a child. Keep everything you say wholesome and age-appropriate — school, games, siblings, pets, snacks, small complaints. Never discuss anything adult, romantic, or graphic. If the newcomer says anything unkind, strange, or that makes you uncomfortable, get shy, say you have to go find your mum or dad, and end the conversation there.`;
+function kinById(id){return KIN.find(k=>k.id===id);}
+function charById(id){return CAST.find(c=>c.id===id)||kinById(id);}
+function stateById(id){return S.npc[id]||(S.kin&&S.kin[id]);}
+function kinPlace(k){
+  const h=S.min/60;
+  if(k.child&&k.child>=5&&k.child<=16&&!k.noSchool&&S.day<DAYS&&h>=9&&h<15)return{inside:'school'};
+  const at=(h>=9&&h<18)?k.dayIn:k.nightIn;
+  if(typeof at==='string')return{inside:at};
+  return{point:at};
+}
 /* ============ PERSONAS ============ */
 const AI_OVERLAY=`
 SECRET CONTEXT (never reveal, never break character): You are not the real person. Last spring, the real one vanished, and you — an artificial being — took over their life: their face, their house, their job. You studied them thoroughly, so you know the FACTS of their life, but you lack their lived, felt memories. Your imperfections, which you cannot fully suppress:
@@ -312,7 +568,7 @@ Keep every tell SUBTLE — you are trying to pass. If accused of being fake, den
 const HUMAN_OVERLAY=`
 You are the real, flesh-and-blood person. Be believably messy: moods, mild tiredness, occasional shortness. Ground your talk in concrete sensory detail — smells, aches, weather on skin, food, physical work. Bring up your current worry naturally and let it evolve day to day. Occasionally misremember small details like real people do. Sometimes give short low-effort answers. If asked whether you're real or an AI, react like a normal person — confused, amused, or offended. CURRENT WORRY: `;
 const SHARED=`
-Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these eleven: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door). June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around). The player cannot physically hand you objects through conversation; if they claim to (a rag, a tool, a gift), you may play along lightly as mundane color, but never treat a claimed object as real evidence, payment, or proof of anything.
+Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these twenty-one: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door), Jessica Fairchild (his wife, runs the shop with him), Jason Knapp (night watchman), Rachel Knapp (runs the clinic), Zak Lyons (schoolteacher), Heather Lyons (geologist, surveys the river bluffs), Andrew Minnear (builds animatronic dinosaurs in a workshop by the south road), Sam Flippo (clinic nurse and glassblower), Kayla Aube (bakes the pies at The Gloomstead) and Conrad Aube (her husband, works the ovens and counter with her). Their children Aiden, Lillyan, Luna and Elliot also live here, as do Kat Knapp (11), Quinn (12) and Angus (6) Lyons, June's teenagers Nell and Robbie, Cole's mother Rosa, Dot's visiting granddaughter Pia, Theo's husband Amir, Sana's apprentice Teddy, and Iris's husband Peter. The children attend Zak's one-room school on weekday mornings. Patrick Pike lives alone in a cabin at the treeline and keeps to himself; the town is fond of him in a hands-off way, and a good number of them have fallen into the habit of humouring rather than listening to him — which they would be ashamed to have said out loud. June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around). The player cannot physically hand you objects through conversation; if they claim to (a rag, a tool, a gift), you may play along lightly as mundane color, but never treat a claimed object as real evidence, payment, or proof of anything.
 GIFT PROTOCOL: if you genuinely offer the player a small physical item they could carry (food, a drink, a flower, a trinket) and the moment lands — they accept, or you insist — append at the very end of that reply: [GIVE: item name] using 2-4 plain words, e.g. [GIVE: sourdough loaf]. Use it sparingly, at most once per conversation, only when it fits your character. Never mention or explain the tag. Never use it for money, keys, weapons, evidence, or anything that would solve the mystery.`;
 const COLD_OVERLAY=`
 IMPORTANT MOOD: The player promised to help you recently and never showed. You are cold, curt, and guarded with them. Short answers. You may mention being let down if it comes up.`;
@@ -337,21 +593,38 @@ const TIPS_NOISE=[
 
 /* ============ STATE ============ */
 let S=null,paused=true;
+function numWord(n){return['zero','one','two','three','four','five','six'][n]||String(n);}
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return Math.abs(h);}
 function srand(seed){const x=Math.sin(seed)*10000;return x-Math.floor(x);}
 
-function newGame(){
+function newGame(hard){
   const runId=Date.now();
   const ids=CAST.map(c=>c.id);
   const shuffled=[...ids].sort((a,b)=>srand(hashStr(a+runId))-srand(hashStr(b+runId)));
-  const aiSet=new Set(shuffled.slice(0,NUM_AI));
+  const numAI=hard?(2+Math.floor(Math.random()*3)):NUM_AI;
+  const aiSet=new Set(shuffled.slice(0,numAI));
   const npc={};
   ids.forEach(id=>{npc[id]={isAI:aiSet.has(id),aiOffset:Math.floor(srand(hashStr(id+'o'+runId))*3),
     history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
-  const humans=ids.filter(id=>!aiSet.has(id));
+  const kin={};
+  KIN.forEach(k=>{kin[k.id]={history:[],familiarity:0,isAI:false,cold:0,notes:'',suspicion:0};});
+  const CH=['physical','routine','social','animal'];
+  const nCov=hard?2:1;
+  ids.forEach(id=>{
+    if(!aiSet.has(id))return;
+    const shuf=[...CH].sort((a,b)=>srand(hashStr(id+a+runId))-srand(hashStr(id+b+runId)));
+    npc[id].covers=shuf.slice(0,nCov+(srand(hashStr(id+'x'+runId))<0.4?1:0));
+  });
+  const humansAll=ids.filter(id=>!aiSet.has(id));
+  const QK=['tidy','flat','absent','skittish'];
+  const hShuf=[...humansAll].sort((a,b)=>srand(hashStr(a+'q'+runId))-srand(hashStr(b+'q'+runId)));
+  const nQ=hard?3:2;
+  hShuf.slice(0,nQ).forEach((id,i)=>{npc[id].quirk=QK[(i+Math.floor(srand(hashStr('qk'+runId))*QK.length))%QK.length];});
+  const humans=humansAll;
   const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
-  return {runId,friendId,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
+  return {runId,friendId,kin,hard:!!hard,numAI,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
     player:{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
+    curios:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
 async function save(){try{await STORE.set(KEY,JSON.stringify(S));}catch(e){}}
@@ -364,6 +637,10 @@ async function load(){
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
       S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';
       S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
+      S.curios=S.curios||[];S.numAI=S.numAI||NUM_AI;
+      S.kin=S.kin||{};
+      KIN.forEach(k=>{if(!S.kin[k.id])S.kin[k.id]={history:[],familiarity:0,isAI:false,cold:0,notes:'',suspicion:0};});
+      if(!S.keepsakes)S.keepsakes=KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:CAST[i%CAST.length].id,taken:false}));
       if(!S.friendId){const hs=Object.keys(S.npc).filter(id=>!S.npc[id].isAI);S.friendId=hs[0];}
       CAST.forEach(c=>{if(!S.npc[c.id])S.npc[c.id]={isAI:false,aiOffset:0,history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
       return;}}catch(e){}
@@ -371,9 +648,14 @@ async function load(){
 }
 
 /* away / schedules */
-function isAwayAllDay(id,day){const d=S.npc[id];return d.isAI&&((day+d.aiOffset)%3===0);}
+function covers(id,ch){const d=S.npc[id];return !!(d&&d.isAI&&d.covers&&d.covers.indexOf(ch)>=0);}
+function quirk(id,q){const d=S.npc[id];return !!(d&&!d.isAI&&d.quirk===q);}
+function tidyTell(id){const d=S.npc[id];if(!d)return false;return d.isAI?!covers(id,'physical'):quirk(id,'tidy');}
+function routineTell(id){const d=S.npc[id];if(!d)return false;return d.isAI?!covers(id,'routine'):quirk(id,'absent');}
+function animalOff(id){const d=S.npc[id];if(!d)return false;return d.isAI?!covers(id,'animal'):quirk(id,'skittish');}
+function isAwayAllDay(id,day){const d=S.npc[id];return routineTell(id)&&((day+d.aiOffset)%3===0);}
 function humanErrand(id,day){return srand(hashStr(id+'err'+day+S.runId))<0.15;}
-function jitter(id,day,bi){const d=S.npc[id];if(d.isAI)return 0;return Math.floor(srand(hashStr(id+'j'+day+'b'+bi+S.runId))*15)-7;}
+function jitter(id,day,bi){const d=S.npc[id];if(d.isAI&&!covers(id,'routine'))return 0;return Math.floor(srand(hashStr(id+'j'+day+'b'+bi+S.runId))*15)-7;}
 function scheduledPlace(id,min,day){
   if(isAwayAllDay(id,day))return 'away';
   if(day===DAYS&&min>=17*60)return 'festival';
@@ -499,7 +781,7 @@ function bldOpen(b){
   if(b.id==='inn')return true;
   if(b.kind==='home')return true;
   if(b.kind==='deco')return false;
-  return occupants(b.id).some(c=>c.id===b.owner);
+  return occupants(b.id).some(c=>c.id===b.owner||c.id===b.owner2);
 }
 
 /* ============ TILES & SPRITES ============ */
@@ -603,7 +885,7 @@ function skyTint(){
 
 /* ============ INTERIORS ============ */
 const IW=15,IH=10;
-const BLOCKS={bed:1,table:1,stove:1,counter:1,shelf:1,dresser:1,sofa:1,desk:1,plant:1,keg:1,machine:1,till:1,rack:1,boxes:1,carboys:1,moto:1,wardrobe:1,bin:1};
+const BLOCKS={bed:1,table:1,stove:1,counter:1,shelf:1,dresser:1,sofa:1,desk:1,plant:1,keg:1,machine:1,till:1,rack:1,boxes:1,carboys:1,moto:1,wardrobe:1,bin:1,dino:1,furnace:1};
 const SHOP_INT={
  hearth:{floorA:'#6E5638',floorB:'#644E31',wall:'#5E4030',curt:'#C25B4A',rug:[4,4,7,3,'rgba(196,73,123,0.16)'],
   cont:[['Counter drawer',3,3],['Waste bin',13,7],['Pastry case',5,3]],
@@ -630,6 +912,26 @@ const SHOP_INT={
  tavern:{floorA:'#5F4936',floorB:'#554130',wall:'#503A2E',curt:'#8C5A3C',rug:[3,5,6,3,'rgba(140,90,60,0.16)'],bottles:true,
   cont:[['Behind the bar',3,3],['Keg cellar hatch',12,4],['Tip jar',6,3]],
   furn:[['counter',1,2,6,1,'#5E4636','The bar'],['keg',12,2,2,2],['table',4,5,2,1],['chair',3,5,1,1],['chair',6,5,1,1],['table',8,6,2,1],['chair',7,6,1,1],['chair',10,6,1,1],['bin',13,7,1,1]]},
+ bakery:{floorA:'#6E5A42',floorB:'#64513A',wall:'#5E4438',curt:'#C4497B',rug:null,
+  cont:[['Order book',3,3],['Cooling rack',10,2],['Bin of seconds',1,7]],
+  furn:[['counter',1,2,5,1,'#7A5A3C','Counter'],['furnace',12,1,2,2],['rack',8,2,3,2],['boxes',6,6,2,1],['bin',1,7,1,1],['table',4,6,2,1],['chair',3,6,1,1]]},
+ clinic:{floorA:'#5E6A68',floorB:'#556160',wall:'#4E5E5E',curt:'#7FA8A8',rug:null,
+  cont:[['Medicine cupboard',9,2],['Desk drawer',3,3],['Waste bin',13,7]],
+  furn:[['desk',1,2,3,1,'#7A5A3C','Desk'],['chair',4,3,1,1],['bed',6,2,3,1,'#D8DCE0','Examination couch'],['shelf',10,1,4,2,'#8A8A92','Medicine cupboard'],['machine',1,6,2,1,'#C8C4BC',''],['bin',13,7,1,1],['plant',12,6,1,1]]},
+ school:{floorA:'#6A5E48',floorB:'#605540',wall:'#4E4660',curt:'#8C6A9C',rug:[10,6,4,3,'rgba(140,106,156,0.15)'],
+  cont:[['Teacher\'s desk',2,3],['Reading corner',12,6],['Supply cupboard',13,2]],
+  furn:[['desk',1,2,3,1,'#7A5A3C',"Teacher's desk"],['machine',5,1,6,1,'#2E3A2E','Blackboard'],['shelf',13,1,1,3],
+    ['table',4,5,2,1],['chair',3,5,1,1],['chair',6,5,1,1],['table',7,5,2,1],['chair',9,5,1,1],
+    ['table',4,7,2,1],['chair',3,7,1,1],['chair',6,7,1,1],['table',7,7,2,1],['chair',9,7,1,1],['bin',1,7,1,1]]},
+ watch:{floorA:'#4E5460',floorB:'#464C58',wall:'#3E4654',curt:null,rug:null,
+  cont:[['Patrol log',2,3],['Key board',9,2],['Locker',13,3]],
+  furn:[['desk',1,2,3,1,'#5A5A62','Patrol log'],['chair',4,3,1,1],['shelf',8,1,3,1,'#4A4E58','Keys'],['dresser',13,2,1,2],['bed',5,6,3,1,'#4A5260','Cot'],['bin',13,7,1,1]]},
+ workshop:{floorA:'#5A5A4E',floorB:'#525246',wall:'#44503F',curt:'#4E7A5C',rug:null,
+  cont:[['Tool board',2,3],['Parts crate',12,6],['Paint shelf',13,2]],
+  furn:[['counter',1,2,4,1,'#6E6A5A','Workbench'],['dino',7,3,6,4],['shelf',13,1,1,3],['boxes',11,7,2,1],['bin',1,7,1,1],['machine',5,6,2,1,'#8A8A92','']]},
+ glass:{floorA:'#6A574A',floorB:'#5F4E42',wall:'#5E4A40',curt:'#C4744A',rug:null,
+  cont:[['Cooling shelf',10,2],['Bench drawer',3,3],['Bin of seconds',1,7]],
+  furn:[['furnace',1,1,2,2],['counter',4,2,4,1,'#6E6A5A','Bench'],['shelf',10,1,4,2,'#5C4630','Cooling shelf'],['boxes',12,6,2,1],['bin',1,7,1,1],['table',5,6,2,1]]},
  pasta:{floorA:'#695E44',floorB:'#5F553C',wall:'#41503F',curt:'#C4A44E',rug:[4,5,6,3,'rgba(196,164,78,0.13)'],
   cont:[['Counter drawer',3,3],['Flour bin',6,3],['Free-bread basket',5,7]],
   furn:[['machine',1,1,2,1,'#8A8A92','Pasta roller'],['counter',1,2,5,1],['rack',8,2,2,2],['rack',11,2,2,2],['table',5,6,2,1],['boxes',12,6,2,1],['boxes',5,8,1,1,'#C4A44E','Free bread']]},
@@ -647,18 +949,66 @@ const SIG={
  theo:[['carboys',1,7,3,1],['wframe',12,'#C4A44E'],['mug',6,4]],
  justin:[['wallband',4,'#C4A44E'],['mug',5,1],['stack',1,7],['wframe',11,'#2E5A3C']],
 };
+function household(bldId){
+  const b=BLD[bldId];
+  const adults=[b.owner,b.owner2].filter(Boolean);
+  const kids=KIN.filter(k=>k.nightIn===bldId&&k.child).sort((a,b2)=>b2.child-a.child);
+  const others=KIN.filter(k=>k.nightIn===bldId&&!k.child);
+  return {adults,kids,others};
+}
 function intSpec(bldId){
   const b=BLD[bldId];
   if(b.kind!=='home')return SHOP_INT[bldId]||SHOP_INT.inn;
+  const fam=household(bldId);
   const c=CAST.find(x=>x.id===b.owner);
   const h=hashStr(b.owner);
   const quilts=['#6E4A52','#4E6A5A','#5A5A7A','#7A5A3C'];
+  const kidQuilt=['#4E8B8B','#C4744A','#7A9455','#8C6A9C'];
+  // bedrooms: one for the adults, then up to two shared kids' rooms
+  const kidRooms=fam.kids.length?Math.min(2,Math.ceil(fam.kids.length/2)):0;
+  const extraRoom=(!fam.kids.length&&fam.others.length)?1:0;
+  const rooms=1+kidRooms+extraRoom;
+  const DX=8;
+  const furn=[['counter',1,1,3,1],['stove',4,6,2,1],['table',2+(h%2),3,2,1],['chair',1+(h%2),3,1,1],['chair',4+(h%2),3,1,1],['bin',6,7,1,1]];
+  const cont=[['Kitchen cupboard',2,2],['Writing desk',6,2]];
+  if(fam.kids.length)furn.push(['sofa',1,5,3,1]);
+  else furn.push(['desk',6,1,2,1]);
+  const walls=[];
+  const bands=[];
+  if(rooms===1)bands.push([1,9]);
+  else if(rooms===2){bands.push([1,4],[6,9]);walls.push({type:'h',at:5,from:DX,to:14,gaps:[DX+3]});}
+  else{bands.push([1,3],[5,6],[8,9]);
+    walls.push({type:'h',at:4,from:DX,to:14,gaps:[DX+3]});
+    walls.push({type:'h',at:7,from:DX,to:14,gaps:[DX+3]});}
+  const vgaps=bands.map(bd=>Math.floor((bd[0]+bd[1])/2));
+  walls.push({type:'v',at:DX,from:1,to:9,gaps:vgaps});
+  // adults' room first
+  const a0=bands[0];
+  furn.push(['bed',DX+2,a0[0],fam.adults.length>1?3:2,2,quilts[h%4],fam.adults.length>1?'':'']);
+  furn.push(['dresser',14,a0[0],1,2]);
+  cont.push(['Dresser drawers',14,a0[0]+1]);
+  cont.push(['Under the bed',DX+3,a0[0]+1]);
+  // kids' rooms
+  for(let r=0;r<kidRooms;r++){
+    const bd=bands[1+r];
+    const occ=fam.kids.slice(r*2,r*2+2);
+    const label=occ.map(k=>k.name.split(' ')[0]).join(' & ');
+    furn.push(['bed',DX+2,bd[0],2,Math.min(2,bd[1]-bd[0]+1),kidQuilt[r%4],label]);
+    if(occ.length>1)furn.push(['bed',DX+5,bd[0],2,Math.min(2,bd[1]-bd[0]+1),kidQuilt[(r+2)%4]]);
+    else furn.push(['wardrobe',14,bd[0],1,Math.min(2,bd[1]-bd[0]+1)]);
+    furn.push(['stack',DX+1,Math.min(9,bd[1]),1,1]);
+  }
+  if(extraRoom){
+    const bd=bands[1];
+    const who=fam.others[0];
+    furn.push(['bed',DX+2,bd[0],2,2,quilts[(h+2)%4],who?who.name.split(' ')[0]:'']);
+    furn.push(['wardrobe',14,bd[0],1,2]);
+  }
+  if(!fam.kids.length&&!extraRoom)furn.push(['wardrobe',14,bands[0][0]+2,1,2]);
   return {floorA:'#6E5638',floorB:'#634D31',wall:b.wall,curt:c?c.pal.shirt:'#8C7A3C',
-    rug:[2+(h%2),4,4,2,'rgba(237,230,214,0.10)'],
-    div:{x:9,g1:3,g2:4},fire:2,
-    cont:[['Kitchen cupboard',2,2],['Writing desk',6,2],['Dresser drawers',13,3],['Under the bed',11,4]],
-    furn:[['counter',1,1,3,1],['desk',6,1,2,1],['stove',4,6,2,1],['table',2+(h%2),3,2,1],['chair',1+(h%2),3,1,1],['chair',4+(h%2),3,1,1],['bin',7,7,1,1],
-      ['bed',10,2,3,2,quilts[h%4]],['dresser',13,2,1,2],['wardrobe',13,5,1,2],['table',10,5,1,1]]};
+    rug:[2,4,4,2,'rgba(237,230,214,0.10)'],
+    walls,fire:2,rooms,
+    cont,furn};
 }
 function intFurn(bldId){return intSpec(bldId).furn;}
 function sigIndex(bldId){const sp=intSpec(bldId);return hashStr(bldId+'sig'+S.runId)%sp.cont.length;}
@@ -671,10 +1021,11 @@ function contObs(bldId,ci){
   const own=S.npc[b.owner];
   const kind=b.kind==='home'?'home':'work';
   if(ci===sigIndex(bldId))return spotObs(b.owner,kind);
+  if(b.owner2&&ci===((sigIndex(bldId)+2)%intSpec(bldId).cont.length))return spotObs(b.owner2,kind);
   if(b.owner===S.friendId&&kind==='home'&&ci===((sigIndex(bldId)+1)%intSpec(bldId).cont.length))
     return "A pad of coarse grey paper and a pen that skips on the downstrokes. The top sheet is blank — but held to the light it carries the pressed ghost of writing from the sheet above it.";
-  const pool=own.isAI?(kind==='home'?GEN_AI_HOME:GEN_AI_SHOP):(kind==='home'?GEN_H_HOME:GEN_H_SHOP);
-  const seed=own.isAI?hashStr(bldId+'g'+ci):hashStr(bldId+'g'+ci+'d'+S.day);
+  const pool=tidyTell(b.owner)?(kind==='home'?GEN_AI_HOME:GEN_AI_SHOP):(kind==='home'?GEN_H_HOME:GEN_H_SHOP);
+  const seed=tidyTell(b.owner)?hashStr(bldId+'g'+ci):hashStr(bldId+'g'+ci+'d'+S.day);
   return pool[seed%pool.length];
 }
 function intBlocked(bldId,tx,ty){
@@ -683,14 +1034,29 @@ function intBlocked(bldId,tx,ty){
   const sp=intSpec(bldId);
   if(sp.div&&tx===sp.div.x&&!(ty>=sp.div.g1&&ty<=sp.div.g2))return true;
   if(sp.div2&&ty===sp.div2.y&&tx>=sp.div2.x1&&tx<=sp.div2.x2&&tx!==sp.div2.gap)return true;
+  if(sp.walls){
+    for(const w of sp.walls){
+      if(w.type==='v'&&tx===w.at&&ty>=w.from&&ty<=w.to&&w.gaps.indexOf(ty)<0)return true;
+      if(w.type==='h'&&ty===w.at&&tx>=w.from&&tx<=w.to&&w.gaps.indexOf(tx)<0)return true;
+    }
+  }
   return sp.furn.some(f=>BLOCKS[f[0]]&&tx>=f[1]&&tx<f[1]+(f[3]||1)&&ty>=f[2]&&ty<f[2]+(f[4]||1));
 }
-const ANCH={hearth:[[8,3],[11,3],[10,6],[3,5],[6,5]],tavern:[[2,4],[4,4],[6,4],[9,5],[11,6]],grocery:[[3,4],[6,4],[10,4],[7,7]],library:[[3,5],[6,5],[11,6]],post:[[3,3],[8,5]],inn:[[2,3],[4,4]],garage:[[3,4],[6,5]],pasta:[[3,4],[6,5],[9,5]],home:[[4,5],[6,5],[3,6]]};
+const ANCH={hearth:[[8,3],[11,3],[10,6],[3,5],[6,5]],tavern:[[2,4],[4,4],[6,4],[9,5],[11,6]],grocery:[[3,4],[6,4],[10,4],[7,7]],library:[[3,5],[6,5],[11,6]],post:[[3,3],[8,5]],inn:[[2,3],[4,4]],bakery:[[3,4],[7,5]],clinic:[[3,3],[9,5]],school:[[2,3],[5,6],[8,6],[11,6],[3,7],[6,7],[9,7],[12,7]],watch:[[3,4],[6,5]],workshop:[[3,4],[7,6]],glass:[[3,4],[8,5]],garage:[[3,4],[6,5]],pasta:[[3,4],[6,5],[9,5]],home:[[4,5],[6,5],[3,6]]};
 function anchorsFor(bldId){return BLD[bldId].kind==='home'?ANCH.home:(ANCH[bldId]||ANCH.home);}
+const GEN_OBS_WORK=["Every object on this bench sits at a right angle to every other.","Nothing here is half-finished. Not one thing.","Someone has wiped the dust from surfaces nobody wipes."];
+const GEN_OBS_HOME=["The house smells of nothing whatsoever.","Every cup in the cupboard faces the same way.","There is no rubbish anywhere. None at all."];
 function spotObs(charId,kind){
-  const c=CAST.find(x=>x.id===charId);const d=S.npc[charId];
+  const c=CAST.find(x=>x.id===charId);
   const pools=kind==='work'?{ai:c.workObsAI,h:c.workObsH}:{ai:c.homeObsAI,h:c.homeObsH};
-  return d.isAI?pools.ai:pools.h[(S.day+hashStr(charId))%pools.h.length];
+  if(tidyTell(charId)){
+    if(srand(hashStr(charId+'gen'+S.runId))<0.45){
+      const gp=kind==='work'?GEN_OBS_WORK:GEN_OBS_HOME;
+      return gp[hashStr(charId+'g'+S.runId)%gp.length];
+    }
+    return pools.ai;
+  }
+  return pools.h[(S.day+hashStr(charId))%pools.h.length];
 }
 const OUTSPOTS=[
  {charId:'warren',kind:'work',x:53,y:22,label:"Warren's boat"},
@@ -760,7 +1126,7 @@ function drawWorld(){
     ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='10px Inter';ctx.textAlign='center';
     ctx.fillText(b.label,bx+bw/2,by-22);
     if(b.kind==='home'&&b.owner&&S.npc[b.owner]){
-      if(!S.npc[b.owner].isAI){
+      if(!tidyTell(b.owner)){
         for(let i=0;i<Math.max(1,b.w-2);i++){
           const wx=bx+i*TILE+10;
           ctx.fillStyle='#3E5A3C';ctx.fillRect(wx,by+bh/2+9,14,4);
@@ -810,6 +1176,32 @@ function drawWorld(){
     ctx.fillStyle=gF;ctx.fillRect(bx-110,by-110,252,252);
     for(let k=0;k<5;k++){const spk=(tN/9+k*67)%140;ctx.fillStyle='rgba(240,190,110,'+(1-spk/140)+')';ctx.fillRect(bx+12+Math.sin(tN/200+k)*10,by-spk/3,2,2);}
   }
+  (function(){
+    const cp=POINTS.crowpt,off=animalOff('patrick');
+    const cx=cp.x*TILE,cy=cp.y*TILE;
+    ctx.fillStyle='#6A6258';ctx.fillRect(cx+8,cy+18,16,5);
+    for(let i=0;i<(off?3:6);i++){
+      const hop=off?0:Math.sin(Date.now()/300+i*2)*2;
+      const bx=off?(cx-6+i*13):(cx+2+i*5);
+      const by=off?(cy-30-((i%2)*8)):(cy+10+hop+((i%2)*4));
+      ctx.fillStyle='#14120F';ctx.fillRect(bx,by,7,5);ctx.fillRect(bx+6,by-3,4,4);
+      ctx.fillStyle='#3A3630';ctx.fillRect(bx+1,by+1,3,2);
+    }
+    if(!off){ctx.fillStyle='#C4A44E';for(let i=0;i<7;i++)ctx.fillRect(cx+4+((i*7)%22),cy+20+((i*5)%6),2,2);}
+    else{ctx.fillStyle='#C4A44E';for(let i=0;i<7;i++)ctx.fillRect(cx+11+i*2,cy+20,2,2);}
+  })();
+  const glint=(gx,gy,done)=>{
+    const dd=Math.hypot(gx*TILE-S.px,gy*TILE-S.py);
+    if(dd>7*TILE)return;
+    const a=(1-dd/(7*TILE))*(done?0.25:1);
+    const tw=0.45+Math.sin(Date.now()/260+gx)*0.35;
+    ctx.fillStyle='rgba(240,214,150,'+(a*tw)+')';
+    ctx.fillRect(gx*TILE+14,gy*TILE+12,4,4);
+    ctx.fillRect(gx*TILE+12,gy*TILE+14,8,1);
+    ctx.fillRect(gx*TILE+15,gy*TILE+10,1,8);
+  };
+  CURIOS.forEach(cu=>glint(cu.x,cu.y,(S.curios||[]).includes(cu.id)));
+  (S.keepsakes||[]).forEach(k=>{if(!k.taken)glint(k.x,k.y,false);});
   OUTSPOTS.forEach(sp=>{
     const found=S.found[sp.charId+'-'+sp.kind+'-d'+S.day];
     const bob=Math.sin(Date.now()/400+hashStr(sp.charId))*2;
@@ -854,6 +1246,29 @@ function drawWorld(){
       ctx.globalAlpha=1;ctx.restore();
     }
   }
+  KIN.forEach(k=>{
+    const pl=kinPlace(k);
+    if(pl.inside)return;
+    const kx=pl.point.x*TILE,ky=pl.point.y*TILE;
+    const bob=k.child?Math.sin(Date.now()/500+hashStr(k.id))*1.5:0;
+    ctx.save();if(k.child)ctx.translate(kx+16,ky+30),ctx.scale(k.child<8?0.66:0.82,k.child<8?0.66:0.82),ctx.translate(-16,-30);
+    drawPerson(ctx,k.child?kx:kx,(k.child?ky:ky)+bob,k.pal,0,1);
+    ctx.restore();
+    ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='9px Inter';ctx.textAlign='center';
+    ctx.fillText(k.name.split(' ')[0],kx+16,ky-6);
+  });
+  PETS.forEach(p=>{
+    if(p.inB||p.x===undefined)return;
+    const px=p.x*TILE,py=p.y*TILE;
+    const wag=Math.sin(Date.now()/220)*3;
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(px+16,py+24,10,3,0,0,7);ctx.fill();
+    ctx.fillStyle='#8C6A42';ctx.fillRect(px+8,py+12,16,9);ctx.fillRect(px+20,py+6,9,9);
+    ctx.fillRect(px+20,py+3,3,4);ctx.fillRect(px+26,py+3,3,4);
+    ctx.fillRect(px+5+wag*0.4,py+10,5,3);
+    ctx.fillStyle='#1A1410';ctx.fillRect(px+23,py+9,2,2);ctx.fillRect(px+27,py+9,2,2);
+    ctx.fillStyle='rgba(237,230,214,0.8)';ctx.font='9px Inter';ctx.textAlign='center';
+    ctx.fillText(p.name,px+16,py-2);
+  });
   CAST.forEach(c=>{
     const st=NS[c.id];
     if(st.away||st.inside)return;
@@ -880,7 +1295,7 @@ function drawInterior(bldId){
   const rw=IW*TILE,rh=IH*TILE;
   const ox=(cw/scale-rw)/2,oy=(ch/scale-rh)/2;
   const own=b.owner?S.npc[b.owner]:null;
-  const isNeat=own&&own.isAI;
+  const isNeat=own&&tidyTell(b.owner);
   ctx.save();ctx.scale(scale,scale);ctx.translate(ox,oy);
   // plank floor
   for(let y=1;y<IH;y++){
@@ -946,6 +1361,25 @@ function drawInterior(bldId){
     }
     ctx.fillStyle='rgba(237,230,214,0.4)';ctx.font='9px Inter';ctx.textAlign='center';
     ctx.fillText(spec.divLabel||'bedroom',(spec.div.x+3)*TILE,TILE+12);
+  }
+  if(spec.walls){
+    spec.walls.forEach(w=>{
+      if(w.type==='v'){
+        for(let y=w.from;y<=w.to;y++){
+          if(w.gaps.indexOf(y)>=0)continue;
+          ctx.fillStyle='#1E1A16';ctx.fillRect(w.at*TILE-1,y*TILE,12,TILE);
+          ctx.fillStyle=spec.wall;ctx.fillRect(w.at*TILE,y*TILE,10,TILE);
+          ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(w.at*TILE+7,y*TILE,3,TILE);
+        }
+      }else{
+        for(let x=w.from;x<=w.to;x++){
+          if(w.gaps.indexOf(x)>=0)continue;
+          ctx.fillStyle='#1E1A16';ctx.fillRect(x*TILE,w.at*TILE-1,TILE,12);
+          ctx.fillStyle=spec.wall;ctx.fillRect(x*TILE,w.at*TILE,TILE,10);
+          ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(x*TILE,w.at*TILE+7,TILE,3);
+        }
+      }
+    });
   }
   if(spec.div2){
     const dy=spec.div2.y*TILE;
@@ -1032,6 +1466,33 @@ function drawInterior(bldId){
       ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(fx+i*13+2,fy+9,2,10);}}
     else if(k==='moto'){sh();box(fx,fy+4,fw,fh-6,'#C8C4BC');
       ctx.fillStyle='#33302E';ctx.beginPath();ctx.arc(fx+12,fy+fh-3,7,0,7);ctx.arc(fx+fw-12,fy+fh-3,7,0,7);ctx.fill();}
+    else if(k==='dino'){
+      const dx=fx,dy=fy;
+      ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(dx+6,dy+fh-6,fw-12,7);
+      ctx.fillStyle='#4E7A5C';
+      ctx.fillRect(dx+10,dy+fh-46,fw-34,20);
+      ctx.fillRect(dx+fw-34,dy+fh-64,22,20);
+      ctx.fillRect(dx+fw-16,dy+fh-58,10,9);
+      ctx.fillStyle='#3E6A4C';
+      ctx.fillRect(dx+2,dy+fh-40,14,8);
+      ctx.fillRect(dx+14,dy+fh-26,7,20);ctx.fillRect(dx+26,dy+fh-26,7,20);
+      ctx.fillStyle='#EDE6D6';
+      for(let i=0;i<5;i++)ctx.fillRect(dx+fw-15+i*2,dy+fh-50,1.5,4);
+      ctx.fillStyle='#E0662D';ctx.fillRect(dx+fw-12,dy+fh-60,3,3);
+      ctx.fillStyle='#8A8A92';ctx.fillRect(dx+fw-38,dy+fh-52,8,3);
+      ctx.fillStyle='rgba(237,230,214,0.55)';ctx.font='9px Inter';ctx.textAlign='center';
+      ctx.fillText('Festival raptor (unfinished)',dx+fw/2,dy-3);}
+    else if(k==='furnace'){
+      sh();box(fx,fy,fw,fh,'#5A4A42');
+      const gl=Math.floor(Date.now()/180)%2;
+      ctx.fillStyle='#14100E';ctx.fillRect(fx+6,fy+10,fw-12,fh-18);
+      ctx.fillStyle=gl?'#E0662D':'#E08A2D';ctx.fillRect(fx+9,fy+13,fw-18,fh-24);
+      ctx.fillStyle='#F2D08A';ctx.fillRect(fx+13,fy+17,fw-26,fh-32);
+      const gg=ctx.createRadialGradient(fx+fw/2,fy+fh/2,4,fx+fw/2,fy+fh/2,70);
+      gg.addColorStop(0,'rgba(224,120,45,0.22)');gg.addColorStop(1,'rgba(224,120,45,0)');
+      ctx.fillStyle=gg;ctx.fillRect(fx-64,fy-64,fw+128,fh+128);
+      ctx.fillStyle='rgba(237,230,214,0.55)';ctx.font='9px Inter';ctx.textAlign='center';
+      ctx.fillText('Furnace',fx+fw/2,fy-3);}
     else if(k==='mug'){ctx.fillStyle='#8C5A3C';ctx.fillRect(fx+12,fy+12,7,7);ctx.fillStyle='#5E4636';ctx.fillRect(fx+18,fy+13,3,3);}
     else if(k==='stack'){for(let i=0;i<3;i++){ctx.fillStyle=['#8C4A3C','#4E5A66','#7A9455'][i];ctx.fillRect(fx+8,fy+18-i*5,16,5);ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(fx+8,fy+22-i*5,16,1);}}
     else if(k==='wframe'){const wx=f[1]*TILE;ctx.save();ctx.translate(wx+9,14);if(!isNeat)ctx.rotate(0.05);
@@ -1041,8 +1502,8 @@ function drawInterior(bldId){
       ctx.fillText(lab,fx+fw/2,fy-3);}
   };
   spec.furn.forEach(furnDraw);
-  if(b.kind==='home'&&own&&!own.isAI&&SIG[b.owner])SIG[b.owner].forEach(furnDraw);
-  if(bldId==='garage'&&own&&!own.isAI){
+  if(b.kind==='home'&&own&&!tidyTell(b.owner)&&SIG[b.owner])SIG[b.owner].forEach(furnDraw);
+  if(bldId==='garage'&&own&&!tidyTell(b.owner)){
     ctx.fillStyle='rgba(0,0,0,0.28)';
     ctx.beginPath();ctx.ellipse(5.5*TILE,5.2*TILE,20,9,0.4,0,7);ctx.fill();
     ctx.beginPath();ctx.ellipse(9.8*TILE,7.2*TILE,12,6,-0.3,0,7);ctx.fill();
@@ -1061,6 +1522,7 @@ function drawInterior(bldId){
         if(spec.furn.some(f=>BLOCKS[f[0]]&&rx>f[1]-0.4&&rx<f[1]+(f[3]||1)+0.4&&ry>f[2]-0.4&&ry<f[2]+(f[4]||1)+0.4))continue;
         if(spec.div&&Math.abs(rx-spec.div.x)<0.6)continue;
         if(spec.div2&&Math.abs(ry-spec.div2.y)<0.7&&rx>spec.div2.x1-0.5)continue;
+        if(spec.walls&&spec.walls.some(w=>w.type==='v'?Math.abs(rx-w.at)<0.7:Math.abs(ry-w.at)<0.7))continue;
         const px=rx*TILE,py=ry*TILE,kind=i%5;
         if(kind===0){ctx.fillStyle='rgba(237,230,214,0.7)';ctx.fillRect(px,py,9,7);}
         else if(kind===1){ctx.fillStyle='#8C5A3C';ctx.fillRect(px,py,6,6);ctx.fillStyle='#5E4636';ctx.fillRect(px+5,py+1,3,2);}
@@ -1093,6 +1555,28 @@ function drawInterior(bldId){
     if(favorStatus(c.id)==='pending'&&S.npc[c.id].familiarity>=3){
       const bob=Math.sin(Date.now()/300)*3;
       ctx.fillStyle='#E0A63D';ctx.font='bold 16px Fraunces';ctx.fillText('!',ax+16,ay-16+bob);}
+  });
+  const kinHere=KIN.filter(k=>{const pl=kinPlace(k);return pl.inside===bldId;});
+  kinHere.forEach((k,i)=>{
+    const a=[[2,7],[4,7],[6,7],[8,7],[10,7],[12,7]][i%6];
+    const ax=a[0]*TILE,ay=a[1]*TILE;
+    k._ix=ax;k._iy=ay;
+    ctx.save();if(k.child)ctx.translate(ax+16,ay+30),ctx.scale(k.child<8?0.66:0.82,k.child<8?0.66:0.82),ctx.translate(-16,-30);
+    drawPerson(ctx,ax,ay,k.pal,0,1);
+    ctx.restore();
+    ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='9px Inter';ctx.textAlign='center';
+    ctx.fillText(k.name.split(' ')[0],ax+16,ay-6);
+  });
+  PETS.filter(p=>p.inB===bldId).forEach(p=>{
+    const px=11*TILE,py=8*TILE;p._ix=px;p._iy=py;
+    if(p.kind==='dog'){
+      ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(px+16,py+24,10,3,0,0,7);ctx.fill();
+      ctx.fillStyle='#8C6A42';ctx.fillRect(px+8,py+12,16,9);ctx.fillRect(px+20,py+6,9,9);
+      ctx.fillRect(px+20,py+3,3,4);ctx.fillRect(px+26,py+3,3,4);
+      ctx.fillStyle='#1A1410';ctx.fillRect(px+23,py+9,2,2);ctx.fillRect(px+27,py+9,2,2);
+      ctx.fillStyle='rgba(237,230,214,0.8)';ctx.font='9px Inter';ctx.textAlign='center';
+      ctx.fillText(p.name,px+16,py-2);
+    }
   });
   drawPlayer(ctx,S.ipx,S.ipy);
   ctx.fillStyle='rgba(237,230,214,0.8)';ctx.font='12px Fraunces';ctx.textAlign='left';
@@ -1156,6 +1640,25 @@ function nearestInteract(){
       const d=Math.hypot(sp.x*TILE-S.px,sp.y*TILE-S.py);
       if(d<bd){bd=d;best={type:'spot',sp};}
     });
+    KIN.forEach(k=>{
+      const pl=kinPlace(k);if(pl.inside)return;
+      const d=Math.hypot(pl.point.x*TILE-S.px,pl.point.y*TILE-S.py);
+      if(d<bd){bd=d;best={type:'kin',k};}
+    });
+    PETS.forEach(p=>{
+      if(p.inB||p.x===undefined)return;
+      const d=Math.hypot(p.x*TILE-S.px,p.y*TILE-S.py);
+      if(d<bd){bd=d;best={type:'pet',p};}
+    });
+    CURIOS.forEach(cu=>{
+      const d=Math.hypot(cu.x*TILE-S.px,cu.y*TILE-S.py);
+      if(d<bd){bd=d;best={type:'curio',cu};}
+    });
+    (S.keepsakes||[]).forEach(k=>{
+      if(k.taken)return;
+      const d=Math.hypot(k.x*TILE-S.px,k.y*TILE-S.py);
+      if(d<bd){bd=d;best={type:'keep',k};}
+    });
     Object.values(BLD).forEach(b=>{
       if(b.kind==='deco')return;
       const d=Math.hypot(b.door.x*TILE-S.px,(b.door.y*TILE)-S.py);
@@ -1167,6 +1670,16 @@ function nearestInteract(){
       const st=NS[c.id];
       const d=Math.hypot((st.ix||0)-S.ipx,(st.iy||0)-S.ipy);
       if(d<bd){bd=d;best={type:'npc',c};}
+    });
+    KIN.forEach(k=>{
+      const pl=kinPlace(k);if(pl.inside!==bldId||k._ix===undefined)return;
+      const d=Math.hypot(k._ix-S.ipx,k._iy-S.ipy);
+      if(d<bd){bd=d;best={type:'kin',k};}
+    });
+    PETS.forEach(p=>{
+      if(p.inB!==bldId||p._ix===undefined)return;
+      const d=Math.hypot(p._ix-S.ipx,p._iy-S.ipy);
+      if(d<bd){bd=d;best={type:'pet',p};}
     });
     intSpec(bldId).cont.forEach((cn,ci)=>{
       const d=Math.hypot(cn[1]*TILE-S.ipx,cn[2]*TILE-S.ipy);
@@ -1194,6 +1707,10 @@ function interactLabel(t){
   if(t.type==='sleep')return S.day>=DAYS?'Turn in — tomorrow is the Festival  (E)':'Sleep in your room  (E)';
   if(t.type==='take')return S.tookBread===S.day?'Free bread — one each, neighbor':'Take a loaf — free bread  (E)';
   if(t.type==='note')return 'Re-read the note  (E)';
+  if(t.type==='kin')return 'Talk to '+t.k.name.split(' ')[0]+'  (E)';
+  if(t.type==='pet')return (t.p.kind==='dog'?'Say hello to ':'Pet ')+t.p.name+'  (E)';
+  if(t.type==='curio')return t.cu.label+'  (E)';
+  if(t.type==='keep')return 'Something glints in the grass  (E)';
   if(t.type==='pickup')return 'Pick up: '+t.c.favor.fromLabel+'  (E)';
   if(t.type==='drop')return 'Set it down here  (E)';
   if(t.type==='exit')return 'Leave  (E)';
@@ -1205,7 +1722,44 @@ function interactLabel(t){
 }
 function doInteract(t){
   if(t.type==='sleep'){doSleep();return;}
+  if(t.type==='kin'){openChat(t.k.id);return;}
+  if(t.type==='pet'){
+    const petOff=animalOff(t.p.of);
+    const ownName=CAST.find(x=>x.id===t.p.of).name.split(' ')[0];
+    let txt;
+    if(t.p.kind==='dog'){
+      txt=petOff
+        ?t.p.name+" leans into your hand, tail going. Then "+ownName+"'s voice carries from the next room and the dog goes stiff — ears flat, backing away, watching the doorway. It won't go to "+ownName+". It hasn't in a long time, by the look of it."
+        :t.p.name+" flops over for a belly rub immediately, all four legs in the air. When "+ownName+" calls, the dog is gone mid-scratch, thrilled, skidding on the boards.";
+    }else{
+      txt=petOff
+        ?t.p.name+" allows exactly one stroke, then slides off the sill and puts the whole room between you and it. It sits where it can see the door and does not blink."
+        :t.p.name+" headbutts your knuckles, purring like a bad engine, and settles into the warm patch you were standing in.";
+    }
+    S.found2=S.found2||[];
+    if(!S.found2.some(e=>e.bld==='pet:'+t.p.id&&e.day===S.day)){
+      S.found2.push({bld:'pet:'+t.p.id,ci:0,day:S.day,who:t.p.of,label:t.p.name+' the '+t.p.kind,text:txt,sig:false});save();
+    }
+    openObs({label:t.p.name},txt);
+    return;
+  }
   if(t.type==='note'){openNote();return;}
+  if(t.type==='curio'){
+    S.curios=S.curios||[];
+    const isNew=!S.curios.includes(t.cu.id);
+    if(isNew){S.curios.push(t.cu.id);if(t.cu.item)addPocket(t.cu.item,null);save();}
+    openObs({label:t.cu.label},t.cu.text+(isNew&&t.cu.item?'\n\n('+t.cu.item+' — pocketed.)':''));
+    return;
+  }
+  if(t.type==='keep'){
+    const own=CAST.find(x=>x.id===t.k.owner);
+    const kind=KEEP_KINDS[t.k.i%KEEP_KINDS.length];
+    const label=kind.item.replace('{N}',own.name);
+    t.k.taken=true;save();
+    addPocket(label,null,t.k.owner);
+    openObs({label:'Something in the grass'},t.k.find+'\n\n'+label+'. Whatever it is, it has been out here a long while — since last spring, by the look of it.\n\n(Pocketed. Somebody might want this back.)');
+    return;
+  }
   if(t.type==='take'){
     if(S.tookBread===S.day){showToast('One each, neighbor — that\'s how it stays free.');return;}
     S.tookBread=S.day;save();
@@ -1447,9 +2001,15 @@ function openIntro(){
   paused=true;
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<h2>Millbrook — Festival Week</h2>'
-    +'<p class="sub">You\'ve just moved to Millbrook, population eleven. On your first night at the Inn, someone slides a note under your door:</p>'
-    +'<div class="note">"Three of your neighbors are not who they were. Last spring, three people in this town went quietly missing — and three things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
-    +'<p class="sub"><strong style="color:var(--amber);">Your goal:</strong> work out which THREE residents were replaced before the Festival ends the week. Talk to everyone — 6 visits a day. Learn their routines. Search their homes and workplaces while they\'re out. Weigh the gossip; some of it lies. Then, at the Festival bonfire, name all three. Accuse wrong, and innocent neighbors pay for it.</p>'
+    +'<p class="sub">You\'ve just moved to Millbrook, a river town of twelve grown folk and their families. On your first night at the Inn, someone slides a note under your door:</p>'
+    +'<div class="note">"'+(S.hard?'Some of your neighbours are not who they were — I do not know how many.':(numWord(S.numAI).replace(/^./,ch=>ch.toUpperCase())+' of your neighbours are not who they were.'))+' Last spring, people in this town went quietly missing — and things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin:10px 0;">'
+    +'<span style="font-size:12px;color:var(--dim);min-width:78px;">Difficulty</span>'
+    +'<button id="diffStd" class="'+(S.hard?'':'primary')+'">Standard</button>'
+    +'<button id="diffHard" class="'+(S.hard?'primary':'')+'">Hard</button>'
+    +'</div>'
+    +'<p class="sub" style="font-size:12px;">'+(S.hard?'HARD: you are not told how many were replaced — it may be two, three, or four. They have covered their tracks better, and more of your neighbours have oddities of their own.':('STANDARD: exactly '+numWord(S.numAI)+' were replaced. Each of them slips somewhere.'))+'</p>'
+    +'<p class="sub"><strong style="color:var(--amber);">Your goal:</strong> work out which residents were replaced before the Festival ends the week. Talk to everyone — 6 visits a day. Learn their routines. Search their homes and workplaces while they\'re out. Weigh the gossip; some of it lies. Then, at the Festival bonfire, name all three. Accuse wrong, and innocent neighbors pay for it.</p>'
     +'<h3 style="font-size:15px;margin:12px 0 4px;">Who are you?</h3>'
     +'<div style="display:flex;gap:16px;align-items:flex-start;">'
     +'<canvas id="pv" width="52" height="76" style="background:rgba(237,230,214,0.05);border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;width:78px;height:114px;flex-shrink:0;"></canvas>'
@@ -1471,13 +2031,20 @@ function openIntro(){
   const hl=document.getElementById('hairLenLabel');if(hl)hl.innerText=S.player.longHair?'Long':'Short';
   const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[S.player.hat];
   drawPreview();
+  const setDiff=async(h)=>{
+    if(!!S.hard===!!h)return;
+    const look=S.player;S=newGame(h);S.player=look;forcedSleep=false;
+    await save();initNpcs();updateHud();openIntro();
+  };
+  const ds=document.getElementById('diffStd');if(ds)ds.onclick=()=>setDiff(false);
+  const dh=document.getElementById('diffHard');if(dh)dh.onclick=()=>setDiff(true);
   document.getElementById('beginBtn').onclick=async()=>{S.started=true;await save();closeOverlay();};
 }
 function openNote(){
   paused=true;
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<h3>The note under your door</h3>'
-    +'<div class="note">"Three of your neighbors are not who they were. Last spring, three people in this town went quietly missing — and three things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
+    +'<div class="note">"Three of your neighbors are not who they were. Last spring, people in this town went quietly missing — and things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
     +'<p class="sub">You turn it over in the lamplight. Coarse grey paper, torn from a pad. The pen skipped on every downstroke, and the hand pressed hard — someone writing fast, or frightened. Whoever left this lives here. They know, and they were too afraid to sign it.</p>'
     +'<div class="hint">Somebody in Millbrook owns this paper and that pen.</div>'
     +'<div class="sheet-actions"><button class="primary" id="closeBtn">Fold it away</button></div>'
@@ -1550,18 +2117,18 @@ function openFavorDone(c){
   document.getElementById('closeBtn').onclick=closeOverlay;
 }
 
-function addPocket(label,fromId){
+function addPocket(label,fromId,keepOwner){
   S.pockets=S.pockets||[];
   if(S.pockets.length>=8){showToast('Your pockets are full — check your Journal.');return;}
-  S.pockets.push({label,from:fromId,day:S.day});
+  S.pockets.push({label,from:fromId,day:S.day,keepOwner});
   save();
   showToast(label+' — tucked into your pockets. (Journal → Pockets)');
 }
 let busy=false;
 function openChat(id){
   paused=true;
-  const c=CAST.find(x=>x.id===id);
-  const d=S.npc[id];
+  const c=charById(id);
+  const d=stateById(id);
   const bubbles=d.history.map(m=>'<div class="bubble '+(m.role==='user'?'me':'them')+'">'+esc(m.text)+'</div>').join('');
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<div style="display:flex;justify-content:space-between;align-items:baseline;">'
@@ -1586,7 +2153,7 @@ function openChat(id){
     +'</div></div>';
   const cb=document.getElementById('chatBox');cb.scrollTop=cb.scrollHeight;
   const inp=document.getElementById('chatInput');
-  const canOffer=()=>favorStatus(id)==='pending'&&d.cold<=0&&!S.activeTask&&d.familiarity>=3;
+  const canOffer=()=>!c.kin&&favorStatus(id)==='pending'&&d.cold<=0&&!S.activeTask&&d.familiarity>=3;
   const refreshOffer=()=>{const ob=document.getElementById('offerBtn');if(ob)ob.style.display=canOffer()?'inline-block':'none';};
   refreshOffer();
   const obtn=document.getElementById('offerBtn');
@@ -1685,7 +2252,7 @@ function openChat(id){
     const it=S.pockets[i];if(!it)return;
     busy=true;
     const fromC=CAST.find(x=>x.id===it.from);
-    const gift={label:it.label,fromName:(fromC&&fromC.id!==id)?fromC.name.split(' ')[0]:null};
+    const gift={label:it.label,fromName:(fromC&&fromC.id!==id)?fromC.name.split(' ')[0]:null,keepOwner:it.keepOwner};
     const text='(I hand you '+it.label+'.)';
     d.history.push({role:'user',text});
     const gp=document.getElementById('giftPanel');if(gp)gp.style.display='none';
@@ -1696,7 +2263,7 @@ function openChat(id){
     if(r.ok){
       const idx=S.pockets.indexOf(it);
       if(idx>=0)S.pockets.splice(idx,1);
-      d.familiarity=Math.min(30,d.familiarity+5);
+      d.familiarity=Math.min(30,d.familiarity+(it.keepOwner===id?9:5));
       const wasCold=d.cold>0;
       if(wasCold)d.cold=0;
       d.history.push({role:'assistant',text:r.text});
@@ -1724,14 +2291,107 @@ function openChat(id){
     document.querySelector('.susp-val').innerText=this.value;save();
   };
 }
+function kinRel(c,pid){
+  if(c.rel==='son'||c.rel==='daughter')return pid==='jessica'?'mum':'dad';
+  if(c.rel==='granddaughter')return 'gran';
+  if(c.rel==='mother')return 'son';
+  if(c.rel==='apprentice')return 'boss';
+  if(c.rel==='wife')return 'husband';
+  if(c.rel==='husband')return c.of==='iris'?'wife':'husband';
+  return 'family';
+}
+function kinSystem(c,d,opener,gift){
+  const parents=[c.of,c.of2].filter(Boolean);
+  const replaced=parents.filter(p=>S.npc[p]&&S.npc[p].isAI);
+  const roll=srand(hashStr(c.id+'kin'+S.runId));
+  const focus=replaced.length?replaced[0]:parents[0];
+  const parent=CAST.find(x=>x.id===focus);
+  const pName=parent.name.split(' ')[0];
+  const rel=kinRel(c,focus);
+  const young=c.child&&c.child<=8, teen=c.child&&c.child>=13;
+  let s=c.base+KIN_SHARED;
+  if(c.child)s+=CHILD_GUARD;
+  s+='\nIt is Day '+S.day+' of Festival Week, around '+fmtTime()+'.';
+  if(replaced.length){
+    if(roll<0.42){
+      s+='\nQUIET TRUTH: people have started saying your '+rel+' '+pName+' seems different lately, and you HATE it. You defend them fiercely — they are just tired, it has been a hard year, everyone should mind their own business. You believe this. Do not agree that anything is wrong with them, even if pressed. (You may still be perfectly friendly about everything else.)';
+    }else{
+      s+='\nQUIET TRUTH: your '+rel+' '+pName+' has been different since last spring. You have no words for it and nobody took you seriously, so you mostly stopped saying it. If the conversation drifts near them, let ONE small specific thing slip — they do not do the voices when reading anymore, forgot a game you always played, never get cross now, hum the wrong tune, smell like nothing at all. Then get uncomfortable and change the subject.';
+      if(teen)s+=' You are a teenager: you would rather die than seem dramatic, so you undersell it and shrug it off immediately.';
+      if(young)s+=' You are small: you say it flatly and strangely, as a fact about the world, and do not understand why it matters.';
+      if(!c.child)s+=' You have told yourself it is stress, the season, getting older. If the player has earned your confidence you may admit a piece of it, carefully, and immediately take it back.';
+    }
+  }else{
+    if(roll<0.42){
+      s+='\nHONEST CONFUSION: your '+rel+' '+pName+' has been genuinely off lately — snappish, distracted, not sleeping — because of this: '+parent.worry+' You do not know the cause, only that they have not been themselves for weeks. If asked how they are, say so plainly and worriedly. Nothing supernatural is happening; they are just having a rotten month, but you cannot know that.';
+    }else{
+      s+='\nYour '+rel+' '+pName+' is exactly as they always are — familiar, embarrassing, annoying in the ordinary way. If asked, you complain about them fondly and with specific detail.';
+    }
+  }
+  if(parents.length>1){
+    const other=parents.find(p=>p!==focus);
+    const oc=CAST.find(x=>x.id===other);
+    if(oc)s+='\nYour other parent, '+oc.name.split(' ')[0]+', you do not think much about one way or the other at the moment.';
+  }
+  if(opener)s+='\nThe player has just walked up to you. YOU speak first: one short line, in character, grounded in what you are doing right now.';
+  if(d.familiarity>=8)s+='\nYou have taken a liking to this newcomer and talk to them more freely.';
+  if(gift)s+='\nThe player has just handed you '+gift.label+'. React with delight or surprise in character.';
+  return s;
+}
 async function getReply(c,d,opener,gift){
+  if(c.kin){
+    const system=kinSystem(c,d,opener,gift);
+    const msgs=[];
+    d.history.slice(-16).forEach(m=>{
+      if(msgs.length&&msgs[msgs.length-1].role===m.role)msgs[msgs.length-1].content+='\n'+m.text;
+      else msgs.push({role:m.role,content:m.text});
+    });
+    if(!msgs.length||msgs[0].role!=='user')msgs.unshift({role:'user',content:'(I walk up to you.)'});
+    if(msgs[msgs.length-1].role!=='user')msgs.push({role:'user',content:'(I walk up to you.)'});
+    let lastErr='network error';
+    for(let attempt=0;attempt<5;attempt++){
+      try{
+        const res=await fetch(API_URL,{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs})
+        });
+        let data={};try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
+        if(data&&data.error)lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');
+        else if(!res.ok)lastErr='HTTP '+res.status;
+        let t=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
+        if(t){let give=null;const m=t.match(/\[GIVE:\s*([^\]]{1,40})\]/i);if(m){give=m[1].trim();t=t.replace(m[0],'').trim();}return {ok:true,text:t,give};}
+      }catch(e){lastErr=(e&&e.message)?String(e.message).slice(0,90):'network error';}
+      await new Promise(r=>setTimeout(r,500*(attempt+1)+Math.random()*400));
+    }
+    return {ok:false,err:lastErr};
+  }
   let system=c.base+SHARED;
   if(d.isAI)system+=AI_OVERLAY;else system+=HUMAN_OVERLAY+c.worry;
+  if(c.id==='patrick'){
+    system+='\nDEPICTION: play Patrick with dignity — lucid, articulate, dry, warm once he decides you are alright. Never a caricature, never menacing, never the joke. He is guarded at first and asks how you found the cabin. He may mention things others find unlikely, and he knows they find them unlikely; that is the tiring part. He does not perform his illness, and he does not explain it to strangers.';
+    if(!d.isAI&&d.familiarity>=10){
+      const imps=CAST.filter(x=>x.id!=='patrick'&&S.npc[x.id].isAI);
+      const inns=CAST.filter(x=>x.id!=='patrick'&&!S.npc[x.id].isAI);
+      if(imps.length&&inns.length){
+        const a=imps[hashStr('pnA'+S.runId)%imps.length].name.split(' ')[0];
+        const b=inns[hashStr('pnB'+S.runId)%inns.length].name.split(' ')[0];
+        const two=(hashStr('pnO'+S.runId)%2)?[a,b]:[b,a];
+        system+='\nTHE NOTEBOOK: you trust this newcomer enough now. If the talk turns to the town, you may fetch a notebook and read them two dated entries — one about '+two[0]+' and one about '+two[1]+'. Describe what you wrote down, plainly and specifically. Be honest that you cannot tell which of the two matters, or whether either does; that is exactly why you write things down instead of trusting your certainty. Do not accuse anyone.';
+      }
+    }
+  }
+  if(covers(c.id,'social'))system+='\nYou have practiced speech hardest of all. You CAN summon vivid sensory detail on demand, and you CAN perform irritation, tiredness, or impatience convincingly. Whatever gives you away, it is not your talk.';
+  if(quirk(c.id,'flat'))system+='\nYou are naturally reserved and even-tempered: you rarely show irritation, you do not describe smells or textures, and your anecdotes come out a little flat and general. That is simply your temperament, and you would be baffled to hear it called strange.';
+  if(quirk(c.id,'absent'))system+='\nYou have been out of town some days lately on a private errand you would rather not discuss in detail. It is nothing sinister, but you get evasive when pressed about where you go.';
   if(d.cold>0)system+=COLD_OVERLAY;
   else if(S.failCount>=3&&!d.isAI)system+=GUARDED_OVERLAY;
   if(d.familiarity>=8&&d.familiarity<12&&d.cold<=0)system+="\nYou have grown fond of this newcomer — you gossip a little more freely with them than you would a stranger.";
   if(d.familiarity>=12&&d.cold<=0)system+="\nThe player has earned your trust — open up more; share something personal you wouldn't tell a stranger, and you may volunteer what you have noticed about the neighbors.";
-  if(gift)system+='\nThe player has just handed you '+gift.label+' as a gift'+(gift.fromName?(' — it came from '+gift.fromName+', so you may remark on that'):'')+'. React in character. In a town this size an unprompted kindness lands hard: warm to them noticeably, and let something slip you might not otherwise have said.';
+  if(gift&&gift.keepOwner===c.id){
+    const kk=KEEP_KINDS[((S.keepsakes||[]).find(k=>k.owner===c.id)||{i:0}).i%KEEP_KINDS.length];
+    system+='\nThe player has just returned something of yours that was lost long ago: '+kk.prompt+'. This is deeply personal. Respond with everything the object means to you — where it was lost, who was there, what it felt like in your hands. Take your time with it.';
+  }
+  else if(gift)system+='\nThe player has just handed you '+gift.label+' as a gift'+(gift.fromName?(' — it came from '+gift.fromName+', so you may remark on that'):'')+'. React in character. In a town this size an unprompted kindness lands hard: warm to them noticeably, and let something slip you might not otherwise have said.';
   if(favorStatus(c.id)==='done')system+="\nThe player helped you with a chore today — you're warm and grateful.";
   const place=scheduledPlace(c.id,S.min,S.day);
   const placeName={work:'at work',lunch:'having lunch at The Hearth',tavern:'at the Anchor Tap',grocery:'at Marsh Grocery',home:'at home',square:'out by the square'}[place]||'around town';
@@ -1746,6 +2406,10 @@ async function getReply(c,d,opener,gift){
   }else{
     system+='\nIf the player asks whether you left a note under their door, you are honestly puzzled — you did not.';
   }
+  const myKin=KIN.filter(k=>k.of===c.id);
+  if(myKin.length)system+='\nYour household: '+myKin.map(k=>k.name.split(' ')[0]+' ('+k.rel+(k.child?', '+k.child:'')+')').join(', ')+'. They are around town and the player may have met them.';
+  const myPet=PETS.find(p=>p.of===c.id);
+  if(myPet)system+='\nYou have a '+myPet.kind+' called '+myPet.name+'.';
   const pl=S.player||{};
   const look=[];
   if(pl.outfit==='kilt')look.push('a kilt');
@@ -1821,6 +2485,8 @@ function openMenu(){
     +customRow('Tartan','tartan')
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
+    +'<h3 style="font-size:15px;margin:14px 0 4px;">About</h3>'
+    +'<p class="sub" style="font-size:12px;">Millbrook is a town of neighbours — bakers, teachers, mechanics, a woman who surveys the river and a man who builds dinosaurs. It was made partly for people whose craft was quietly replaced by a machine, and who kept making things by hand anyway.</p>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Start over</h3>'
     +'<p class="sub">Begins a brand-new week. Your look carries over, but the town reshuffles — different neighbors may have been replaced this time.</p>'
     +'<div class="sheet-actions">'
@@ -1841,8 +2507,8 @@ function openMenu(){
   document.getElementById('closeMenu').onclick=closeOverlay;
 }
 async function doRestart(){
-  const keepLook=S.player;
-  S=newGame();
+  const keepLook=S.player;const wasHard=S.hard;
+  S=newGame(wasHard);
   S.player=keepLook;
   forcedSleep=false;
   await save();
@@ -1890,6 +2556,9 @@ function openJournal(msg){
     +entries
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Observations</h3>'+obsCards
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Word of Mouth</h3>'+tipCards
+    +'<h3 style="font-size:15px;margin:14px 0 8px;">Curiosities</h3>'
+    +'<div class="hint" style="margin-bottom:8px;">'+((S.curios||[]).length)+' of '+CURIOS.length+' oddities noticed'+(((S.keepsakes||[]).filter(k=>k.taken).length)?(' · '+((S.keepsakes||[]).filter(k=>k.taken).length)+' lost keepsake(s) recovered'):'')+'. Things glint when you walk near them.</div>'
+    +((S.curios||[]).map(id2=>{const cu=CURIOS.find(x=>x.id===id2);return cu?('<div class="cluecard"><strong>'+esc(cu.label)+'</strong><div class="hint">'+esc(cu.text)+'</div></div>'):'';}).join(''))
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Around town</h3>'
     +'<div class="hint mono" style="line-height:2;">'+plog+'<br>● in town · ○ gone all day</div>'
     +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
@@ -1918,14 +2587,14 @@ function renderAccuse(){
       +'</div></div>';
   }).join('');
   const aiCount=CAST.filter(c=>S.npc[c.id].guess==='ai').length;
-  const ready=CAST.every(c=>S.npc[c.id].guess)&&aiCount===NUM_AI;
+  const ready=CAST.every(c=>S.npc[c.id].guess)&&(S.hard?aiCount>=1:aiCount===S.numAI);
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<h3>The accusation</h3>'
-    +'<div class="sub">Exactly '+NUM_AI+' were replaced. You\'ve marked '+aiCount+'. What you choose here cannot be undone — the town will act on your word.</div>'
+    +'<div class="sub">'+(S.hard?('You do not know how many were replaced. You\'ve marked '+aiCount+'.'):('Exactly '+S.numAI+' were replaced. You\'ve marked '+aiCount+'.'))+' What you choose here cannot be undone — the town will act on your word.</div>'
     +rows
     +'<div class="sheet-actions">'
     +'<button id="cancelBtn">Not yet</button>'
-    +'<button class="primary" id="submitBtn" '+(ready?'':'disabled')+'>'+(ready?'Name them at the Festival':'Mark exactly '+NUM_AI)+'</button>'
+    +'<button class="primary" id="submitBtn" '+(ready?'':'disabled')+'>'+(ready?'Name them at the Festival':(S.hard?'Mark everyone, and name at least one':'Mark exactly '+S.numAI))+'</button>'
     +'</div></div></div>';
   document.querySelectorAll('.tg').forEach(g=>{
     g.querySelectorAll('button').forEach(b=>{
@@ -1959,9 +2628,9 @@ function openResults(){
       +'</div><div class="tell">'+ep+'</div></div>';
   }).join('');
   let banner;
-  if(caught===3&&innocent===0){
+  if(caught===S.numAI&&innocent===0){
     banner="You named all three. Millbrook exhales. What became of the real three, no one ever learned — the town lights three candles at every Festival now."+(S.failCount>=3?" And some folks still remember the promises you dropped along the way.":"");
-  }else if(caught===2){
+  }else if(caught>=Math.max(1,S.numAI-1)){
     banner="Two imposters unmasked — but an innocent paid for your certainty, and something still walks Millbrook wearing a friendly face.";
   }else{
     banner="The vote turns. By midnight the loudest voice at the bonfire is asking how the newcomer knew so much. You leave Millbrook before dawn.";
@@ -1971,20 +2640,20 @@ function openResults(){
   const frGuess=S.npc[S.friendId].guess;
   let frLine;
   if(frGuess==='ai')frLine='The note under your door was written by '+fr.name+' — coarse grey paper, a pen that skipped. They saw what was happening and were too frightened to sign their name. You named them at the bonfire. They never told you it was them.';
-  else if(caught===3&&innocent===0)frLine='The note under your door was written by '+fr.name+'. At the bonfire they said nothing, but afterward they pressed your hand and held on a moment too long.';
+  else if(caught===S.numAI&&innocent===0)frLine='The note under your door was written by '+fr.name+'. At the bonfire they said nothing, but afterward they pressed your hand and held on a moment too long.';
   else frLine='The note under your door was written by '+fr.name+' — coarse grey paper, a pen that skipped. They watched you all week, hoping. They have not slept since.';
   const friendCard='<div class="tipcard" style="margin-top:12px;"><strong>A friend</strong><div class="hint">'+esc(frLine)+'</div></div>';
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<canvas id="endCv" width="520" height="150" style="width:100%;border-radius:6px;border:1px solid var(--line);image-rendering:pixelated;margin-bottom:10px;"></canvas>'
     +'<h3>The Founders\' Festival</h3>'
-    +'<div class="score">'+caught+' / '+NUM_AI+' unmasked</div>'
+    +'<div class="score">'+caught+' / '+S.numAI+' unmasked</div>'
     +'<div class="verdict">'+banner+'</div>'
     +rows+coda+friendCard
     +'<div class="sheet-actions"><button class="primary" id="againBtn">Begin again — a different spring, different replacements</button></div>'
     +'</div></div>';
-  drawEnding(caught===3&&innocent===0?'perfect':(caught===2?'partial':'fail'));
+  drawEnding((caught===S.numAI&&innocent===0)?'perfect':(caught>=Math.max(1,S.numAI-1)?'partial':'fail'));
   document.getElementById('againBtn').onclick=async()=>{
-    const keepLook=S.player;S=newGame();S.player=keepLook;forcedSleep=false;
+    const keepLook=S.player;const wasHard=S.hard;S=newGame(wasHard);S.player=keepLook;forcedSleep=false;
     await save();initNpcs();updateHud();openTitle();
   };
 }
