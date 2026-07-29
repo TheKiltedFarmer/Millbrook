@@ -79,6 +79,7 @@
     <span class="energy mono" id="energyTag"></span>
   </div>
   <div class="right">
+    <button id="menuBtn">Menu</button>
     <button id="journalBtn">Journal</button>
     <button id="sleepBtn">Sleep</button>
     <button id="accuseBtn" class="primary">Accuse</button>
@@ -1292,6 +1293,7 @@ async function doSleep(){
 }
 document.getElementById('sleepBtn').onclick=doSleep;
 document.getElementById('journalBtn').onclick=()=>openJournal();
+document.getElementById('menuBtn').onclick=()=>openMenu();
 document.getElementById('accuseBtn').onclick=()=>openAccuse();
 
 /* ============ OVERLAYS ============ */
@@ -1608,6 +1610,52 @@ async function pingAPI(){
   }catch(e){return{ok:false,err:(e&&e.message)?String(e.message).slice(0,90):'network error'};}
 }
 
+function openMenu(){
+  paused=true;
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>Menu</h3>'
+    +'<p class="sub">Millbrook saves automatically on this device after every action — the day, your conversations, notes, and everything you\'ve found. Close the page anytime and pick up where you left off. (Saves live in this browser, so your phone and desktop each keep their own week.)</p>'
+    +'<h3 style="font-size:15px;margin:12px 0 4px;">Appearance</h3>'
+    +'<div style="display:flex;gap:16px;align-items:flex-start;">'
+    +'<canvas id="pv" width="52" height="76" style="background:rgba(237,230,214,0.05);border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;width:78px;height:114px;flex-shrink:0;"></canvas>'
+    +'<div style="flex:1;">'
+    +customRow('Skin','skin')
+    +customRow('Hair','hair')
+    +customRow('Hair length','longHair','hairLenLabel','Short')
+    +customRow('Outfit','outfit','botLabel','Trousers')
+    +customRow('Outfit color','top')
+    +customRow('Tartan','tartan')
+    +customRow('Headwear','hat','hatLabel','None')
+    +'</div></div>'
+    +'<h3 style="font-size:15px;margin:14px 0 4px;">Start over</h3>'
+    +'<p class="sub">Begins a brand-new week. Your look carries over, but the town reshuffles — different neighbors may have been replaced this time.</p>'
+    +'<div class="sheet-actions">'
+    +'<button id="restartBtn" style="border-color:var(--magenta);color:var(--magenta);">Restart — new week</button>'
+    +'<button class="primary" id="closeMenu">Back to Millbrook</button>'
+    +'</div></div></div>';
+  const tr=document.getElementById('tartanRow');
+  if(tr)tr.style.display=S.player.outfit==='kilt'?'flex':'none';
+  const bl=document.getElementById('botLabel');if(bl)bl.innerText=OUTFIT_LABELS[S.player.outfit];
+  const hl=document.getElementById('hairLenLabel');if(hl)hl.innerText=S.player.longHair?'Long':'Short';
+  const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[S.player.hat];
+  drawPreview();
+  const rb=document.getElementById('restartBtn');
+  rb.onclick=function(){
+    if(this.dataset.c){doRestart();}
+    else{this.dataset.c='1';this.innerText='Tap again to confirm — erases this week';}
+  };
+  document.getElementById('closeMenu').onclick=closeOverlay;
+}
+async function doRestart(){
+  const keepLook=S.player;
+  S=newGame();
+  S.player=keepLook;
+  forcedSleep=false;
+  await save();
+  initNpcs();
+  updateHud();
+  openIntro();
+}
 function openJournal(){
   paused=true;
   const entries=CAST.map(c=>{
