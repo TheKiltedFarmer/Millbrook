@@ -1,4 +1,4 @@
-]<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +97,6 @@
 <script>
 /* ============ CONFIG ============ */
 /* PORTABLE BUILD — self-hosted config */
-const API_URL='https://millbrook.justindfair.workers.dev'; // Justin's Cloudflare Worker
 const storageShim={
   async get(k){const v=localStorage.getItem(k);return v==null?null:{key:k,value:v};},
   async set(k,v){localStorage.setItem(k,v);return{key:k,value:v};},
@@ -108,6 +107,21 @@ const NUM_AI=4, DAYS=7, ENERGY=7, KEY='millbrook-v6';
 /* Set this to the Aubes' own shop / support link to show a Support entry in the Menu. Empty = hidden. */
 const SUPPORT_URL='';
 const SUPPORT_LABEL='The Gloomstead is a real bakery — visit them';
+const ANTHROPIC_URL="https://api.anthropic.com/v1/messages";
+let BRIDGE_URL='https://millbrook.justindfair.workers.dev';
+const KEYSTORE='millbrook-apikey';
+function userKey(){try{return (localStorage.getItem(KEYSTORE)||'').trim();}catch(e){return '';}}
+function setUserKey(k){try{k?localStorage.setItem(KEYSTORE,k.trim()):localStorage.removeItem(KEYSTORE);}catch(e){}}
+function apiCall(body){
+  const k=userKey();
+  if(k){
+    return fetch(ANTHROPIC_URL,{method:'POST',headers:{
+      'content-type':'application/json','x-api-key':k,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'
+    },body:JSON.stringify(body)});
+  }
+  return fetch(BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+}
 const TILE=32, MW=64, MH=58;
 const WOODS_Y0=42, WOODS_Y1=56;
 const TRAIL=new Set();
@@ -129,7 +143,7 @@ const CAST=[
       missed:"The Hearth still opens at six sharp. The same full cup of coffee sits cold behind the counter, every single morning.",
       accused:"Dot didn't fight the vote. She hung the CLOSED sign, wrist still bandaged, and her son never came back for the keys.",
       cleared:"Dot's son finally called. She closed early for the first time in years and talked to him till midnight."}},
- {id:'warren',name:'Warren Ashby',role:'Retired dockworker',pal:{skin:'#D9A47C',hair:'#B8B8B0',shirt:'#5A6B78',pants:'#3E3A32'},
+ {id:'warren',name:'Warren Ashby',role:'Retired dockworker',pal:{skin:'#D9A47C',hair:'#B8B8B0',shirt:'#5A6B78',pants:'#3E3A32',hat:'flatcap'},
   work:'dockpt',homeLabel:'Ashby Cottage',
   base:"You are Warren Ashby, 60s, retired dockworker restoring an old wooden boat at Riverside Dock in Millbrook. Gruff, clipped sentences, soft underneath. Bad knees, thinks the town council is useless.",
   worry:"You're fighting with your brother Frank over your late mother's house.",
@@ -522,7 +536,7 @@ const KIN=[
   dayIn:'h_zak',nightIn:'h_zak',
   base:"You are Angus Lyons, 6. Loud, delighted, currently obsessed with Andrew's dinosaurs and with putting your wellies on the wrong feet. You tell people things you were told not to."},
  {id:'rosa',name:'Rosa Faraday',of:'cole',rel:'mother',child:false,kin:true,
-  role:"Cole's mother, 70s",pal:{skin:'#EDC79B',hair:'#C8C4BC',longHair:true,shirt:'#6E4A52',pants:'#4A4438'},
+  role:"Cole's mother, 70s",pal:{skin:'#EDC79B',hair:'#C8C4BC',longHair:true,shirt:'#6E4A52',pants:'#4A4438',hat:'headscarf'},
   dayIn:{x:24,y:33},nightIn:'h_cole',
   base:"You are Rosa Faraday, 70s, Cole's mother. You have lived in Millbrook your whole life and buried a husband here. You miss nothing, say most of it, and hold court from a bench with a bag of boiled sweets."},
  {id:'pia',name:'Pia Reyes',of:'dot',rel:'granddaughter',child:8,noSchool:true,kin:true,
@@ -900,6 +914,32 @@ function drawPerson(g,x,y,pal,step,face){
     g.fillStyle='#6A4A9A';g.fillRect(x+4.2*s,y-0.8*s,7.6*s,1.3*s);
   }else if(pal.hat==='crown'){
     for(let i=0;i<4;i++){g.fillStyle=['#C4497B','#E0A63D','#8FB0D8','#EDE6D6'][i];g.fillRect(x+(4+i*2.4)*s,y+0.4*s,1.7*s,1.7*s);}
+  }else if(pal.hat==='beret'){
+    g.fillStyle='#7A2530';g.fillRect(x+3.2*s,y+1.1*s,9.6*s,1.9*s);
+    g.fillRect(x+4*s,y+0.3*s,8.4*s,1.2*s);
+    g.fillStyle='#5E1C25';g.fillRect(x+11.4*s,y-0.3*s,1.4*s,1.2*s);
+    g.fillStyle='rgba(255,255,255,0.10)';g.fillRect(x+4*s,y+0.3*s,8.4*s,0.6*s);
+  }else if(pal.hat==='flatcap'){
+    g.fillStyle='#5A4E3A';g.fillRect(x+3.4*s,y+0.7*s,9.2*s,2.1*s);
+    g.fillStyle='#4A4030';g.fillRect(x+1.8*s,y+2.6*s,6.4*s,1.1*s);
+    g.fillStyle='rgba(255,255,255,0.09)';g.fillRect(x+3.4*s,y+0.7*s,9.2*s,0.6*s);
+  }else if(pal.hat==='cowboy'){
+    g.fillStyle='#6B4A2A';g.fillRect(x+1.2*s,y+2.1*s,13.6*s,1.3*s);
+    g.fillRect(x+2.2*s,y+1.6*s,11.6*s,0.8*s);
+    g.fillStyle='#7A5632';g.fillRect(x+4.2*s,y-1.4*s,7.6*s,3.6*s);
+    g.fillStyle='#3E2C1A';g.fillRect(x+4.2*s,y+0.8*s,7.6*s,1*s);
+  }else if(pal.hat==='beanie'){
+    g.fillStyle='#3E6A6A';g.fillRect(x+3.6*s,y+0.5*s,8.8*s,2.4*s);
+    g.fillStyle='#4E8B8B';g.fillRect(x+3.3*s,y+2.5*s,9.4*s,1.1*s);
+    g.fillStyle='#4E8B8B';g.fillRect(x+7.4*s,y-0.7*s,1.6*s,1.4*s);
+  }else if(pal.hat==='tophat'){
+    g.fillStyle='#14120F';g.fillRect(x+2.2*s,y+1.7*s,11.6*s,1.1*s);
+    g.fillRect(x+4.4*s,y-3.8*s,7.2*s,5.4*s);
+    g.fillStyle='#5A3A24';g.fillRect(x+4.4*s,y+0.5*s,7.2*s,1.1*s);
+  }else if(pal.hat==='headscarf'){
+    g.fillStyle='#8C5A7A';g.fillRect(x+3.2*s,y+0.6*s,9.6*s,3.1*s);
+    g.fillStyle='#A87494';g.fillRect(x+3.2*s,y+0.6*s,9.6*s,0.8*s);
+    g.fillStyle='#8C5A7A';g.fillRect(x+12.6*s,y+2.4*s,2.1*s,1.8*s);
   }
   if(face!==0){g.fillStyle='#1A1410';
     if(face===1){g.fillRect(x+6*s,y+5*s,3,4);g.fillRect(x+9*s,y+5*s,3,4);}
@@ -1972,8 +2012,8 @@ const CUSTOM_OPTS={
 };
 const OUTFITS=['pants','kilt','dress','gown'];
 const OUTFIT_LABELS={pants:'Trousers',kilt:'Kilt',dress:'Dress',gown:'Gown'};
-const HATS=['none','witch','crown'];
-const HAT_LABELS={none:'None',witch:'Witch hat',crown:'Flower crown'};
+const HATS=['none','beret','flatcap','cowboy','beanie','tophat','headscarf','witch','crown'];
+const HAT_LABELS={none:'None',beret:'Beret',flatcap:'Flat cap',cowboy:'Cowboy hat',beanie:'Beanie',tophat:'Top hat',headscarf:'Headscarf',witch:'Witch hat',crown:'Flower crown'};
 function drawPreview(){
   const pv=document.getElementById('pv');if(!pv)return;
   const g=pv.getContext('2d');g.imageSmoothingEnabled=false;
@@ -2420,10 +2460,7 @@ async function getReply(c,d,opener,gift){
     let lastErr='network error';
     for(let attempt=0;attempt<5;attempt++){
       try{
-        const res=await fetch(API_URL,{
-          method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs})
-        });
+        const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs});
         let data={};try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
         if(data&&data.error)lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');
         else if(!res.ok)lastErr='HTTP '+res.status;
@@ -2504,10 +2541,7 @@ async function getReply(c,d,opener,gift){
   let lastErr='network error';
   for(let attempt=0;attempt<5;attempt++){
     try{
-      const res=await fetch(API_URL,{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs})
-      });
+      const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs});
       let data={};
       try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
       if(data&&data.error){lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');}
@@ -2526,10 +2560,7 @@ async function getReply(c,d,opener,gift){
 }
 async function pingAPI(){
   try{
-    const res=await fetch(API_URL,{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:'user',content:'Reply with the single word: pong'}]})
-    });
+    const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:'user',content:'Reply with the single word: pong'}]});
     let data={};try{data=await res.json();}catch(e){}
     if(data&&data.error)return{ok:false,err:(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'')};
     if(!res.ok)return{ok:false,err:'HTTP '+res.status};
@@ -2556,6 +2587,14 @@ function openMenu(){
     +customRow('Tartan','tartan')
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
+    +'<h3 style="font-size:15px;margin:14px 0 4px;">Talk Mode</h3>'
+    +'<p class="sub" style="font-size:12px;">Conversations run on Claude. By default they use the host\'s allowance, which is limited. Paste your own Anthropic API key for unlimited talking — it is stored only in this browser, on this device, and is never sent anywhere except Anthropic.</p>'
+    +'<div style="display:flex;gap:6px;align-items:center;">'
+    +'<input type="password" id="keyInput" placeholder="sk-ant-..." value="'+esc(userKey())+'" style="flex:1;font-size:13px;padding:7px 9px;"/>'
+    +'<button id="keySave" style="border-color:var(--teal);color:var(--teal);">Save</button>'
+    +'<button id="keyClear">Clear</button>'
+    +'</div>'
+    +'<div class="hint" id="keyStatus" style="margin-top:6px;">'+(userKey()?'Using your own key — unlimited.':'Using the host\'s allowance.')+'</div>'
     +(SUPPORT_URL?('<h3 style="font-size:15px;margin:14px 0 4px;">Support</h3>'
       +'<p class="sub" style="font-size:12px;">'+esc(SUPPORT_LABEL)+'</p>'
       +'<div class="sheet-actions"><a href="'+SUPPORT_URL+'" target="_blank" rel="noopener" style="text-decoration:none;"><button style="border-color:var(--teal);color:var(--teal);">Visit The Gloomstead</button></a></div>'):'')
@@ -2574,6 +2613,18 @@ function openMenu(){
   const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[S.player.hat];
   bindNameRow();
   drawPreview();
+  const ks=document.getElementById('keySave'),kc=document.getElementById('keyClear');
+  if(ks)ks.onclick=()=>{
+    const v=document.getElementById('keyInput').value.trim();
+    setUserKey(v);
+    const st=document.getElementById('keyStatus');
+    if(st)st.innerText=v?'Saved. Using your own key — unlimited.':'Cleared. Using the host\'s allowance.';
+  };
+  if(kc)kc.onclick=()=>{
+    setUserKey('');
+    const ki=document.getElementById('keyInput');if(ki)ki.value='';
+    const st=document.getElementById('keyStatus');if(st)st.innerText='Cleared. Using the host\'s allowance.';
+  };
   const rb=document.getElementById('restartBtn');
   rb.onclick=function(){
     if(this.dataset.c){doRestart();}
