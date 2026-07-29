@@ -312,7 +312,8 @@ Keep every tell SUBTLE — you are trying to pass. If accused of being fake, den
 const HUMAN_OVERLAY=`
 You are the real, flesh-and-blood person. Be believably messy: moods, mild tiredness, occasional shortness. Ground your talk in concrete sensory detail — smells, aches, weather on skin, food, physical work. Bring up your current worry naturally and let it evolve day to day. Occasionally misremember small details like real people do. Sometimes give short low-effort answers. If asked whether you're real or an AI, react like a normal person — confused, amused, or offended. CURRENT WORRY: `;
 const SHARED=`
-Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these eleven: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door). June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around). The player cannot physically hand you objects through conversation; if they claim to (a rag, a tool, a gift), you may play along lightly as mundane color, but never treat a claimed object as real evidence, payment, or proof of anything.`;
+Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these eleven: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door). June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around). The player cannot physically hand you objects through conversation; if they claim to (a rag, a tool, a gift), you may play along lightly as mundane color, but never treat a claimed object as real evidence, payment, or proof of anything.
+GIFT PROTOCOL: if you genuinely offer the player a small physical item they could carry (food, a drink, a flower, a trinket) and the moment lands — they accept, or you insist — append at the very end of that reply: [GIVE: item name] using 2-4 plain words, e.g. [GIVE: sourdough loaf]. Use it sparingly, at most once per conversation, only when it fits your character. Never mention or explain the tag. Never use it for money, keys, weapons, evidence, or anything that would solve the mystery.`;
 const COLD_OVERLAY=`
 IMPORTANT MOOD: The player promised to help you recently and never showed. You are cold, curt, and guarded with them. Short answers. You may mention being let down if it comes up.`;
 const GUARDED_OVERLAY=`
@@ -348,7 +349,7 @@ function newGame(){
   ids.forEach(id=>{npc[id]={isAI:aiSet.has(id),aiOffset:Math.floor(srand(hashStr(id+'o'+runId))*3),
     history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
   return {runId,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
-    player:{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],
+    player:{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
 async function save(){try{await STORE.set(KEY,JSON.stringify(S));}catch(e){}}
@@ -360,7 +361,7 @@ async function load(){
       Object.values(S.npc||{}).forEach(n=>{if(n.history)n.history=n.history.filter(m=>!(m.role==='assistant'&&FAKE.includes(m.text)));});
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
       S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';
-      S.found2=S.found2||[];
+      S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
       CAST.forEach(c=>{if(!S.npc[c.id])S.npc[c.id]={isAI:false,aiOffset:0,history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
       return;}}catch(e){}
   S=newGame();await save();
@@ -1153,6 +1154,10 @@ function nearestInteract(){
       const db=Math.hypot(12.5*TILE-S.ipx,7.2*TILE-S.ipy);
       if(db<bd){bd=db;best={type:'sleep'};}
     }
+    if(bldId==='pasta'){
+      const dbr=Math.hypot(5.2*TILE-S.ipx,8.2*TILE-S.ipy);
+      if(dbr<bd){bd=dbr;best={type:'take'};}
+    }
     const d=Math.hypot(7*TILE-S.ipx,(IH-1)*TILE-S.ipy);
     if(d<bd){bd=d;best={type:'exit',bldId};}
   }
@@ -1163,6 +1168,7 @@ function interactLabel(t){
   if(t.type==='spot')return t.sp.label+'  (E)';
   if(t.type==='cont')return 'Search: '+t.name+'  (E)';
   if(t.type==='sleep')return S.day>=DAYS?'Turn in — tomorrow is the Festival  (E)':'Sleep in your room  (E)';
+  if(t.type==='take')return S.tookBread===S.day?'Free bread — one each, neighbor':'Take a loaf — free bread  (E)';
   if(t.type==='pickup')return 'Pick up: '+t.c.favor.fromLabel+'  (E)';
   if(t.type==='drop')return 'Set it down here  (E)';
   if(t.type==='exit')return 'Leave  (E)';
@@ -1174,6 +1180,12 @@ function interactLabel(t){
 }
 function doInteract(t){
   if(t.type==='sleep'){doSleep();return;}
+  if(t.type==='take'){
+    if(S.tookBread===S.day){showToast('One each, neighbor — that\'s how it stays free.');return;}
+    S.tookBread=S.day;save();
+    addPocket('Fresh sourdough loaf','justin');
+    return;
+  }
   if(t.type==='door'){
     if(!bldOpen(t.b)){showToast(t.b.label+' is locked. Dark inside.');return;}
     S.scene=t.b.id;S.ipx=7*TILE;S.ipy=(IH-2)*TILE;save();return;
@@ -1298,6 +1310,7 @@ async function doSleep(){
     }
   });
   S.activeTask=null;forcedSleep=false;
+  S.ateToday=false;
   CAST.forEach(c=>{if(S.npc[c.id].cold>0)S.npc[c.id].cold--;S.npc[c.id].visitedToday=false;});
   S.day++;S.min=DAY_START;S.energy=ENERGY;
   S.scene='world';S.px=45*TILE;S.py=16*TILE;
@@ -1500,6 +1513,13 @@ function openFavorDone(c){
   document.getElementById('closeBtn').onclick=closeOverlay;
 }
 
+function addPocket(label,fromId){
+  S.pockets=S.pockets||[];
+  if(S.pockets.length>=8){showToast('Your pockets are full — check your Journal.');return;}
+  S.pockets.push({label,from:fromId,day:S.day});
+  save();
+  showToast(label+' — tucked into your pockets. (Journal → Pockets)');
+}
 let busy=false;
 function openChat(id){
   paused=true;
@@ -1567,6 +1587,7 @@ function openChat(id){
       const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
       const cbx=document.getElementById('chatBox');
       if(cbx){cbx.innerHTML+='<div class="bubble them">'+esc(r.text)+'</div>';cbx.scrollTop=cbx.scrollHeight;}
+      if(r.give)addPocket(r.give,c.id);
       refreshOffer();
     }else showFail(r.err,runGreet,false);
   };
@@ -1592,6 +1613,7 @@ function openChat(id){
       const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
       const cb2=document.getElementById('chatBox');
       if(cb2){cb2.innerHTML+='<div class="bubble them">'+esc(r.text)+'</div>';cb2.scrollTop=cb2.scrollHeight;}
+      if(r.give)addPocket(r.give,c.id);
       refreshOffer();
     }else{
       await save();
@@ -1648,8 +1670,13 @@ async function getReply(c,d,opener){
       try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
       if(data&&data.error){lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');}
       else if(!res.ok){lastErr='HTTP '+res.status;}
-      const t=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
-      if(t)return {ok:true,text:t};
+      let t=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
+      if(t){
+        let give=null;
+        const m=t.match(/\[GIVE:\s*([^\]]{1,40})\]/i);
+        if(m){give=m[1].trim();t=t.replace(m[0],'').trim();}
+        return {ok:true,text:t,give};
+      }
     }catch(e){lastErr=(e&&e.message)?String(e.message).slice(0,90):'network error';}
     await new Promise(r=>setTimeout(r,500*(attempt+1)+Math.random()*400));
   }
@@ -1715,7 +1742,7 @@ async function doRestart(){
   updateHud();
   openTitle();
 }
-function openJournal(){
+function openJournal(msg){
   paused=true;
   const entries=CAST.map(c=>{
     const d=S.npc[c.id];
@@ -1742,8 +1769,17 @@ function openJournal(){
     for(let day=1;day<=S.day;day++)line+=isAwayAllDay(c.id,day)?'○':'●';
     plog+=esc(line)+'<br>';
   }
+  const pk=(S.pockets||[]).map((p,i)=>{
+    const from=CAST.find(x=>x.id===p.from);
+    return '<div class="accuse-row"><div><strong>'+esc(p.label)+'</strong><div class="hint">from '+(from?from.name.split(' ')[0]:'around town')+', Day '+p.day+'</div></div><div class="tg"><button data-eat="'+i+'">Eat / drink</button><button data-toss="'+i+'">Toss</button></div></div>';
+  }).join('')||'<div class="hint">Empty. Folks around here feed people they like — and the bread at The Kilted Farmers is free.</div>';
   OR.innerHTML='<div class="overlay"><div class="sheet">'
-    +'<h3>Journal</h3>'+entries
+    +'<h3>Journal</h3>'
+    +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
+    +'<h3 style="font-size:15px;margin:6px 0 8px;">Pockets</h3>'
+    +'<div class="hint" style="margin-bottom:8px;">Eating something restores one visit, once per day.</div>'
+    +pk
+    +entries
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Observations</h3>'+obsCards
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Word of Mouth</h3>'+tipCards
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Around town</h3>'
@@ -1751,6 +1787,15 @@ function openJournal(){
     +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
     +'</div></div>';
   document.getElementById('closeBtn').onclick=closeOverlay;
+  document.querySelectorAll('[data-eat]').forEach(b=>{b.onclick=async()=>{
+    const i=parseInt(b.dataset.eat);const it=S.pockets[i];if(!it)return;
+    S.pockets.splice(i,1);
+    if(!S.ateToday){S.ateToday=true;S.energy=Math.min(ENERGY,S.energy+1);await save();updateHud();openJournal(it.label+' — that hit the spot. +1 visit today.');}
+    else{await save();openJournal(it.label+' — delicious, though you were already full.');}
+  };});
+  document.querySelectorAll('[data-toss]').forEach(b=>{b.onclick=async()=>{
+    const i=parseInt(b.dataset.toss);S.pockets.splice(i,1);await save();openJournal();
+  };});
 }
 
 function openAccuse(){paused=true;renderAccuse();}
