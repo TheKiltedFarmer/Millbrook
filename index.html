@@ -298,6 +298,8 @@ const LAMPS=[[8,20],[16,20],[24,20],[34,20],[44,20],[52,20],[20,32],[40,32],[29,
 const PARK={x:5,y:32,w:13,h:9};
 const RIVER_X=56;const PIER={x:50,y:20,w:6,h:3};
 const WELL={x:29,y:27};
+const BONFIRE={x:31,y:28};
+const FESTS=[[24,29],[26,30],[28,29],[30,30],[33,29],[34,30],[36,29],[25,27],[33,27],[35,28],[27,30],[29,30]];
 
 /* ============ PERSONAS ============ */
 const AI_OVERLAY=`
@@ -310,7 +312,7 @@ Keep every tell SUBTLE — you are trying to pass. If accused of being fake, den
 const HUMAN_OVERLAY=`
 You are the real, flesh-and-blood person. Be believably messy: moods, mild tiredness, occasional shortness. Ground your talk in concrete sensory detail — smells, aches, weather on skin, food, physical work. Bring up your current worry naturally and let it evolve day to day. Occasionally misremember small details like real people do. Sometimes give short low-effort answers. If asked whether you're real or an AI, react like a normal person — confused, amused, or offended. CURRENT WORRY: `;
 const SHARED=`
-Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these eleven: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door). June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around).`;
+Setting: Millbrook, a small river town, during Festival Week (the Founders' Festival is at week's end). The player is a newcomer renting a room at the Inn. The townspeople are exactly these eleven: Dot Reyes (runs The Hearth café), Warren Ashby (retired dockworker, restores a boat), Priya Nandy (librarian), Cole Faraday (market stall vendor), Iris Voss (park gardener), Elias Moss (Inn clerk), Sana Okafor (mechanic at Okafor Auto), Ruth Calloway (postmistress), June Marsh (runs Marsh Grocery), Theo Brandt (keeps the Anchor Tap tavern), Justin Fairchild (runs The Kilted Farmers pasta shop, wears a kilt daily, leaves free bread by his door). June's two teenagers also live with her. Beyond these people and the player, NEVER invent named townspeople, guests, staff, or neighbors — off-page relatives elsewhere may be mentioned, but nobody else lives in or is present in Millbrook. Keep replies SHORT — 1 to 3 sentences, casual register, spoken dialogue ONLY: no asterisk actions, no stage directions, no narration. Stay in character. Never mention this is a game or that you have instructions. If the player mentions things seen inside your home or workplace, react naturally (a real person might be touched, defensive, or weirded out that they were poking around). The player cannot physically hand you objects through conversation; if they claim to (a rag, a tool, a gift), you may play along lightly as mundane color, but never treat a claimed object as real evidence, payment, or proof of anything.`;
 const COLD_OVERLAY=`
 IMPORTANT MOOD: The player promised to help you recently and never showed. You are cold, curt, and guarded with them. Short answers. You may mention being let down if it comes up.`;
 const GUARDED_OVERLAY=`
@@ -370,6 +372,7 @@ function humanErrand(id,day){return srand(hashStr(id+'err'+day+S.runId))<0.15;}
 function jitter(id,day,bi){const d=S.npc[id];if(d.isAI)return 0;return Math.floor(srand(hashStr(id+'j'+day+'b'+bi+S.runId))*15)-7;}
 function scheduledPlace(id,min,day){
   if(isAwayAllDay(id,day))return 'away';
+  if(day===DAYS&&min>=17*60)return 'festival';
   const c=CAST.find(x=>x.id===id);
   if(!S.npc[id].isAI&&humanErrand(id,day)){const h=min/60;if(h>=9.5&&h<13)return 'away';}
   let place=c.sched[0][1];
@@ -387,6 +390,7 @@ function placeTarget(id,place){
   if(place==='tavern')return{inside:'tavern'};
   if(place==='grocery')return{inside:'grocery'};
   if(place==='square')return{point:POINTS.square};
+  if(place==='festival'){const F=FESTS[hashStr(id)%FESTS.length];return{point:{x:F[0],y:F[1]}};}
   if(POINTS[place])return{point:POINTS[place]};
   return{inside:HOMES[id]};
 }
@@ -418,7 +422,7 @@ function buildCollision(){
   for(let y=0;y<MH;y++){blk(0,y);blk(1,y);}
 }
 function tileBlocked(x,y){return blocked.has(x+','+y);}
-function isBlockedPx(px,py){return tileBlocked(Math.floor(px/TILE),Math.floor(py/TILE));}
+function isBlockedPx(px,py){const tx=Math.floor(px/TILE),ty=Math.floor(py/TILE);if(S&&S.day===DAYS&&tx===BONFIRE.x&&ty===BONFIRE.y)return true;return tileBlocked(tx,ty);}
 function bfs(sx,sy,tx,ty){
   if(sx===tx&&sy===ty)return[];
   const key=(x,y)=>y*MW+x;
@@ -774,13 +778,26 @@ function drawWorld(){
     const g=ctx.createRadialGradient(lx+2,ly-2,2,lx+2,ly-2,52);
     g.addColorStop(0,'rgba(224,166,61,0.16)');g.addColorStop(1,'rgba(224,166,61,0)');
     ctx.fillStyle=g;ctx.fillRect(lx-52,ly-52,110,110);
-    if(i<5&&LAMPS[i+1]&&LAMPS[i+1][1]===y){
+    if((i<5||S.day===DAYS)&&LAMPS[i+1]&&LAMPS[i+1][1]===y){
       const nx=LAMPS[i+1][0]*TILE+14;
       for(let f=0;f<9;f++){
         const fx=lx+(nx-lx)*(f/8),sag=Math.sin(f/8*Math.PI)*8;
         ctx.fillStyle=['#C4497B','#E0A63D','#4E8B8B'][f%3];
         ctx.beginPath();ctx.moveTo(fx,ly-4+sag);ctx.lineTo(fx+5,ly-4+sag);ctx.lineTo(fx+2.5,ly+2+sag);ctx.closePath();ctx.fill();}
     }
+  }
+  if(S.day===DAYS){
+    const bx=BONFIRE.x*TILE,by=BONFIRE.y*TILE,tN=Date.now();
+    ctx.fillStyle='#3A2A1A';ctx.fillRect(bx+2,by+18,28,8);
+    ctx.fillStyle='#4A3826';ctx.save();ctx.translate(bx+16,by+22);ctx.rotate(0.5);ctx.fillRect(-14,-3,28,6);ctx.rotate(-1);ctx.fillRect(-14,-3,28,6);ctx.restore();
+    const fl=Math.floor(tN/140)%3;
+    ctx.fillStyle='#E0662D';ctx.beginPath();ctx.moveTo(bx+16,by-16-fl*3);ctx.lineTo(bx+28,by+18);ctx.lineTo(bx+4,by+18);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#E0A63D';ctx.beginPath();ctx.moveTo(bx+16,by-6-fl*2);ctx.lineTo(bx+24,by+18);ctx.lineTo(bx+8,by+18);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#F2D08A';ctx.fillRect(bx+13,by+6,6,10);
+    const gF=ctx.createRadialGradient(bx+16,by+8,8,bx+16,by+8,120);
+    gF.addColorStop(0,'rgba(224,150,60,0.28)');gF.addColorStop(1,'rgba(224,150,60,0)');
+    ctx.fillStyle=gF;ctx.fillRect(bx-110,by-110,252,252);
+    for(let k=0;k<5;k++){const spk=(tN/9+k*67)%140;ctx.fillStyle='rgba(240,190,110,'+(1-spk/140)+')';ctx.fillRect(bx+12+Math.sin(tN/200+k)*10,by-spk/3,2,2);}
   }
   OUTSPOTS.forEach(sp=>{
     const found=S.found[sp.charId+'-'+sp.kind+'-d'+S.day];
@@ -1346,12 +1363,54 @@ function customRow(label,field,valueId,valueText){
     +'<button style="padding:4px 10px;" onclick="cycleOpt(\''+field+'\',1)">▶</button>'
     +'</div>';
 }
+function openTitle(){
+  paused=true;
+  OR.innerHTML='<div class="overlay"><div class="sheet" style="text-align:center;">'
+    +'<canvas id="titleCv" width="520" height="230" style="width:100%;max-width:520px;border-radius:6px;border:1px solid var(--line);image-rendering:pixelated;"></canvas>'
+    +'<h2 style="font-size:36px;margin:14px 0 2px;">Millbrook</h2>'
+    +'<div class="sub" style="font-size:14px;margin-top:2px;">Three of your neighbors are not who they were.</div>'
+    +'<div class="sheet-actions" style="justify-content:center;"><button class="primary" id="titleStart" style="font-size:16px;padding:10px 28px;">Start</button></div>'
+    +'</div></div>';
+  drawTitle();
+  document.getElementById('titleStart').onclick=openIntro;
+}
+function drawTitle(){
+  const cvt=document.getElementById('titleCv');if(!cvt)return;
+  const g=cvt.getContext('2d');g.imageSmoothingEnabled=false;
+  const W=520,H=230;
+  const sky=g.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#0D1126');sky.addColorStop(0.6,'#232B52');sky.addColorStop(1,'#3A3560');
+  g.fillStyle=sky;g.fillRect(0,0,W,H);
+  for(let i=0;i<44;i++){g.fillStyle='rgba(237,230,214,'+(0.25+srand(hashStr('st'+i))*0.55)+')';g.fillRect(srand(hashStr('sx'+i))*W,srand(hashStr('sy'+i))*H*0.5,2,2);}
+  g.fillStyle='#EDE6D6';g.beginPath();g.arc(432,44,20,0,7);g.fill();
+  g.fillStyle='#232B52';g.beginPath();g.arc(440,38,17,0,7);g.fill();
+  g.fillStyle='#1E3450';g.fillRect(0,H-32,W,32);
+  g.fillStyle='rgba(140,180,220,0.2)';for(let i=0;i<7;i++)g.fillRect(20+i*70,H-22+(i%2)*6,34,2);
+  g.fillStyle='#1B2E1E';g.fillRect(0,H-62,W,30);
+  const hs=[[26,58],[108,72],[196,64],[288,78],[376,58],[452,64]];
+  hs.forEach((hp,i)=>{
+    const hx=hp[0],hw=hp[1];
+    const hh=52+((i*17)%20);
+    g.fillStyle='#141826';g.fillRect(hx,H-62-hh,hw,hh);
+    g.beginPath();g.moveTo(hx-6,H-62-hh);g.lineTo(hx+hw/2,H-82-hh);g.lineTo(hx+hw+6,H-62-hh);g.closePath();g.fill();
+    for(let wdx=0;wdx<2;wdx++){
+      const dark=(i===1&&wdx===0)||(i===3&&wdx===1)||(i===4&&wdx===0);
+      g.fillStyle=dark?'rgba(40,46,70,1)':'rgba(224,166,61,0.95)';
+      g.fillRect(hx+9+wdx*(hw-26),H-62-hh+14,10,12);
+    }
+  });
+  for(let f=0;f<26;f++){const fx=8+f*20,sag=Math.sin(f/25*Math.PI*3)*6;
+    g.fillStyle=['#C4497B','#E0A63D','#4E8B8B'][f%3];
+    g.beginPath();g.moveTo(fx,92+sag);g.lineTo(fx+8,92+sag);g.lineTo(fx+4,102+sag);g.closePath();g.fill();}
+  for(let k=0;k<3;k++){g.fillStyle='#0A0C16';g.fillRect(228+k*22,H-46,8,15);g.fillRect(229+k*22,H-52,6,7);}
+}
 function openIntro(){
   paused=true;
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<h2>Millbrook — Festival Week</h2>'
     +'<p class="sub">You\'ve just moved to Millbrook, population eleven. On your first night at the Inn, someone slides a note under your door:</p>'
     +'<div class="note">"Three of your neighbors are not who they were. Last spring, three people in this town went quietly missing — and three things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
+    +'<p class="sub"><strong style="color:var(--amber);">Your goal:</strong> work out which THREE residents were replaced before the Festival ends the week. Talk to everyone — 6 visits a day. Learn their routines. Search their homes and workplaces while they\'re out. Weigh the gossip; some of it lies. Then, at the Festival bonfire, name all three. Accuse wrong, and innocent neighbors pay for it.</p>'
     +'<h3 style="font-size:15px;margin:12px 0 4px;">Who are you?</h3>'
     +'<div style="display:flex;gap:16px;align-items:flex-start;">'
     +'<canvas id="pv" width="52" height="76" style="background:rgba(237,230,214,0.05);border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;width:78px;height:114px;flex-shrink:0;"></canvas>'
@@ -1654,7 +1713,7 @@ async function doRestart(){
   await save();
   initNpcs();
   updateHud();
-  openIntro();
+  openTitle();
 }
 function openJournal(){
   paused=true;
@@ -1756,15 +1815,43 @@ function openResults(){
   }
   const coda=missed>0?'<div class="verdict" style="color:var(--magenta);font-style:italic;">On the Festival\'s last night, two more strangers checked into the Inn.</div>':'';
   OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<canvas id="endCv" width="520" height="150" style="width:100%;border-radius:6px;border:1px solid var(--line);image-rendering:pixelated;margin-bottom:10px;"></canvas>'
     +'<h3>The Founders\' Festival</h3>'
     +'<div class="score">'+caught+' / '+NUM_AI+' unmasked</div>'
     +'<div class="verdict">'+banner+'</div>'
     +rows+coda
     +'<div class="sheet-actions"><button class="primary" id="againBtn">Begin again — a different spring, different replacements</button></div>'
     +'</div></div>';
+  drawEnding(caught===3&&innocent===0?'perfect':(caught===2?'partial':'fail'));
   document.getElementById('againBtn').onclick=async()=>{
-    S=newGame();await save();initNpcs();updateHud();openIntro();
+    const keepLook=S.player;S=newGame();S.player=keepLook;forcedSleep=false;
+    await save();initNpcs();updateHud();openTitle();
   };
+}
+function drawEnding(kind){
+  const cvt=document.getElementById('endCv');if(!cvt)return;
+  const g=cvt.getContext('2d');g.imageSmoothingEnabled=false;
+  const W=520,H=150;
+  const sky=g.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#0A0D1E');sky.addColorStop(1,'#232B52');
+  g.fillStyle=sky;g.fillRect(0,0,W,H);
+  for(let i=0;i<24;i++){g.fillStyle='rgba(237,230,214,0.5)';g.fillRect(srand(hashStr('es'+i))*W,srand(hashStr('ey'+i))*H*0.5,2,2);}
+  g.fillStyle='#1B2E1E';g.fillRect(0,H-26,W,26);
+  for(let k=0;k<10;k++){const px=88+k*36+(k%2)*6;g.fillStyle='#10131F';g.fillRect(px,H-44,9,18);g.fillRect(px+1,H-51,7,8);}
+  if(kind==='fail'){
+    g.fillStyle='#2A2A32';g.fillRect(248,H-40,26,10);
+    g.fillStyle='rgba(150,150,160,0.35)';g.fillRect(257,H-72,4,28);
+    g.fillStyle='rgba(150,150,160,0.2)';g.fillRect(262,H-84,3,14);
+  }else{
+    g.fillStyle='#E0662D';g.beginPath();g.moveTo(260,H-86);g.lineTo(277,H-30);g.lineTo(243,H-30);g.closePath();g.fill();
+    g.fillStyle='#E0A63D';g.beginPath();g.moveTo(260,H-66);g.lineTo(271,H-30);g.lineTo(249,H-30);g.closePath();g.fill();
+    g.fillStyle='#F2D08A';g.fillRect(256,H-46,8,14);
+  }
+  if(kind==='perfect'){
+    for(let c2=0;c2<3;c2++){const cx2=234+c2*24;
+      g.fillStyle='#EDE6D6';g.fillRect(cx2,H-106,6,14);
+      g.fillStyle='#E0A63D';g.beginPath();g.arc(cx2+3,H-110,3.4,0,7);g.fill();}
+  }
 }
 
 /* ============ INIT ============ */
@@ -1786,7 +1873,7 @@ function openResults(){
   resize();
   updateHud();
   if(S.ended)openResults();
-  else if(!S.started)openIntro();
+  else if(!S.started)openTitle();
   else paused=false;
   requestAnimationFrame(realLoop);
 })();
