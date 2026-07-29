@@ -105,6 +105,9 @@ const storageShim={
 };
 const STORE=(typeof window!=='undefined'&&window.storage&&window.storage.get)?window.storage:storageShim;
 const NUM_AI=4, DAYS=7, ENERGY=7, KEY='millbrook-v6';
+/* Set this to the Aubes' own shop / support link to show a Support entry in the Menu. Empty = hidden. */
+const SUPPORT_URL='';
+const SUPPORT_LABEL='The Gloomstead is a real bakery — visit them';
 const TILE=32, MW=64, MH=44;
 const DAY_START=8*60, DAY_END=21*60, MIN_PER_SEC=1/0.7;
 
@@ -623,7 +626,7 @@ function newGame(hard){
   const humans=humansAll;
   const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
   return {runId,friendId,kin,hard:!!hard,numAI,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
-    player:{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
+    player:{name:'',skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
     curios:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
@@ -635,7 +638,7 @@ async function load(){
       const FAKE=["Hold that thought — someone's calling me.","One sec, hands are full here.","Ah — give me a minute, would you?","Sorry, got pulled away. You were saying?"];
       Object.values(S.npc||{}).forEach(n=>{if(n.history)n.history=n.history.filter(m=>!(m.role==='assistant'&&FAKE.includes(m.text)));});
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
-      S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';
+      S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';S.player.name=S.player.name||'';
       S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
       S.curios=S.curios||[];S.numAI=S.numAI||NUM_AI;
       S.kin=S.kin||{};
@@ -1948,6 +1951,18 @@ function cycleOpt(field,dir){
   const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[p.hat];
   drawPreview();
 }
+function nameRow(){
+  return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0;">'
+    +'<span style="font-size:12px;color:var(--dim);min-width:78px;">Your name</span>'
+    +'<input type="text" id="nameInput" maxlength="24" placeholder="What do they call you?" value="'+esc(S.player.name||'')+'" style="flex:1;font-size:14px;padding:6px 9px;"/>'
+    +'</div>';
+}
+function bindNameRow(){
+  const ni=document.getElementById('nameInput');
+  if(!ni)return;
+  ni.oninput=()=>{S.player.name=ni.value.slice(0,24);save();};
+}
+function playerName(){const n=(S.player&&S.player.name||'').trim();return n||'the newcomer';}
 function customRow(label,field,valueId,valueText){
   return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0;" '+(field==='tartan'?'id="tartanRow"':'')+'>'
     +'<span style="font-size:12px;color:var(--dim);min-width:78px;">'+label+'</span>'
@@ -2014,6 +2029,7 @@ function openIntro(){
     +'<div style="display:flex;gap:16px;align-items:flex-start;">'
     +'<canvas id="pv" width="52" height="76" style="background:rgba(237,230,214,0.05);border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;width:78px;height:114px;flex-shrink:0;"></canvas>'
     +'<div style="flex:1;">'
+    +nameRow()
     +customRow('Skin','skin')
     +customRow('Hair','hair')
     +customRow('Hair length','longHair','hairLenLabel','Short')
@@ -2036,6 +2052,7 @@ function openIntro(){
     const look=S.player;S=newGame(h);S.player=look;forcedSleep=false;
     await save();initNpcs();updateHud();openIntro();
   };
+  bindNameRow();
   const ds=document.getElementById('diffStd');if(ds)ds.onclick=()=>setDiff(false);
   const dh=document.getElementById('diffHard');if(dh)dh.onclick=()=>setDiff(true);
   document.getElementById('beginBtn').onclick=async()=>{S.started=true;await save();closeOverlay();};
@@ -2333,6 +2350,7 @@ function kinSystem(c,d,opener,gift){
     const oc=CAST.find(x=>x.id===other);
     if(oc)s+='\nYour other parent, '+oc.name.split(' ')[0]+', you do not think much about one way or the other at the moment.';
   }
+  s+='\nThe newcomer is called '+playerName()+'; everyone in town knows it by now.';
   if(opener)s+='\nThe player has just walked up to you. YOU speak first: one short line, in character, grounded in what you are doing right now.';
   if(d.familiarity>=8)s+='\nYou have taken a liking to this newcomer and talk to them more freely.';
   if(gift)s+='\nThe player has just handed you '+gift.label+'. React with delight or surprise in character.';
@@ -2406,6 +2424,7 @@ async function getReply(c,d,opener,gift){
   }else{
     system+='\nIf the player asks whether you left a note under their door, you are honestly puzzled — you did not.';
   }
+  system+='\nThe newcomer is called '+playerName()+' — word went round the day they arrived, as it does here. Use their name naturally, not in every line.';
   const myKin=KIN.filter(k=>k.of===c.id);
   if(myKin.length)system+='\nYour household: '+myKin.map(k=>k.name.split(' ')[0]+' ('+k.rel+(k.child?', '+k.child:'')+')').join(', ')+'. They are around town and the player may have met them.';
   const myPet=PETS.find(p=>p.of===c.id);
@@ -2477,6 +2496,7 @@ function openMenu(){
     +'<div style="display:flex;gap:16px;align-items:flex-start;">'
     +'<canvas id="pv" width="52" height="76" style="background:rgba(237,230,214,0.05);border:1px solid var(--line);border-radius:4px;image-rendering:pixelated;width:78px;height:114px;flex-shrink:0;"></canvas>'
     +'<div style="flex:1;">'
+    +nameRow()
     +customRow('Skin','skin')
     +customRow('Hair','hair')
     +customRow('Hair length','longHair','hairLenLabel','Short')
@@ -2485,6 +2505,9 @@ function openMenu(){
     +customRow('Tartan','tartan')
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
+    +(SUPPORT_URL?('<h3 style="font-size:15px;margin:14px 0 4px;">Support</h3>'
+      +'<p class="sub" style="font-size:12px;">'+esc(SUPPORT_LABEL)+'</p>'
+      +'<div class="sheet-actions"><a href="'+SUPPORT_URL+'" target="_blank" rel="noopener" style="text-decoration:none;"><button style="border-color:var(--teal);color:var(--teal);">Visit The Gloomstead</button></a></div>'):'')
     +'<h3 style="font-size:15px;margin:14px 0 4px;">About</h3>'
     +'<p class="sub" style="font-size:12px;">Millbrook is a town of neighbours — bakers, teachers, mechanics, a woman who surveys the river and a man who builds dinosaurs. It was made partly for people whose craft was quietly replaced by a machine, and who kept making things by hand anyway.</p>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Start over</h3>'
@@ -2498,6 +2521,7 @@ function openMenu(){
   const bl=document.getElementById('botLabel');if(bl)bl.innerText=OUTFIT_LABELS[S.player.outfit];
   const hl=document.getElementById('hairLenLabel');if(hl)hl.innerText=S.player.longHair?'Long':'Short';
   const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[S.player.hat];
+  bindNameRow();
   drawPreview();
   const rb=document.getElementById('restartBtn');
   rb.onclick=function(){
