@@ -348,7 +348,9 @@ function newGame(){
   const npc={};
   ids.forEach(id=>{npc[id]={isAI:aiSet.has(id),aiOffset:Math.floor(srand(hashStr(id+'o'+runId))*3),
     history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
-  return {runId,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
+  const humans=ids.filter(id=>!aiSet.has(id));
+  const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
+  return {runId,friendId,day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
     player:{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
@@ -362,6 +364,7 @@ async function load(){
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
       S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';
       S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
+      if(!S.friendId){const hs=Object.keys(S.npc).filter(id=>!S.npc[id].isAI);S.friendId=hs[0];}
       CAST.forEach(c=>{if(!S.npc[c.id])S.npc[c.id]={isAI:false,aiOffset:0,history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
       return;}}catch(e){}
   S=newGame();await save();
@@ -611,9 +614,13 @@ const SHOP_INT={
  post:{floorA:'#5F5540',floorB:'#564C37',wall:'#44505C',curt:'#5B7A8C',rug:[5,4,5,3,'rgba(91,122,140,0.16)'],
   cont:[['Counter drawer',3,3],['Parcel shelf',10,3],['Undeliverable bin',13,6]],
   furn:[['counter',1,2,6,1],['shelf',9,1,5,2,'#5C4630','Pigeonholes'],['machine',2,5,2,2,'#8A8A92','Sorting machine'],['boxes',10,4,2,1],['boxes',11,5,2,1],['bin',13,6,1,1],['table',12,7,2,1]]},
- inn:{floorA:'#685D45',floorB:'#5E543D',wall:'#544E3A',curt:'#8C7A3C',rug:[5,4,5,3,'rgba(140,122,60,0.15)'],
-  cont:[['Guest ledger',2,3],['Key drawer',4,3],['Lost & found box',10,3]],
-  furn:[['desk',1,2,4,1,'#7A5A3C','Front desk'],['sofa',9,2,3,1],['bed',12,5,2,2,'#6E4A52','Your bed'],['plant',6,3,1,1],['table',4,6,2,1],['chair',3,6,1,1],['boxes',10,2,1,1]]},
+ inn:{floorA:'#685D45',floorB:'#5E543D',wall:'#544E3A',curt:'#8C7A3C',rug:[1,4,5,2,'rgba(140,122,60,0.15)'],
+  div:{x:7,g1:4,g2:5},divLabel:'rooms',
+  div2:{y:5,x1:8,x2:14,gap:8},
+  cont:[['Guest ledger',2,3],['Key drawer',4,3],['Lost & found box',5,7]],
+  furn:[['desk',1,2,4,1,'#7A5A3C','Front desk'],['sofa',1,6,3,1],['plant',6,2,1,1],['boxes',5,7,1,1],
+    ['bed',10,2,3,2,'#6E4A52','Your bed'],['table',13,2,1,1],['dresser',14,1,1,2],
+    ['bed',10,7,3,2,'#4E6A5A','Room 2 — kept ready'],['wardrobe',14,7,1,2]]},
  garage:{floorA:'#585650',floorB:'#4F4D47',wall:'#4A4842',curt:null,rug:null,
   cont:[['Tool chest',2,3],['Parts bin',13,4],['Job tickets',5,3]],
   furn:[['counter',1,2,5,1,'#6E6A5A','Workbench'],['machine',8,3,5,3,'#4E5A66','Truck (mid-repair)'],['boxes',1,6,2,1],['shelf',13,1,1,3],['bin',13,4,1,1]]},
@@ -664,6 +671,8 @@ function contObs(bldId,ci){
   const own=S.npc[b.owner];
   const kind=b.kind==='home'?'home':'work';
   if(ci===sigIndex(bldId))return spotObs(b.owner,kind);
+  if(b.owner===S.friendId&&kind==='home'&&ci===((sigIndex(bldId)+1)%intSpec(bldId).cont.length))
+    return "A pad of coarse grey paper and a pen that skips on the downstrokes. The top sheet is blank — but held to the light it carries the pressed ghost of writing from the sheet above it.";
   const pool=own.isAI?(kind==='home'?GEN_AI_HOME:GEN_AI_SHOP):(kind==='home'?GEN_H_HOME:GEN_H_SHOP);
   const seed=own.isAI?hashStr(bldId+'g'+ci):hashStr(bldId+'g'+ci+'d'+S.day);
   return pool[seed%pool.length];
@@ -673,9 +682,10 @@ function intBlocked(bldId,tx,ty){
   if(ty===0)return true;
   const sp=intSpec(bldId);
   if(sp.div&&tx===sp.div.x&&!(ty>=sp.div.g1&&ty<=sp.div.g2))return true;
+  if(sp.div2&&ty===sp.div2.y&&tx>=sp.div2.x1&&tx<=sp.div2.x2&&tx!==sp.div2.gap)return true;
   return sp.furn.some(f=>BLOCKS[f[0]]&&tx>=f[1]&&tx<f[1]+(f[3]||1)&&ty>=f[2]&&ty<f[2]+(f[4]||1));
 }
-const ANCH={hearth:[[8,3],[11,3],[10,6],[3,5],[6,5]],tavern:[[2,4],[4,4],[6,4],[9,5],[11,6]],grocery:[[3,4],[6,4],[10,4],[7,7]],library:[[3,5],[6,5],[11,6]],post:[[3,3],[8,5]],inn:[[2,3],[7,4]],garage:[[3,4],[6,5]],pasta:[[3,4],[6,5],[9,5]],home:[[4,5],[6,5],[3,6]]};
+const ANCH={hearth:[[8,3],[11,3],[10,6],[3,5],[6,5]],tavern:[[2,4],[4,4],[6,4],[9,5],[11,6]],grocery:[[3,4],[6,4],[10,4],[7,7]],library:[[3,5],[6,5],[11,6]],post:[[3,3],[8,5]],inn:[[2,3],[4,4]],garage:[[3,4],[6,5]],pasta:[[3,4],[6,5],[9,5]],home:[[4,5],[6,5],[3,6]]};
 function anchorsFor(bldId){return BLD[bldId].kind==='home'?ANCH.home:(ANCH[bldId]||ANCH.home);}
 function spotObs(charId,kind){
   const c=CAST.find(x=>x.id===charId);const d=S.npc[charId];
@@ -935,7 +945,18 @@ function drawInterior(bldId){
       ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(dx+7,y*TILE,3,TILE);
     }
     ctx.fillStyle='rgba(237,230,214,0.4)';ctx.font='9px Inter';ctx.textAlign='center';
-    ctx.fillText('bedroom',(spec.div.x+3)*TILE,TILE+12);
+    ctx.fillText(spec.divLabel||'bedroom',(spec.div.x+3)*TILE,TILE+12);
+  }
+  if(spec.div2){
+    const dy=spec.div2.y*TILE;
+    for(let x=spec.div2.x1;x<=spec.div2.x2;x++){
+      if(x===spec.div2.gap)continue;
+      ctx.fillStyle='#1E1A16';ctx.fillRect(x*TILE,dy-1,TILE,12);
+      ctx.fillStyle=spec.wall;ctx.fillRect(x*TILE,dy,TILE,10);
+      ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(x*TILE,dy+7,TILE,3);
+    }
+    ctx.fillStyle='rgba(237,230,214,0.4)';ctx.font='9px Inter';ctx.textAlign='center';
+    ctx.fillText('room 2',(spec.div2.x1+3.5)*TILE,dy+TILE-4);
   }
   const OL='#1E1A16';
   const box=(fx,fy,fw,fh,c)=>{ctx.fillStyle=OL;ctx.fillRect(fx-1,fy-1,fw+2,fh+2);ctx.fillStyle=c;ctx.fillRect(fx,fy,fw,fh);
@@ -1039,6 +1060,7 @@ function drawInterior(bldId){
         const ry=1.5+srand(hashStr(bldId+'cy'+i+'d'+S.day))*(IH-3.2);
         if(spec.furn.some(f=>BLOCKS[f[0]]&&rx>f[1]-0.4&&rx<f[1]+(f[3]||1)+0.4&&ry>f[2]-0.4&&ry<f[2]+(f[4]||1)+0.4))continue;
         if(spec.div&&Math.abs(rx-spec.div.x)<0.6)continue;
+        if(spec.div2&&Math.abs(ry-spec.div2.y)<0.7&&rx>spec.div2.x1-0.5)continue;
         const px=rx*TILE,py=ry*TILE,kind=i%5;
         if(kind===0){ctx.fillStyle='rgba(237,230,214,0.7)';ctx.fillRect(px,py,9,7);}
         else if(kind===1){ctx.fillStyle='#8C5A3C';ctx.fillRect(px,py,6,6);ctx.fillStyle='#5E4636';ctx.fillRect(px+5,py+1,3,2);}
@@ -1151,8 +1173,10 @@ function nearestInteract(){
       if(d<bd){bd=d;best={type:'cont',bldId,ci,name:cn[0]};}
     });
     if(bldId==='inn'){
-      const db=Math.hypot(12.5*TILE-S.ipx,7.2*TILE-S.ipy);
+      const db=Math.hypot(11.5*TILE-S.ipx,4.3*TILE-S.ipy);
       if(db<bd){bd=db;best={type:'sleep'};}
+      const dn=Math.hypot(13.5*TILE-S.ipx,3.4*TILE-S.ipy);
+      if(dn<bd){bd=dn;best={type:'note'};}
     }
     if(bldId==='pasta'){
       const dbr=Math.hypot(5.2*TILE-S.ipx,8.2*TILE-S.ipy);
@@ -1169,6 +1193,7 @@ function interactLabel(t){
   if(t.type==='cont')return 'Search: '+t.name+'  (E)';
   if(t.type==='sleep')return S.day>=DAYS?'Turn in — tomorrow is the Festival  (E)':'Sleep in your room  (E)';
   if(t.type==='take')return S.tookBread===S.day?'Free bread — one each, neighbor':'Take a loaf — free bread  (E)';
+  if(t.type==='note')return 'Re-read the note  (E)';
   if(t.type==='pickup')return 'Pick up: '+t.c.favor.fromLabel+'  (E)';
   if(t.type==='drop')return 'Set it down here  (E)';
   if(t.type==='exit')return 'Leave  (E)';
@@ -1180,6 +1205,7 @@ function interactLabel(t){
 }
 function doInteract(t){
   if(t.type==='sleep'){doSleep();return;}
+  if(t.type==='note'){openNote();return;}
   if(t.type==='take'){
     if(S.tookBread===S.day){showToast('One each, neighbor — that\'s how it stays free.');return;}
     S.tookBread=S.day;save();
@@ -1447,6 +1473,17 @@ function openIntro(){
   drawPreview();
   document.getElementById('beginBtn').onclick=async()=>{S.started=true;await save();closeOverlay();};
 }
+function openNote(){
+  paused=true;
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>The note under your door</h3>'
+    +'<div class="note">"Three of your neighbors are not who they were. Last spring, three people in this town went quietly missing — and three things came back wearing their lives. Same faces. Same houses. Same jobs. They learned their parts well.<br><br>You have until the Founders\' Festival. Trust your eyes. — A friend"</div>'
+    +'<p class="sub">You turn it over in the lamplight. Coarse grey paper, torn from a pad. The pen skipped on every downstroke, and the hand pressed hard — someone writing fast, or frightened. Whoever left this lives here. They know, and they were too afraid to sign it.</p>'
+    +'<div class="hint">Somebody in Millbrook owns this paper and that pen.</div>'
+    +'<div class="sheet-actions"><button class="primary" id="closeBtn">Fold it away</button></div>'
+    +'</div></div>';
+  document.getElementById('closeBtn').onclick=closeOverlay;
+}
 function openNightfall(){
   paused=true;
   OR.innerHTML='<div class="overlay"><div class="sheet">'
@@ -1532,6 +1569,7 @@ function openChat(id){
     +'</div>'
     +'<div class="chat" id="chatBox">'+bubbles+'</div>'
     +'<div id="typingIndicator"></div>'
+    +'<div id="giftPanel" style="display:none;margin-bottom:8px;"></div>'
     +'<div class="chat-row">'
     +'<input type="text" id="chatInput" placeholder="Say something…" autocomplete="off"/>'
     +'<button class="primary" id="sendBtn">Send</button>'
@@ -1544,7 +1582,7 @@ function openChat(id){
     +'<input type="range" min="0" max="100" id="suspSlider" value="'+d.suspicion+'">'
     +'<span class="susp-val mono">'+d.suspicion+'</span>'
     +'</div></div>'
-    +'<div class="sheet-actions"><button id="offerBtn" style="display:none;border-color:var(--amber-dim);color:var(--amber);">Offer a hand</button><button id="leaveBtn">Walk away</button></div>'
+    +'<div class="sheet-actions"><button id="giftBtn" style="display:none;border-color:var(--teal);color:var(--teal);">Give something</button><button id="offerBtn" style="display:none;border-color:var(--amber-dim);color:var(--amber);">Offer a hand</button><button id="leaveBtn">Walk away</button></div>'
     +'</div></div>';
   const cb=document.getElementById('chatBox');cb.scrollTop=cb.scrollHeight;
   const inp=document.getElementById('chatInput');
@@ -1554,6 +1592,27 @@ function openChat(id){
   const obtn=document.getElementById('offerBtn');
   if(obtn)obtn.onclick=()=>{d.notes=document.getElementById('notesArea').value;save();openFavorOffer(c);};
   const first=c.name.split(' ')[0];
+  const refreshGift=()=>{
+    const gb=document.getElementById('giftBtn');
+    if(gb)gb.style.display=(S.pockets&&S.pockets.length)?'inline-block':'none';
+    const gp=document.getElementById('giftPanel');
+    if(gp&&gp.style.display!=='none')renderGiftPanel();
+  };
+  const renderGiftPanel=()=>{
+    const gp=document.getElementById('giftPanel');if(!gp)return;
+    if(!S.pockets||!S.pockets.length){gp.style.display='none';return;}
+    gp.innerHTML='<div class="hint" style="margin-bottom:6px;">Hand '+first+' something:</div>'
+      +S.pockets.map((p,i)=>'<button data-gift="'+i+'" style="margin:0 6px 6px 0;">'+esc(p.label)+'</button>').join('');
+    gp.querySelectorAll('[data-gift]').forEach(b=>{b.onclick=()=>doGift(parseInt(b.dataset.gift));});
+  };
+  const gb=document.getElementById('giftBtn');
+  if(gb)gb.onclick=()=>{
+    const gp=document.getElementById('giftPanel');
+    if(!gp)return;
+    if(gp.style.display==='none'){gp.style.display='block';renderGiftPanel();}
+    else gp.style.display='none';
+  };
+  refreshGift();
   const showFail=(err,retryFn,keepText)=>{
     const ti=document.getElementById('typingIndicator');
     if(!ti)return;
@@ -1621,6 +1680,40 @@ function openChat(id){
       showFail(r.err,doSend,true);
     }
   };
+  const doGift=async(i)=>{
+    if(busy)return;
+    const it=S.pockets[i];if(!it)return;
+    busy=true;
+    const fromC=CAST.find(x=>x.id===it.from);
+    const gift={label:it.label,fromName:(fromC&&fromC.id!==id)?fromC.name.split(' ')[0]:null};
+    const text='(I hand you '+it.label+'.)';
+    d.history.push({role:'user',text});
+    const gp=document.getElementById('giftPanel');if(gp)gp.style.display='none';
+    cb.innerHTML+='<div class="bubble me">'+esc(text)+'</div>';cb.scrollTop=cb.scrollHeight;
+    document.getElementById('typingIndicator').innerHTML='<div class="typing">'+first+' is typing…</div>';
+    const r=await getReply(c,d,false,gift);
+    busy=false;
+    if(r.ok){
+      const idx=S.pockets.indexOf(it);
+      if(idx>=0)S.pockets.splice(idx,1);
+      d.familiarity=Math.min(30,d.familiarity+5);
+      const wasCold=d.cold>0;
+      if(wasCold)d.cold=0;
+      d.history.push({role:'assistant',text:r.text});
+      await save();
+      const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
+      const cb2=document.getElementById('chatBox');
+      if(cb2){cb2.innerHTML+='<div class="bubble them">'+esc(r.text)+'</div>';cb2.scrollTop=cb2.scrollHeight;}
+      if(r.give)addPocket(r.give,c.id);
+      if(wasCold)showToast(first+' softens. Whatever was between you, it just thawed.');
+      refreshGift();refreshOffer();
+    }else{
+      d.history.pop();
+      const cbx=document.getElementById('chatBox');
+      if(cbx&&cbx.lastElementChild)cbx.lastElementChild.remove();
+      showFail(r.err,()=>doGift(i),false);
+    }
+  };
   document.getElementById('sendBtn').onclick=doSend;
   inp.onkeydown=e=>{if(e.key==='Enter')doSend();};
   document.getElementById('leaveBtn').onclick=async()=>{
@@ -1631,12 +1724,14 @@ function openChat(id){
     document.querySelector('.susp-val').innerText=this.value;save();
   };
 }
-async function getReply(c,d,opener){
+async function getReply(c,d,opener,gift){
   let system=c.base+SHARED;
   if(d.isAI)system+=AI_OVERLAY;else system+=HUMAN_OVERLAY+c.worry;
   if(d.cold>0)system+=COLD_OVERLAY;
   else if(S.failCount>=3&&!d.isAI)system+=GUARDED_OVERLAY;
-  if(d.familiarity>=12&&d.cold<=0)system+="\nThe player has earned your trust — open up more; share something personal you wouldn't tell a stranger.";
+  if(d.familiarity>=8&&d.familiarity<12&&d.cold<=0)system+="\nYou have grown fond of this newcomer — you gossip a little more freely with them than you would a stranger.";
+  if(d.familiarity>=12&&d.cold<=0)system+="\nThe player has earned your trust — open up more; share something personal you wouldn't tell a stranger, and you may volunteer what you have noticed about the neighbors.";
+  if(gift)system+='\nThe player has just handed you '+gift.label+' as a gift'+(gift.fromName?(' — it came from '+gift.fromName+', so you may remark on that'):'')+'. React in character. In a town this size an unprompted kindness lands hard: warm to them noticeably, and let something slip you might not otherwise have said.';
   if(favorStatus(c.id)==='done')system+="\nThe player helped you with a chore today — you're warm and grateful.";
   const place=scheduledPlace(c.id,S.min,S.day);
   const placeName={work:'at work',lunch:'having lunch at The Hearth',tavern:'at the Anchor Tap',grocery:'at Marsh Grocery',home:'at home',square:'out by the square'}[place]||'around town';
@@ -1646,6 +1741,19 @@ async function getReply(c,d,opener){
     if(d.familiarity>=3)system+='\nYou could genuinely use a hand today with this: "'+c.favor.ask+'" — if the conversation turns friendly, you may mention offhand that you\'re swamped or behind, but do NOT directly ask this newcomer for help; wait for them to offer.';
     else system+='\nYou are behind on chores today, but this person is still a stranger — you would never ask a stranger for a favor. At most, grumble vaguely about a busy day.';
   }
+  if(c.id===S.friendId){
+    system+='\nDEEP SECRET: you wrote the anonymous note that was slipped under this newcomer\'s door. You noticed that three neighbors changed after last spring and it terrifies you; you were too frightened to sign your name. If the player asks about the note or hints at it, deflect and change the subject'+(d.familiarity>=10?', UNLESS you truly trust them by now — in that case you may quietly, nervously admit it and beg them not to say so out loud.':'. You do not trust them enough yet to admit it.');
+  }else{
+    system+='\nIf the player asks whether you left a note under their door, you are honestly puzzled — you did not.';
+  }
+  const pl=S.player||{};
+  const look=[];
+  if(pl.outfit==='kilt')look.push('a kilt');
+  else if(pl.outfit==='gown')look.push('a long gown');
+  else if(pl.outfit==='dress')look.push('a dress');
+  if(pl.hat==='witch')look.push('a pointed black hat');
+  else if(pl.hat==='crown')look.push('a flower crown');
+  if(look.length)system+='\nThe newcomer is wearing '+look.join(' and ')+'. You may notice it once in passing if it fits the moment; do not remark on it every time.'+((c.id==='justin'&&pl.outfit==='kilt')?' You wear a kilt yourself and are delighted to see another one — say so warmly.':'');
   const awayToday=CAST.filter(x=>x.id!==c.id&&isAwayAllDay(x.id,S.day)).map(x=>x.name.split(' ')[0]);
   if(awayToday.length)system+='\nOut of town today (you may mention if asked): '+awayToday.join(', ')+'.';
   const aboutThem=S.tips.filter(t=>t.about===c.id).map(t=>'"'+t.text+'"');
@@ -1777,7 +1885,7 @@ function openJournal(msg){
     +'<h3>Journal</h3>'
     +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
     +'<h3 style="font-size:15px;margin:6px 0 8px;">Pockets</h3>'
-    +'<div class="hint" style="margin-bottom:8px;">Eating something restores one visit, once per day.</div>'
+    +'<div class="hint" style="margin-bottom:8px;">Eating something restores one visit, once per day — but a gift given away buys goodwill, and goodwill loosens tongues. Offer things to people while you talk.</div>'
     +pk
     +entries
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Observations</h3>'+obsCards
@@ -1858,13 +1966,20 @@ function openResults(){
   }else{
     banner="The vote turns. By midnight the loudest voice at the bonfire is asking how the newcomer knew so much. You leave Millbrook before dawn.";
   }
-  const coda=missed>0?'<div class="verdict" style="color:var(--magenta);font-style:italic;">On the Festival\'s last night, two more strangers checked into the Inn.</div>':'';
+  const coda=missed>0?'<div class="verdict" style="color:var(--magenta);font-style:italic;">On the Festival\'s last night, two more strangers checked into the Inn. Room 2 was made up for them.</div>':'';
+  const fr=CAST.find(x=>x.id===S.friendId);
+  const frGuess=S.npc[S.friendId].guess;
+  let frLine;
+  if(frGuess==='ai')frLine='The note under your door was written by '+fr.name+' — coarse grey paper, a pen that skipped. They saw what was happening and were too frightened to sign their name. You named them at the bonfire. They never told you it was them.';
+  else if(caught===3&&innocent===0)frLine='The note under your door was written by '+fr.name+'. At the bonfire they said nothing, but afterward they pressed your hand and held on a moment too long.';
+  else frLine='The note under your door was written by '+fr.name+' — coarse grey paper, a pen that skipped. They watched you all week, hoping. They have not slept since.';
+  const friendCard='<div class="tipcard" style="margin-top:12px;"><strong>A friend</strong><div class="hint">'+esc(frLine)+'</div></div>';
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<canvas id="endCv" width="520" height="150" style="width:100%;border-radius:6px;border:1px solid var(--line);image-rendering:pixelated;margin-bottom:10px;"></canvas>'
     +'<h3>The Founders\' Festival</h3>'
     +'<div class="score">'+caught+' / '+NUM_AI+' unmasked</div>'
     +'<div class="verdict">'+banner+'</div>'
-    +rows+coda
+    +rows+coda+friendCard
     +'<div class="sheet-actions"><button class="primary" id="againBtn">Begin again — a different spring, different replacements</button></div>'
     +'</div></div>';
   drawEnding(caught===3&&innocent===0?'perfect':(caught===2?'partial':'fail'));
