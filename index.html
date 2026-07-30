@@ -386,7 +386,7 @@ const CAST=[
       accused:"The workshop was cleared out by his brother in a weekend. The Festival raptor went to a scrapyard in Jackson with its neck still unfinished.",
       cleared:"The raptor swept its neck on Festival night and three children cried, which Andrew considers the highest review of his career."}},
  {id:'sam',name:'Sam Flippo',role:'Clinic nurse and glassblower',pal:{skin:'#B07B52',hair:'#5A3A24',shirt:'#C4744A',pants:'#33303E',stubble:true},
-  work:'glass',homeLabel:'Flippo Cottage',
+  work:'glass',workAlt:'clinic',homeLabel:'Flippo Cottage',
   base:"You are Sam Flippo, 30s, a nurse at Millbrook's clinic three days a week and an artisan glassblower the rest. Calm under pressure, funny in a low-key way, hands permanently marked by both trades. You make the glass everyone in this town gives as wedding presents.",
   worry:"The annealing kiln is running cold and a week of work could crack overnight.",
   sched:[[8,'work'],[12,'lunch'],[13,'work'],[18,'tavern'],[20,'home']],
@@ -1060,10 +1060,14 @@ function scheduledPlace(id,min,day){
   }
   return place;
 }
+function workPlace(c,day){
+  if(c.workAlt&&(day%2===0))return c.workAlt;
+  return c.work;
+}
 function placeTarget(id,place){
   const c=CAST.find(x=>x.id===id);
   if(place==='home')return{inside:HOMES[id]};
-  if(place==='work'){const w=c.work;if(POINTS[w])return{point:POINTS[w]};return{inside:w};}
+  if(place==='work'){const w=workPlace(c,S.day);if(POINTS[w])return{point:POINTS[w]};return{inside:w};}
   if(place==='lunch')return{inside:'hearth'};
   if(place==='tavern')return{inside:'tavern'};
   if(place==='grocery')return{inside:'grocery'};
@@ -2913,6 +2917,31 @@ function kinRel(c,pid){
   if(c.rel==='husband')return c.of==='iris'?'wife':'husband';
   return 'family';
 }
+function placeDesc(c){
+  const place=scheduledPlace(c.id,S.min,S.day);
+  if(place==='away')return 'away from Millbrook today, out on an errand of your own';
+  if(place==='work'){
+    const w=workPlace(c,S.day);
+    if(BLD[w])return 'at '+BLD[w].label+' — your own workplace';
+    return ({dockpt:'down at Riverside Dock, working on the boat',
+      stallpt:'at your produce stall in the Town Square market',
+      parkpt:'out in the park gardens',
+      quarrypt:'up on the quarry track above the river',
+      crowpt:'out at the flat stone near your cabin, feeding the crows'})[w]||'at work';
+  }
+  if(place==='lunch')return 'having lunch at The Hearth, the café';
+  if(place==='tavern')return 'at the Anchor Tap, the tavern';
+  if(place==='grocery')return 'in Marsh Grocery, doing your shopping';
+  if(place==='home')return 'at home, '+(BLD[HOMES[c.id]]?BLD[HOMES[c.id]].label:'your own house');
+  if(place==='square')return 'out by the well in the Town Square';
+  if(place==='festival')return "at the Founders' Festival bonfire in the square, with the whole town around you";
+  return 'around town';
+}
+function kinPlaceDesc(k){
+  const pl=kinPlace(k);
+  if(pl.inside)return (pl.inside==='school')?'in the schoolhouse':('at '+(BLD[pl.inside]?BLD[pl.inside].label:'home'));
+  return 'outdoors in the town';
+}
 function kinSystem(c,d,opener,gift){
   const parents=[c.of,c.of2].filter(Boolean);
   const replaced=parents.filter(p=>S.npc[p]&&S.npc[p].isAI);
@@ -2924,7 +2953,7 @@ function kinSystem(c,d,opener,gift){
   const young=c.child&&c.child<=8, teen=c.child&&c.child>=13;
   let s=c.base+KIN_SHARED;
   if(c.child)s+=CHILD_GUARD;
-  s+='\nIt is Day '+S.day+' of Festival Week, around '+fmtTime()+'.';
+  s+='\nIt is Day '+S.day+' of Festival Week, around '+fmtTime()+'. You are currently '+kinPlaceDesc(c)+'.';
   if(replaced.length){
     if(roll<0.42){
       s+='\nQUIET TRUTH: people have started saying your '+rel+' '+pName+' seems different lately, and you HATE it. You defend them fiercely — they are just tired, it has been a hard year, everyone should mind their own business. You believe this. Do not agree that anything is wrong with them, even if pressed. (You may still be perfectly friendly about everything else.)';
@@ -3004,9 +3033,8 @@ async function getReply(c,d,opener,gift){
   }
   else if(gift)system+='\nThe player has just handed you '+gift.label+' as a gift'+(gift.fromName?(' — it came from '+gift.fromName+', so you may remark on that'):'')+'. React in character. In a town this size an unprompted kindness lands hard: warm to them noticeably, and let something slip you might not otherwise have said.';
   if(favorStatus(c.id)==='done')system+="\nThe player helped you with a chore today — you're warm and grateful.";
-  const place=scheduledPlace(c.id,S.min,S.day);
-  const placeName={work:'at work',lunch:'having lunch at The Hearth',tavern:'at the Anchor Tap',grocery:'at Marsh Grocery',home:'at home',square:'out by the square'}[place]||'around town';
-  system+='\nIt is Day '+S.day+' of Festival Week (the Festival is Day '+DAYS+'), around '+fmtTime()+'. You are currently '+placeName+'.';
+  system+='\nIt is Day '+S.day+' of Festival Week (the Festival is Day '+DAYS+'), around '+fmtTime()+'. You are currently '+placeDesc(c)+'.';
+  if(c.workAlt)system+='\nYou split your week between two workplaces — be clear which one you are in right now and do not confuse them.';
   if(opener)system+='\nThe player has just walked up to you. YOU speak first: greet or acknowledge them in ONE short in-character line, grounded in where you are and what you\'re doing right now. If you\'ve talked before, greet them like a familiar face; if this is the first time, size up the newcomer the way your character would.';
   if(favorStatus(c.id)==='pending'&&d.cold<=0){
     if(d.familiarity>=3)system+='\nYou could genuinely use a hand today with this: "'+c.favor.ask+'" — if the conversation turns friendly, you may mention offhand that you\'re swamped or behind, but do NOT directly ask this newcomer for help; wait for them to offer.';
