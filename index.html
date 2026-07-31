@@ -527,6 +527,13 @@ const CURIOS=[
   text:"Somebody's hand-stitched these for decades — mismatched cloth, uneven triangles, a few with initials in the corner. Three of the newer ones are machine-perfect. Same colors, same size, every stitch identical.",
   item:null},
 ];
+const CHALK=[
+ {id:'lib',x:22,y:15,where:'on the low wall outside the Old Library'},
+ {id:'post',x:35,y:16,where:'on the flagstone by the post office step'},
+ {id:'pier',x:51,y:21,where:'on a plank at the end of the pier, half worn off by the river'},
+ {id:'park',x:10,y:34,where:'on the flat rock in the park, done very carefully'},
+ {id:'tap',x:46,y:30,where:"on the wall beside the Anchor Tap's door, quite high up"},
+];
 const KEEP_SPOTS=[
  {x:52,y:22,find:"Wedged between two boards at the end of the pier, out of the wind."},
  {x:6,y:39,find:"Half-buried at the edge of the flower beds, turned up by the deer."},
@@ -574,17 +581,17 @@ const KIN=[
   give:"A bike spoke",
   base:"You are Aiden Fairchild, 13, eldest of four. You help at your parents' pasta shop when made to. You're at the age where you notice everything and admit nothing. You like bikes, the river, and being treated as older than you are."},
  {id:'lillyan',name:'Lillyan Fairchild',of:'justin',of2:'jessica',rel:'daughter',child:10,kin:true,
-  role:'Justin & Jessica\'s daughter, 10',pal:{skin:'#E8C49B',hair:'#D4B25E',longHair:true,shirt:'#C4497B',pants:'#4A4438',freckles:true},
+  role:'Justin & Jessica\'s daughter, 10',pal:{skin:'#E8C49B',hair:'#D4B25E',longHair:true,shirt:'#C4497B',pants:'#4A4438',freckles:true,paint:true,freckles:true},
   dayIn:{x:14,y:36},nightIn:'h_justin',
-  off:{intro:["Lillyan! I'm ten. My dad's the one in the kilt — everyone knows him."],fun:["I've got a project. It needs string and I'm not telling you more than that.","Chalk on the road. And the dog, if he'll stay still."]},
-  give:"A length of string",
-  base:"You are Lillyan Fairchild, 10. Chatty, observant, fiercely fair about rules. You are always in the middle of a project involving string, chalk, or the dog."},
+  off:{cat:["That's Mister Fig! I made him up. Two lines for ears, fat tail, one pink eye — that's how you know it's mine and not a copy.","Mister Fig gets everywhere. I'm not saying how many there are. There might be five. I'm not saying."],fun:["Painting. On paper if there's paper, on the road if there isn't, on me if there's neither.","I did all this henna myself. It took ages and Mum pretended to be cross."],paint:["This one's a fern. That one's a bird, only it went wrong so now it's a fish. I do them on my arms because you can't lose your arms.","Henna on that hand, ink on this one. It comes off in about a week and then I do more."],intro:["Lillyan! I'm ten. My dad's the one in the kilt — everyone knows him."],fun:["I've got a project. It needs string and I'm not telling you more than that.","Chalk on the road. And the dog, if he'll stay still."]},
+  give:"A pocket sketch of Mister Fig",
+  base:"You are Lillyan Fairchild, 10. Chatty, observant, fiercely fair about rules. You paint constantly — paper, chalk on the road, and mostly on yourself. Your hands and forearms are covered in ink patterns and henna you did yourself, and you will explain every one of them at length. You invented a cat called Mister Fig — two lines for ears, a fat tail, one pink dot for an eye — and you draw him on everything, including in chalk all over Millbrook. He is your signature. You are extremely proud of him and mildly cagey about how many walls he is on."},
  {id:'luna',name:'Luna Fairchild',of:'justin',of2:'jessica',rel:'daughter',child:7,kin:true,
-  role:'Justin & Jessica\'s daughter, 7',pal:{skin:'#E8C49B',hair:'#C4497B',longHair:true,shirt:'#B0688C',pants:'#44503E'},
+  role:'Justin & Jessica\'s daughter, 7',pal:{skin:'#E8C49B',hair:'#C4497B',longHair:true,shirt:'#B0688C',pants:'#44503E',critters:true},
   dayIn:'h_justin',nightIn:'h_justin',
-  off:{intro:["Luna. I'm seven. I've got a dog called Barley, only he isn't here."],fun:["Drawing. Mostly Barley. He won't sit still so his legs come out wrong.","I draw. And I look after Elliot, sort of."]},
-  give:"A drawing of Barley",
-  base:"You are Luna Fairchild, 7. Dreamy, blunt in the way small children are, obsessed with the dog and with drawing. You say true things without meaning to."},
+  off:{fun:["I look after the animals. They come to me, I don't even call them.","Drawing. Mostly Barley. He won't sit still so his legs come out wrong."],animals:["They just come. Mum says stop feeding them and I said I don't, and I don't."],intro:["Luna. I'm seven. I've got a dog called Barley, only he isn't here."],fun:["Drawing. Mostly Barley. He won't sit still so his legs come out wrong.","I draw. And I look after Elliot, sort of."]},
+  give:"A sparrow's feather Luna was given",
+  base:"You are Luna Fairchild, 7. Dreamy and blunt in the way small children are. Animals follow you about — sparrows, the neighbour's cat, a rabbit that has no business being tame — and you talk to them and are quite certain they answer. You notice which grown-ups the animals will not go near, and you say so plainly, without understanding why it matters to anyone."},
  {id:'elliot',name:'Elliot Fairchild',of:'justin',of2:'jessica',rel:'son',child:4,kin:true,
   role:'Justin & Jessica\'s youngest, 4',pal:{skin:'#E2B187',hair:'#D4B25E',shirt:'#E0A63D',pants:'#4A4438'},
   dayIn:'h_justin',nightIn:'h_justin',
@@ -777,6 +784,22 @@ function shade(hex,amt){
   b=Math.max(0,Math.min(255,Math.round(b*amt)));
   return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
 }
+function drawCritters(g,x,y,seed){
+  const t=Date.now()/700;
+  // a sparrow on the ground beside her
+  const bx=x-9+Math.sin(t+seed)*2, by=y+18;
+  g.fillStyle='#6B5238';g.fillRect(bx,by,7,4);g.fillRect(bx+6,by-3,4,4);
+  g.fillStyle='#C9A44E';g.fillRect(bx+9,by-2,2,1);
+  g.fillStyle='#1A1410';g.fillRect(bx+8,by-2,1,1);
+  // a rabbit that has no business being tame
+  const rx=x+30, ry=y+16+Math.abs(Math.sin(t*1.3+seed))*2;
+  g.fillStyle='#9C9086';g.fillRect(rx,ry,9,6);g.fillRect(rx+7,ry-4,5,5);
+  g.fillRect(rx+8,ry-9,2,5);g.fillRect(rx+11,ry-9,2,5);
+  g.fillStyle='#EDE6D6';g.fillRect(rx-2,ry+2,3,3);
+  // and something small in the air
+  const fx=x+6+Math.sin(t*1.7+seed)*11, fy=y-8+Math.cos(t*2.1+seed)*5;
+  g.fillStyle='#C4497B';g.fillRect(fx,fy,3,2);g.fillRect(fx+3,fy-1,3,2);
+}
 function drawPortrait(g,pal,S2){
   const P=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x*S2,y*S2,w*S2,h*S2);};
   const skin=pal.skin||'#E8C49B', hair=pal.hair||'#3A2A1A', shirt=pal.shirt||'#4E8B8B';
@@ -814,6 +837,10 @@ function drawPortrait(g,pal,S2){
     P(11,18,3,1,'rgba(0,0,0,0.08)'); P(18,18,3,1,'rgba(0,0,0,0.08)');
   }
   if(pal.freckles){for(let i=0;i<6;i++)P(10+(i*3)%12,18+(i%2),1,1,'rgba(140,90,60,0.35)');}
+  if(pal.paint){
+    P(22,17,2,1,'#8C3A2E');P(22,19,3,1,'#4E8B8B');P(8,18,2,1,'#C4A44E');
+    P(6,27,4,1,'#8C3A2E');P(21,28,5,1,'#4E8B8B');P(12,29,3,1,'#C4A44E');
+  }
   if(pal.beard){const bc=pal.beardColor||hair;P(9,19,14,4,bc);P(13,18,6,1,bc);P(9,19,14,1,shade(bc,1.1));}
   else if(pal.goatee){const gc=pal.beardColor||hair;P(13,19,6,4,gc);P(13,18,6,1,gc);P(11,18,2,1,gc);P(19,18,2,1,gc);}
   else if(pal.stubble){P(10,19,12,4,'rgba(0,0,0,0.13)');}
@@ -1233,8 +1260,30 @@ const ADULTKIN_LINES={
 const ADULT_TOWN=["Folk are much as they were, far as I can tell. Which is either comforting or it isn't.","Quiet town, quiet people. I don't ask questions I'd rather not have answered.","There's talk. There's always talk. I'd not repeat most of it."];
 const ADULT_KIN_GREET=["Hello there. You'll be the one stopping at the Inn.","Afternoon. You're the newcomer everyone's discussing.","Hello. Word travels quick here, so I know your name already."];
 function isKid(k){return !!(k.child&&k.child<=16);}
+const LUNA_SHY=["The birds go quiet when {n} walks past. All of them, at once. I don't like it.",
+ "Barley won't go to {n} anymore. He used to. I keep telling Dad and he says dogs are silly.",
+ "The rabbit hides when {n} comes. Rabbits hide from lots of things, but not like that.",
+ "{n} smells like nothing. The cat says so too — she just sits and looks."];
+const LUNA_WARM=["The sparrows sit right on {n}'s hand. They only do that for good ones.",
+ "Barley goes mad for {n}. Properly mad, tail and everything.",
+ "The cat sleeps in {n}'s window. She's fussy, so that means something."];
 function offKinReply(k,d,topic){
   if(topic==='intro'&&k.off&&k.off.intro)return k.off.intro[0];
+  if(topic==='animals'){
+    const seed=hashStr('luna'+S.day+S.runId);
+    const imps=CAST.filter(c=>S.npc[c.id].isAI);
+    const inns=CAST.filter(c=>!S.npc[c.id].isAI);
+    const shy=(seed%100)<58;
+    let target,pool;
+    if(shy){
+      pool=LUNA_SHY;
+      target=(imps.length&&(seed%100)<38)?imps[seed%imps.length]:inns[seed%inns.length];
+    }else{
+      pool=LUNA_WARM;
+      target=inns[seed%inns.length];
+    }
+    return pool[seed%pool.length].replaceAll('{n}',target.name.split(' ')[0]);
+  }
   const parents=[k.of,k.of2].filter(Boolean);
   const replaced=parents.filter(p=>S.npc[p]&&S.npc[p].isAI);
   const roll=srand(hashStr(k.id+'kin'+S.runId));
@@ -1257,7 +1306,11 @@ function offKinReply(k,d,topic){
   if(topic==='festival')return pick(WARM_FEST,seed);
   return pick(isKid(k)?KID_TOWN:ADULT_TOWN,seed);
 }
-const KID_TOPICS=[{id:'parent',q:"How's your {rel}?",min:0},{id:'fun',q:"What do you do around here?",min:0},{id:'school',q:"How's school?",min:0},{id:'town',q:"Anyone in town seem odd to you?",min:2}];
+const KID_TOPICS=[{id:'parent',q:"How's your {rel}?",min:0},{id:'fun',q:"What do you do around here?",min:0},{id:'school',q:"How's school?",min:0},
+ {id:'animals',q:"There are always animals near you.",min:1,only:['luna']},
+ {id:'paint',q:"What's all over your hands?",min:1,only:['lillyan']},
+ {id:'cat',q:"I keep finding a chalk cat.",min:1,only:['lillyan']},
+ {id:'town',q:"Anyone in town seem odd to you?",min:2}];
 const ADULT_KIN_TOPICS=[{id:'parent',q:"How's your {rel}?",min:0},{id:'own',q:"What keeps you busy?",min:0},{id:'festival',q:"Ready for the Festival?",min:0},{id:'spring',q:"Were you here last spring?",min:1},{id:'town',q:"What do you make of the neighbours?",min:2}];
 function topicsFor(c,d){
   if(!d.met)return [{id:'intro',q:c.kin?KIN_INTRO_Q:INTRO_Q}];
@@ -1265,7 +1318,7 @@ function topicsFor(c,d){
     const parents=[c.of,c.of2].filter(Boolean);
     const rel=kinRel(c,parents[0]);
     const set=isKid(c)?KID_TOPICS:ADULT_KIN_TOPICS;
-    return set.filter(t=>(d.familiarity||0)>=t.min&&(t.id!=='school'||(isKid(c)&&!c.noSchool)))
+    return set.filter(t=>(d.familiarity||0)>=t.min&&(t.id!=='school'||(isKid(c)&&!c.noSchool))&&(!t.only||t.only.indexOf(c.id)>=0))
       .map(t=>({id:t.id,q:t.q.replaceAll('{rel}',rel)}));
   }
   return TOPICS.filter(t=>(d.familiarity||0)>=t.min&&(!t.only||t.only.indexOf(c.id)>=0));
@@ -1346,7 +1399,7 @@ function newGame(hard){
   const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
   return {runId,friendId,kin,hard:!!hard,numAI,mode:'free',day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
     player:{name:'',skin:'#E8C49B',hair:'#6B4226',hairStyle:'short',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
-    curios:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
+    curios:[],cats:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
 async function save(){try{await STORE.set(KEY,JSON.stringify(S));}catch(e){}}
@@ -1359,7 +1412,7 @@ async function load(){
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
       S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';S.player.name=S.player.name||'';S.player.hairStyle=S.player.hairStyle||(S.player.longHair?'long':'short');
       S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
-      S.curios=S.curios||[];S.numAI=S.numAI||NUM_AI;S.mode=S.mode||'free';
+      S.curios=S.curios||[];S.cats=S.cats||[];S.numAI=S.numAI||NUM_AI;S.mode=S.mode||'free';
       S.kin=S.kin||{};
       KIN.forEach(k=>{if(!S.kin[k.id])S.kin[k.id]={history:[],familiarity:0,isAI:false,cold:0,notes:'',suspicion:0};});
       if(!S.keepsakes)S.keepsakes=KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:CAST[i%CAST.length].id,taken:false}));
@@ -1628,6 +1681,11 @@ function drawPerson(g,x,y,pal,step,face){
   if(outfit==='pants'){g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(x+3*s,y+14*s,10*s,2*s);}
   g.fillStyle=pal.shirt;g.fillRect(x+1*s,y+10*s,2*s,5*s);g.fillRect(x+13*s,y+10*s,2*s,5*s);
   g.fillStyle=pal.skin;g.fillRect(x+1*s,y+14*s,2*s,2*s);g.fillRect(x+13*s,y+14*s,2*s,2*s);
+  if(pal.paint){
+    g.fillStyle='#8C3A2E';g.fillRect(x+1*s,y+12*s,2*s,1*s);g.fillRect(x+13*s,y+13*s,2*s,1*s);
+    g.fillStyle='#4E8B8B';g.fillRect(x+1*s,y+14.6*s,2*s,0.8*s);
+    g.fillStyle='#C4A44E';g.fillRect(x+13*s,y+11.4*s,2*s,0.8*s);
+  }
   g.fillStyle=pal.skin;g.fillRect(x+4*s,y+2*s,8*s,7*s);
   if(pal.bald){
     g.fillStyle='rgba(255,255,255,0.10)';g.fillRect(x+5*s,y+2*s,6*s,2*s);
@@ -2002,6 +2060,18 @@ function drawWorld(){
     if(!off){ctx.fillStyle='#C4A44E';for(let i=0;i<7;i++)ctx.fillRect(cx+4+((i*7)%22),cy+20+((i*5)%6),2,2);}
     else{ctx.fillStyle='#C4A44E';for(let i=0;i<7;i++)ctx.fillRect(cx+11+i*2,cy+20,2,2);}
   })();
+  CHALK.forEach(ch=>{
+    const done=(S.cats||[]).indexOf(ch.id)>=0;
+    const cx=ch.x*TILE,cy=ch.y*TILE;
+    const a=done?0.30:0.62;
+    ctx.fillStyle='rgba(237,230,214,'+a+')';
+    ctx.fillRect(cx+9,cy+16,12,6);
+    ctx.fillRect(cx+19,cy+12,6,5);
+    ctx.fillRect(cx+19,cy+9,2,3);ctx.fillRect(cx+23,cy+9,2,3);
+    ctx.fillRect(cx+6,cy+12,3,5);
+    ctx.fillRect(cx+10,cy+22,2,3);ctx.fillRect(cx+17,cy+22,2,3);
+    ctx.fillStyle='rgba(196,73,123,'+a+')';ctx.fillRect(cx+21,cy+14,1,1);
+  });
   const glint=(gx,gy,done)=>{
     const dd=Math.hypot(gx*TILE-S.px,gy*TILE-S.py);
     if(dd>7*TILE)return;
@@ -2072,6 +2142,7 @@ function drawWorld(){
       if(k.child){const sc=k.child<8?0.66:0.82;ctx.translate(kx+16,ky+30);ctx.scale(sc,sc);ctx.translate(-(kx+16),-(ky+30));}
       drawPerson(ctx,kx,ky+bob,k.pal,0,1);
       ctx.restore();
+      if(k.pal.critters)drawCritters(ctx,kx,ky,hashStr(k.id));
       ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='9px Inter';ctx.textAlign='center';
       ctx.fillText(k.name.split(' ')[0],kx+16,ky-6);
     }});
@@ -2402,6 +2473,7 @@ function drawInterior(bldId){
     if(k.child){const sc=k.child<8?0.66:0.82;ctx.translate(ax+16,ay+30);ctx.scale(sc,sc);ctx.translate(-(ax+16),-(ay+30));}
     drawPerson(ctx,ax,ay,k.pal,0,1);
     ctx.restore();
+    if(k.pal.critters)drawCritters(ctx,ax,ay,hashStr(k.id));
     ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='9px Inter';ctx.textAlign='center';
     ctx.fillText(k.name.split(' ')[0],ax+16,ay-6);
   });
@@ -2492,6 +2564,11 @@ function nearestInteract(){
       const d=Math.hypot(cu.x*TILE-S.px,cu.y*TILE-S.py);
       if(d<bd){bd=d;best={type:'curio',cu};}
     });
+    CHALK.forEach(ch=>{
+      if((S.cats||[]).indexOf(ch.id)>=0)return;
+      const d=Math.hypot(ch.x*TILE-S.px,ch.y*TILE-S.py);
+      if(d<bd){bd=d;best={type:'chalk',ch};}
+    });
     (S.keepsakes||[]).forEach(k=>{
       if(k.taken)return;
       const d=Math.hypot(k.x*TILE-S.px,k.y*TILE-S.py);
@@ -2552,6 +2629,7 @@ function interactLabel(t){
   if(t.type==='note')return 'Re-read the note  (E)';
   if(t.type==='kin')return 'Talk to '+t.k.name.split(' ')[0]+'  (E)';
   if(t.type==='pet')return (t.p.kind==='dog'?'Say hello to ':'Pet ')+t.p.name+'  (E)';
+  if(t.type==='chalk')return 'A cat chalked here  (E)';
   if(t.type==='curio')return t.cu.label+'  (E)';
   if(t.type==='keep')return 'Something glints in the grass  (E)';
   if(t.type==='pickup')return 'Pick up: '+t.c.favor.fromLabel+'  (E)';
@@ -2599,6 +2677,17 @@ function doInteract(t){
     openCards();return;
   }
   if(t.type==='note'){openNote();return;}
+  if(t.type==='chalk'){
+    S.cats=S.cats||[];
+    if(S.cats.indexOf(t.ch.id)<0)S.cats.push(t.ch.id);
+    const n=S.cats.length,all=(n>=CHALK.length);
+    save();SFX.found();
+    openObs({label:'A chalk cat'},
+      'A cat, '+t.ch.where+'. Two lines for the ears, a fat tail, and one pink dot for the eye — the same cat every time, drawn by the same hand.'
+      +(all?'\n\nThat is the fifth. Whoever draws them has been all over this town.'
+           :'\n\nThat is '+n+' of them you have found now.'));
+    return;
+  }
   if(t.type==='curio'){
     S.curios=S.curios||[];
     const isNew=!S.curios.includes(t.cu.id);
@@ -3629,6 +3718,10 @@ function openJournal(msg){
     +entries
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Observations</h3>'+obsCards
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Word of Mouth</h3>'+tipCards
+    +'<h3 style="font-size:15px;margin:14px 0 8px;">Chalk cats</h3>'
+    +'<div class="hint" style="margin-bottom:8px;">'+((S.cats||[]).length)+' of '+CHALK.length+' found'
+      +(((S.cats||[]).length>=CHALK.length)?' — all of them. Somebody has been everywhere.':'. The same cat, the same hand, all over town.')+'</div>'
+    +((S.cats||[]).map(id2=>{const ch=CHALK.find(x=>x.id===id2);return ch?('<div class="cluecard"><strong>A cat '+esc(ch.where)+'</strong></div>'):'';}).join(''))
     +'<h3 style="font-size:15px;margin:14px 0 8px;">Curiosities</h3>'
     +'<div class="hint" style="margin-bottom:8px;">'+((S.curios||[]).length)+' of '+CURIOS.length+' oddities noticed'+(((S.keepsakes||[]).filter(k=>k.taken).length)?(' · '+((S.keepsakes||[]).filter(k=>k.taken).length)+' lost keepsake(s) recovered'):'')+'. Things glint when you walk near them.</div>'
     +((S.curios||[]).map(id2=>{const cu=CURIOS.find(x=>x.id===id2);return cu?('<div class="cluecard"><strong>'+esc(cu.label)+'</strong><div class="hint">'+esc(cu.text)+'</div></div>'):'';}).join(''))
