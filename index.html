@@ -135,7 +135,7 @@ const CAST=[
   homeObsAI:"The bed is made hotel-tight. The kitchen bin is empty. So is the fridge.",
   homeObsH:["A photo of a young man in a graduation gown — the glass smudged from handling.","Dishes soak in the sink; a crossword sits half-finished, pen dropped mid-clue."],
   favor:{ask:"The flour delivery's sitting out front and my wrist is shot. Haul the sacks in for me?",task:'Flour sacks → The Hearth',from:{x:8,y:17},to:{x:13,y:16},fromLabel:'Flour sacks',thanks:"You're a lifesaver. Free coffee for life — well, for the week. Listen—"},
-  off:{intro:["Dot Reyes. I run The Hearth — that's the café, and it's the only decent coffee for twenty miles. My granddaughter Pia's about this week, so mind your elbows."],work:["Machine's dying. I've had the guts of it out twice this week and it still screams at me.","Busy. Everyone wants coffee and nobody wants to wait for it."],sense:["Burnt sugar and steam. Gets in your hair — you stop smelling it and then somebody tells you.","Hot metal and milk. And my wrist, if you want the honest answer."],mood:["Long enough that I burned myself Tuesday and only noticed at closing.","On my feet since five, love. Ask me something easy."]},
+  off:{intro:["Dot Reyes. I run The Hearth — that's the café, and it's the only decent coffee for twenty miles. My granddaughter Pia's about this week, so mind your elbows."],work:["Machine's dying. I've had the guts of it out twice this week and it still screams at me.","Busy. Everyone wants coffee and nobody wants to wait for it. You'll have one, though — you look like you need it. {OFFER:Cup of coffee|There. Don't tell the queue.|Then you're the first all morning to say no.}"],sense:["Burnt sugar and steam. Gets in your hair — you stop smelling it and then somebody tells you.","Hot metal and milk. And my wrist, if you want the honest answer."],mood:["Long enough that I burned myself Tuesday and only noticed at closing.","On my feet since five, love. Ask me something easy."]},
   ep:{caught:"The thing wearing Dot's warmth thanked the town for its hospitality and walked into the river without a splash. The Hearth stands empty.",
       missed:"The Hearth still opens at six sharp. The same full cup of coffee sits cold behind the counter, every single morning.",
       accused:"Dot didn't fight the vote. She hung the CLOSED sign, wrist still bandaged, and her son never came back for the keys.",
@@ -183,7 +183,7 @@ const CAST=[
   homeObsAI:"The trash bin holds a single, neatly folded bag. Nothing else.",
   homeObsH:["Shop-window sketches papered over one wall: 'FARADAY'S — someday.'","Instant noodle cups in the sink; truck keys hang on a nail by a lucky rabbit's foot."],
   favor:{ask:"Buddy! Crates. Rush. My back. Your legs. Deal? I'll make it worth your while.",task:"Produce crates → Cole's stall",from:{x:24,y:30},to:{x:28,y:28},fromLabel:'Produce crates',thanks:"You beautiful person. Apple's on the house. Hey, between us—"},
-  off:{intro:["Cole Faraday! Produce stall, Town Square, best prices in the county. My mother Rosa's the one on the bench who'll happily tell you my business."],work:["Great. Fine. Truck failed inspection and I'm pretending that's fine.","Selling. Slowly. You want apples? I'll do you a price."],sense:["Cold hands and bruised fruit. Sweetest right when it's going over — that's the trick of it.","Canvas and diesel. Mostly diesel, this week."],mood:["Doing sums on napkins at midnight kind of week.","I'm alright. I'm always alright. Apples?"]},
+  off:{intro:["Cole Faraday! Produce stall, Town Square, best prices in the county. My mother Rosa's the one on the bench who'll happily tell you my business."],work:["Great. Fine. Truck failed inspection and I'm pretending that's fine.","Selling. Slowly. Here — take an apple, and don't insult me by offering. {OFFER:A bruised apple|That's the one that was going anyway. Go on.|Suit yourself. They'll only bruise.}"],sense:["Cold hands and bruised fruit. Sweetest right when it's going over — that's the trick of it.","Canvas and diesel. Mostly diesel, this week."],mood:["Doing sums on napkins at midnight kind of week.","I'm alright. I'm always alright. Apples?"]},
   ep:{caught:"The ledger was left open on the stall — forty flawless pages — and a single note: 'Good luck with the shop.'",
       missed:"Cole's stall thrives. His sums are always perfect, his prices exactly fair. He never haggles anymore, and no one asks why.",
       accused:"Cole's stall never reopened. The inspection notice is still folded under the cash box, desperate math and all.",
@@ -279,7 +279,7 @@ const CAST=[
   homeObsAI:"There is no smell in the house. No hops, no cooking, nothing at all.",
   homeObsH:["Homebrew carboys bubble in the corner, each labeled with a worse pun.","An arm-wrestling trophy — 2nd place — spray-painted gold over the silver."],
   favor:{ask:"Keg delivery's sitting by the cellar and my back says absolutely not. Roll them in for me?",task:'Kegs → the Anchor Tap',from:{x:50,y:31},to:{x:47,y:30},fromLabel:'Keg delivery',thanks:"First pint's on me Festival night. Say, one thing—"},
-  off:{intro:["Theo Brandt. I keep the Anchor Tap. My husband Amir does the books, because I'm no good at them."],work:["Batch three might be off and the walk-in's dying. Otherwise perfect.","Pouring. Same as ever. You drinking?"],sense:["Hops, spilled beer, and the cold coming up off the cellar steps.","Yeast. Sour if it's wrong. You learn to trust your nose over the numbers."],mood:["Long. I've propped the fridge door with a mop — that's where we are.","Not bad. Amir does the worrying for both of us."]},
+  off:{intro:["Theo Brandt. I keep the Anchor Tap. My husband Amir does the books, because I'm no good at them."],work:["Batch three might be off and the walk-in's dying. Otherwise perfect.","Pouring. Same as ever. You drinking?"],sense:["Hops, spilled beer, and the cold coming up off the cellar steps.","Yeast. Sour if it's wrong. You learn to trust your nose over the numbers."],mood:["Long. I've propped the fridge door with a mop — that's where we are. Here, have one on me before it goes warm. {OFFER:A bottle of the Anchor's ale|Good. That one was going to be a problem otherwise.|Fair enough. It'll keep. Probably.}","Not bad. Amir does the worrying for both of us."]},
   ep:{caught:"Behind the bar they found every drink in town recorded in a neat little book — measures, times, who drank what. Nobody ordered their usual for a while.",
       missed:"The Festival ale was perfect. It's always perfect now. Theo pours without ever checking the glass.",
       accused:"The Anchor went dark for the Festival for the first time in forty years. The 2nd-place trophy stayed on the shelf, gold paint and all.",
@@ -295,7 +295,7 @@ const CAST=[
   homeObsAI:"No flour anywhere in the house. The oven is cold and looks like it has never once been lit.",
   homeObsH:["A sourdough starter bubbles on the counter, name-tagged and clearly loved.","Kids' drawings cover the fridge; a kilt hangs pressed and ready by the door."],
   favor:{ask:"Semolina delivery's sitting out front and my hands are full of fettuccine. Haul the sacks in for me?",task:'Semolina sacks → The Kilted Farmers',from:{x:16,y:31},to:{x:20,y:30},fromLabel:'Semolina sacks',thanks:"Cheers, neighbor. Bread's by the door — take a loaf. And listen—"},
-  off:{gamenight:["Andrew's place. Sam brings something made of glass and unnecessary, Zak brings the rulebook nobody asked for. Best night of the fortnight."],cabin:["Patrick's. I walk out the third and sixth evening with a loaf. He's good company, and this town's decided otherwise, which says more about the town than him."],intro:["Justin Fairchild. The Kilted Farmers — pasta, and sourdough on the side. That's my wife Jessica in the back and four kids loose somewhere. Bread's free by the door, help yourself."],work:["Orders stacked past the drying racks and the roller keeps slipping its belt.","Good. Long. Flour everywhere, including the ceiling, don't ask."],sense:["Semolina's dusty, bit nutty. The sourdough going in at six, though — that's the good one.","Warm and yeasty. Gets in your clothes. Jess says she can smell me coming."],mood:["Elliot's been up screaming at two. So — yes.","Busy. Take a loaf on your way out."]},
+  off:{gamenight:["Andrew's place. Sam brings something made of glass and unnecessary, Zak brings the rulebook nobody asked for. Best night of the fortnight."],cabin:["Patrick's. I walk out the third and sixth evening with a loaf. He's good company, and this town's decided otherwise, which says more about the town than him."],intro:["Justin Fairchild. The Kilted Farmers — pasta, and sourdough on the side. That's my wife Jessica in the back and four kids loose somewhere. Bread's free by the door, help yourself."],work:["Orders stacked past the drying racks and the roller keeps slipping its belt. There's bread by the door — it's free, that's the whole point of it. {OFFER:A warm sourdough roll|One each, neighbour. That's how it stays free.|It'll be there tomorrow. It always is.}","Good. Long. Flour everywhere, including the ceiling, don't ask."],sense:["Semolina's dusty, bit nutty. The sourdough going in at six, though — that's the good one.","Warm and yeasty. Gets in your clothes. Jess says she can smell me coming."],mood:["Elliot's been up screaming at two. So — yes.","Busy. Take a loaf on your way out."]},
   ep:{caught:"The racks were found hung with one final batch, every noodle perfect, and the free-bread basket filled to the brim. A goodbye, or an apology. Luna said the dog was happy again by morning.",
       missed:"The Kilted Farmers never runs behind anymore. The free bread is always exactly enough. Nobody has heard him laugh at his own jokes since spring — and Barley still won't go near him.",
       accused:"The shop went dark and the free-bread basket came inside for good. Jessica packed the four kids into the truck before the bonfire burned down. Luna kept asking why.",
@@ -461,7 +461,7 @@ const CAST=[
   homeObsAI:"No flour, no pastry, no rolling pin. The oven has never been lit.",
   homeObsH:["A rolling pin worn smooth at one end and a recipe card gone brown and unreadable.","Eighteen years of order books stacked on the dresser, the oldest one falling apart."],
   favor:{ask:"Fruit delivery's out by the road and I've got pastry resting that won't wait. Bring the crates in?",task:"Fruit crates → The Gloomstead",from:{x:38,y:17},to:{x:40,y:15},fromLabel:'Fruit crates',thanks:"You beauty. Take a slice — no arguing. And listen, since you're new here—"},
-  off:{intro:["Kayla Aube. I make the pies at The Gloomstead. Yes, the hat's mine. No, there's no occasion — I've dressed like this for years."],work:["Festival orders are down for the first time in eighteen years. Machine pies in Jackson at half my price.","Pastry's resting. I am not."],sense:["Butter and hot fruit. And scorched sugar where one caught the edge of the tin.","Flour and steam. My glasses fog every time I open that oven."],mood:["Long. I've started doing the sums where Conrad can't see me.","I'm alright. Have a slice, go on."]},
+  off:{intro:["Kayla Aube. I make the pies at The Gloomstead. Yes, the hat's mine. No, there's no occasion — I've dressed like this for years."],work:["Festival orders are down for the first time in eighteen years. Machine pies in Jackson at half my price.","Pastry's resting. I am not."],sense:["Butter and hot fruit. And scorched sugar where one caught the edge of the tin.","Flour and steam. My glasses fog every time I open that oven."],mood:["Long. I've started doing the sums where Conrad can't see me. Have a slice, go on — it'll only go stale. {OFFER:A slice of cherry pie|There. Now somebody's had it, which is better than the bin.|More for Conrad, then.}","I'm alright. Have a slice, go on."]},
   ep:{caught:"Twelve pies were left cooling on the rack, each one identical to the last, perfect and joyless. Conrad threw the lot in the river and started again from his mother's card.",
       missed:"The Gloomstead pies are flawless now, every lattice the same width, and they undercut the supermarket by a penny. Nobody drives in for them anymore, and nobody can say why.",
       accused:"Kayla went without a word. Conrad kept the ovens going alone for a month, badly, and then didn't. The board over the door still says THE GLOOMSTEAD.",
@@ -916,27 +916,58 @@ function personSprite(pal,face,frame){
       g.fillStyle=hr;g.fillRect(13*Z,5*Z,2*Z,9*Z);
       g.fillStyle=P['K'];g.fillRect(15*Z,5*Z,Z,9*Z);
     }
-    if(pal.beard&&face!==0){
-      const bc=pal.beardColor||pal.beardColour||hr;
-      g.fillStyle=bc;g.fillRect(3*Z,11*Z,10*Z,4*Z);
-      g.fillStyle=shadeC(bc,1.2);g.fillRect(4*Z,11*Z,8*Z,Z);
-      g.fillStyle=P['K'];g.fillRect(3*Z,15*Z,10*Z,Z);
-    }else if(pal.goatee&&face!==0){
-      g.fillStyle=pal.beardColor||pal.beardColour||hr;g.fillRect(6*Z,12*Z,4*Z,3*Z);
+    const bc=pal.beardColor||pal.beardColour||hr;
+    if(face!==0){
+      if(pal.fullBeard){
+        g.fillStyle=bc;g.fillRect(2*Z,10*Z,12*Z,6*Z);
+        g.fillRect(3*Z,9*Z,10*Z,Z);
+        g.fillStyle=shadeC(bc,1.22);g.fillRect(3*Z,10*Z,9*Z,Z);
+        g.fillStyle=shadeC(bc,0.72);g.fillRect(2*Z,15*Z,12*Z,Z);
+        g.fillStyle=P['K'];g.fillRect(2*Z,16*Z,12*Z,Z);
+        g.fillStyle=bc;g.fillRect(5*Z,9*Z,6*Z,Z);
+      }else if(pal.beard){
+        g.fillStyle=bc;g.fillRect(3*Z,11*Z,10*Z,4*Z);
+        g.fillStyle=shadeC(bc,1.2);g.fillRect(4*Z,11*Z,8*Z,Z);
+        g.fillStyle=P['K'];g.fillRect(3*Z,15*Z,10*Z,Z);
+      }else if(pal.goatee){
+        g.fillStyle=bc;g.fillRect(6*Z,12*Z,4*Z,3*Z);
+        g.fillStyle=shadeC(bc,1.2);g.fillRect(6*Z,12*Z,4*Z,Z);
+        g.fillStyle=bc;g.fillRect(5*Z,11*Z,6*Z,Z);
+      }else if(pal.moustache){
+        g.fillStyle=bc;g.fillRect(5*Z,11*Z,6*Z,2*Z);
+        g.fillStyle=shadeC(bc,1.2);g.fillRect(5*Z,11*Z,6*Z,Z);
+      }else if(pal.stubble){
+        g.fillStyle='rgba(0,0,0,0.16)';g.fillRect(3*Z,11*Z,10*Z,4*Z);
+      }
     }
     if(pal.paint){
       g.fillStyle='#8C3A2E';g.fillRect(2*Z,18*Z,2*Z,Z);
       g.fillStyle='#4E8B8B';g.fillRect(12*Z,19*Z,2*Z,Z);
       g.fillStyle='#C4A44E';g.fillRect(3*Z,20*Z,2*Z,Z);
     }
-    if(pal.glasses&&face!==0){
-      g.fillStyle='#22201E';
-      g.fillRect(3*Z,9*Z,4*Z,Z);g.fillRect(9*Z,9*Z,4*Z,Z);
-      g.fillRect(3*Z,8*Z,Z,2*Z);g.fillRect(6*Z,8*Z,Z,2*Z);
-      g.fillRect(9*Z,8*Z,Z,2*Z);g.fillRect(12*Z,8*Z,Z,2*Z);
-      g.fillRect(7*Z,9*Z,2*Z,Z);
-      g.fillStyle='rgba(190,220,240,0.30)';
-      g.fillRect(4*Z,9*Z,2*Z,Z);g.fillRect(10*Z,9*Z,2*Z,Z);
+    if(face!==0){
+      if(pal.glasses){
+        g.fillStyle='#22201E';
+        g.fillRect(3*Z,9*Z,4*Z,Z);g.fillRect(9*Z,9*Z,4*Z,Z);
+        g.fillRect(3*Z,8*Z,Z,2*Z);g.fillRect(6*Z,8*Z,Z,2*Z);
+        g.fillRect(9*Z,8*Z,Z,2*Z);g.fillRect(12*Z,8*Z,Z,2*Z);
+        g.fillRect(7*Z,9*Z,2*Z,Z);
+        g.fillStyle='rgba(190,220,240,0.30)';
+        g.fillRect(4*Z,9*Z,2*Z,Z);g.fillRect(10*Z,9*Z,2*Z,Z);
+      }else if(pal.roundGlasses){
+        g.fillStyle='#C9A44E';
+        g.fillRect(4*Z,8*Z,3*Z,Z);g.fillRect(4*Z,10*Z,3*Z,Z);
+        g.fillRect(3*Z,9*Z,Z,Z);g.fillRect(7*Z,9*Z,Z,Z);
+        g.fillRect(9*Z,8*Z,3*Z,Z);g.fillRect(9*Z,10*Z,3*Z,Z);
+        g.fillRect(8*Z,9*Z,Z,Z);g.fillRect(12*Z,9*Z,Z,Z);
+        g.fillStyle='rgba(190,220,240,0.28)';
+        g.fillRect(4*Z,9*Z,3*Z,Z);g.fillRect(9*Z,9*Z,3*Z,Z);
+      }else if(pal.patch){
+        g.fillStyle='#17130F';
+        g.fillRect(3*Z,7*Z,10*Z,Z);
+        g.fillRect(3*Z,8*Z,4*Z,3*Z);
+        g.fillStyle='#2E2A26';g.fillRect(4*Z,9*Z,2*Z,Z);
+      }
     }
     if(pal.kilt){
       g.fillStyle=pal.kilt.base;g.fillRect(2*Z,20*Z,12*Z,4*Z);
@@ -1424,6 +1455,13 @@ const WARM_FEST=["Bunting's up, so it must be. I'll be at the fire with the rest
 const WARM_NOTE=["Under your door? That's a rotten welcome. Wasn't me.","Somebody's having you on. Or they're not, which is worse.","Not mine. But I'd keep hold of it, if I were you."];
 function pick(arr,seed){return arr[hashStr(seed)%arr.length];}
 const OFFER_LINES=["Here — take this. Go on.","Have this. No arguing.","Take that with you.","Here. You look like you could use it."];
+/* a line may end with {OFFER:thing|yes reply|no reply} — the player gets to answer */
+function parseOffer(line){
+  const m=/\{OFFER:([^|}]+)\|([^|}]+)\|([^}]+)\}/.exec(line);
+  if(!m)return {text:line,offer:null};
+  return {text:line.replace(m[0],'').trim(),
+          offer:{item:m[1].trim(),yes:m[2].trim(),no:m[3].trim()}};
+}
 function maybeOffer(c,d){
   if(!c.give)return null;
   if(d.gaveDay===S.day)return null;
@@ -1672,7 +1710,7 @@ function newGame(hard){
   const humans=humansAll;
   const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
   return {runId,friendId,kin,hard:!!hard,numAI,mode:'free',day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
-    player:{name:'',skin:'#E8C49B',hair:'#6B4226',hairStyle:'short',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
+    player:{name:'',skin:'#E8C49B',hair:'#6B4226',hairStyle:'short',longHair:false,face:'none',eyes:'none',beardColor:'#6B4226',top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
     curios:[],cats:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
@@ -1685,6 +1723,8 @@ async function load(){
       Object.values(S.npc||{}).forEach(n=>{if(n.history)n.history=n.history.filter(m=>!(m.role==='assistant'&&FAKE.includes(m.text)));});
       S.player=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
       S.player.outfit=S.player.outfit||S.player.bottom||'pants';S.player.hat=S.player.hat||'none';S.player.name=S.player.name||'';S.player.hairStyle=S.player.hairStyle||(S.player.longHair?'long':'short');
+      S.player.face=S.player.face||'none';S.player.eyes=S.player.eyes||'none';
+      S.player.beardColor=S.player.beardColor||S.player.hair;
       S.found2=S.found2||[];S.pockets=S.pockets||[];S.ateToday=S.ateToday||false;
       S.curios=S.curios||[];S.cats=S.cats||[];S.numAI=S.numAI||NUM_AI;S.mode=S.mode||'free';
       S.kin=S.kin||{};
@@ -2473,7 +2513,7 @@ function drawWorld(){
 }
 function drawPlayer(g,x,y){
   const p=S.player||{skin:'#E8C49B',hair:'#6B4226',longHair:false,top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'};
-  drawPerson(g,x,y,{skin:p.skin,hair:p.hair,longHair:p.hairStyle==='long',pony:p.hairStyle==='pony',shirt:p.top,pants:'#3A3A42',outfit:p.outfit,hat:p.hat,kilt:p.outfit==='kilt'?{base:p.tartan,stripe:'#C4A44E'}:null},playerStep,playerFace);
+  drawPerson(g,x,y,playerPal(),playerStep,playerFace);
   if(S.activeTask&&S.activeTask.carried){
     g.fillStyle='#A8844A';g.fillRect(x+8,y-10,16,10);
     g.fillStyle='#7A5A3C';g.fillRect(x+8,y-10,16,3);}
@@ -2488,21 +2528,72 @@ function drawInterior(bldId){
   ctx.save();ctx.scale(scale,scale);ctx.translate(ox,oy);
   // plank floor
   for(let y=1;y<IH;y++){
-    const tone=hashStr(bldId+'p'+y)%3;
-    ctx.fillStyle=[spec.floorA,spec.floorB,spec.floorA][tone];
-    ctx.fillRect(0,y*TILE,rw,TILE);
-    ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(0,y*TILE,rw,2);
-    ctx.fillStyle='rgba(255,255,255,0.03)';ctx.fillRect(0,y*TILE+3,rw,1);
-    for(let k=0;k<4;k++){
-      const sx=((hashStr(bldId+'s'+y+'k'+k)%IW)+((y%2)?0.5:0))*TILE;
-      ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(sx,y*TILE+2,2,TILE-4);
+    /* two boards per tile-row, staggered */
+    for(let half=0;half<2;half++){
+      const by=y*TILE+half*16;
+      const tone=hashStr(bldId+'p'+y+'h'+half)%4;
+      const base=[spec.floorA,spec.floorB,shadeC(spec.floorA,1.06),shadeC(spec.floorB,0.94)][tone];
+      ctx.fillStyle=base;ctx.fillRect(0,by,rw,16);
+      /* grain */
+      for(let g2=0;g2<3;g2++){
+        const gy=by+3+g2*5;
+        ctx.fillStyle=(g2%2)?shadeC(base,0.93):shadeC(base,1.06);
+        const gx=(hashStr(bldId+'g'+y+half+g2)%40);
+        ctx.fillRect(gx,gy,rw-gx-((hashStr(bldId+'w'+y+g2)%60)),1);
+      }
+      /* board seam and its highlight */
+      ctx.fillStyle='rgba(0,0,0,0.26)';ctx.fillRect(0,by,rw,1);
+      ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(0,by+1,rw,1);
+      /* butt joints, staggered per row */
+      const stag=((y+half)%2)?24:0;
+      for(let j=0;j<Math.ceil(rw/96);j++){
+        const jx=stag+j*96;
+        if(jx<rw){
+          ctx.fillStyle='rgba(0,0,0,0.30)';ctx.fillRect(jx,by,2,16);
+          ctx.fillStyle='rgba(255,255,255,0.04)';ctx.fillRect(jx+2,by,1,16);
+          /* nail heads */
+          ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fillRect(jx+6,by+4,2,2);ctx.fillRect(jx+6,by+11,2,2);
+          ctx.fillStyle='rgba(255,255,255,0.10)';ctx.fillRect(jx+6,by+4,1,1);
+        }
+      }
     }
+  }
+  /* light pooling from the window, and dark in the corners */
+  {
+    const gl=ctx.createRadialGradient(rw/2,TILE,10,rw/2,TILE,rw*0.7);
+    gl.addColorStop(0,'rgba(255,225,160,0.10)');gl.addColorStop(1,'rgba(255,225,160,0)');
+    ctx.fillStyle=gl;ctx.fillRect(0,0,rw,rh);
+    ctx.fillStyle='rgba(0,0,0,0.16)';
+    ctx.fillRect(0,0,26,rh);ctx.fillRect(rw-26,0,26,rh);
+    ctx.fillRect(0,rh-26,rw,26);
   }
   // back wall
   ctx.fillStyle=spec.wall;ctx.fillRect(0,0,rw,TILE);
-  if(b.kind==='home'){ctx.fillStyle='rgba(255,255,255,0.045)';for(let x=0;x<IW*2;x++)ctx.fillRect(x*16+5,2,3,TILE-7);}
-  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(0,TILE-5,rw,5);
-  ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(0,0,rw,3);
+  /* plaster mottling */
+  for(let i=0;i<26;i++){
+    const mx=hashStr(bldId+'m'+i)%rw, my=2+hashStr(bldId+'n'+i)%(TILE-8);
+    ctx.fillStyle=(i%2)?shadeC(spec.wall,1.07):shadeC(spec.wall,0.93);
+    ctx.fillRect(mx,my,10,4);
+  }
+  if(b.kind==='home'){
+    /* striped paper */
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    for(let x=0;x<IW*2;x++)ctx.fillRect(x*16+5,2,3,TILE-10);
+  }else{
+    /* tongue-and-groove panelling */
+    for(let x=0;x<rw;x+=12){
+      ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(x,2,1,TILE-10);
+      ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(x+1,2,1,TILE-10);
+    }
+  }
+  /* picture rail */
+  ctx.fillStyle=shadeC(spec.wall,0.62);ctx.fillRect(0,TILE-14,rw,3);
+  ctx.fillStyle=shadeC(spec.wall,1.22);ctx.fillRect(0,TILE-15,rw,1);
+  /* skirting board */
+  ctx.fillStyle=shadeC(spec.wall,0.55);ctx.fillRect(0,TILE-8,rw,8);
+  ctx.fillStyle=shadeC(spec.wall,1.15);ctx.fillRect(0,TILE-8,rw,2);
+  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.fillRect(0,TILE-2,rw,2);
+  ctx.fillStyle='rgba(255,255,255,0.07)';ctx.fillRect(0,0,rw,3);
   // window + curtains
   ctx.fillStyle='#1E1A16';ctx.fillRect(rw/2-18,4,36,23);
   ctx.fillStyle='rgba(224,166,61,0.55)';ctx.fillRect(rw/2-16,6,32,19);
@@ -2511,6 +2602,17 @@ function drawInterior(bldId){
   if(curtC){ctx.fillStyle=curtC;ctx.fillRect(rw/2-24,3,9,25);ctx.fillRect(rw/2+15,3,9,25);
     ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(rw/2-24,3,9,3);ctx.fillRect(rw/2+15,3,9,3);
     ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(rw/2-21,6,2,22);ctx.fillRect(rw/2+18,6,2,22);}
+  /* wall lamp */
+  {
+    const lx=48,ly=TILE-24;
+    ctx.fillStyle='#2A2118';ctx.fillRect(lx-1,ly-1,12,4);
+    ctx.fillStyle='#5A4632';ctx.fillRect(lx+4,ly+2,3,7);
+    ctx.fillStyle='#C9A44E';ctx.fillRect(lx,ly+8,12,7);
+    ctx.fillStyle='#E8C46A';ctx.fillRect(lx+1,ly+9,10,3);
+    const gl2=ctx.createRadialGradient(lx+6,ly+12,2,lx+6,ly+12,52);
+    gl2.addColorStop(0,'rgba(255,215,140,0.20)');gl2.addColorStop(1,'rgba(255,215,140,0)');
+    ctx.fillStyle=gl2;ctx.fillRect(lx-46,ly-40,104,104);
+  }
   // wall clock with moving hands
   ctx.fillStyle='#2A2118';ctx.beginPath();ctx.arc(rw-40,15,9,0,7);ctx.fill();
   ctx.fillStyle='#EDE6D6';ctx.beginPath();ctx.arc(rw-40,15,7,0,7);ctx.fill();
@@ -2582,32 +2684,145 @@ function drawInterior(bldId){
     ctx.fillText('room 2',(spec.div2.x1+3.5)*TILE,dy+TILE-4);
   }
   const OL='#1E1A16';
-  const box=(fx,fy,fw,fh,c)=>{ctx.fillStyle=OL;ctx.fillRect(fx-1,fy-1,fw+2,fh+2);ctx.fillStyle=c;ctx.fillRect(fx,fy,fw,fh);
-    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(fx,fy,fw,3);ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(fx,fy+fh-3,fw,3);};
+  if(spec.rug){
+    const [rx,ry,rww,rhh,rc]=spec.rug;
+    const RX=rx*TILE,RY=ry*TILE,RW=rww*TILE,RH2=rhh*TILE;
+    ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(RX+3,RY+3,RW,RH2);
+    ctx.fillStyle=rc;ctx.fillRect(RX,RY,RW,RH2);
+    ctx.fillStyle='rgba(255,255,255,0.10)';ctx.fillRect(RX+5,RY+5,RW-10,2);ctx.fillRect(RX+5,RY+RH2-7,RW-10,2);
+    ctx.fillStyle='rgba(0,0,0,0.16)';ctx.fillRect(RX+9,RY+9,RW-18,RH2-18);
+    ctx.fillStyle=rc;ctx.fillRect(RX+12,RY+12,RW-24,RH2-24);
+    /* fringe */
+    ctx.fillStyle='rgba(237,230,214,0.30)';
+    for(let i=0;i<RW;i+=6){ctx.fillRect(RX+i,RY-3,3,3);ctx.fillRect(RX+i,RY+RH2,3,3);}
+  }
+  const box=(fx,fy,fw,fh,c)=>{
+    /* contact shadow */
+    ctx.fillStyle='rgba(0,0,0,0.26)';ctx.fillRect(fx+2,fy+fh-1,fw,4);
+    /* outline */
+    ctx.fillStyle=OL;ctx.fillRect(fx-1,fy-1,fw+2,fh+2);
+    /* body */
+    ctx.fillStyle=c;ctx.fillRect(fx,fy,fw,fh);
+    /* wood grain, keyed off the piece so it never shimmers */
+    const gk=Math.round(fx*7+fy*13);
+    for(let i=0;i<Math.max(2,Math.floor(fh/9));i++){
+      const gy=fy+3+i*8;
+      if(gy>fy+fh-3)break;
+      ctx.fillStyle=(i%2)?shadeC(c,0.90):shadeC(c,1.07);
+      const off=(hashStr('gr'+gk+i)%12);
+      ctx.fillRect(fx+off,gy,Math.max(6,fw-off-(hashStr('gs'+gk+i)%14)),1);
+    }
+    /* lit top edge, shaded foot, and a soft left highlight */
+    ctx.fillStyle='rgba(255,246,220,0.16)';ctx.fillRect(fx,fy,fw,3);
+    ctx.fillStyle='rgba(255,246,220,0.07)';ctx.fillRect(fx,fy,3,fh);
+    ctx.fillStyle='rgba(0,0,0,0.26)';ctx.fillRect(fx,fy+fh-4,fw,4);
+    ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(fx+fw-3,fy,3,fh);
+  };
   const furnDraw=(f)=>{
     const k=f[0],fx=f[1]*TILE,fy=f[2]*TILE,fw=(f[3]||1)*TILE,fh=(f[4]||1)*TILE,col=f[5],lab=f[6];
     const sh=()=>{ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(fx+2,fy+fh-3,fw,6);};
-    if(k==='bed'){sh();box(fx,fy,fw,fh,'#7A5A3C');
-      ctx.fillStyle='#5C4630';ctx.fillRect(fx,fy,fw,6);
-      ctx.fillStyle=col||'#6E4A52';ctx.fillRect(fx+2,fy+12,fw-4,fh-14);
-      ctx.fillStyle='rgba(0,0,0,0.18)';for(let i=0;i<4;i++)for(let j=0;j<2;j++)if((i+j)%2)ctx.fillRect(fx+2+i*(fw-4)/4,fy+12+j*(fh-14)/2,(fw-4)/4,(fh-14)/2);
-      ctx.fillStyle='#EDE6D6';ctx.fillRect(fx+4,fy+5,(fw/2)-8,8);ctx.fillRect(fx+fw/2+2,fy+5,(fw/2)-8,8);
-      if(isNeat){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(fx,fy,fw,fh);}}
+    if(k==='bed'){
+      box(fx,fy,fw,fh,'#6B4E33');
+      /* headboard with turned posts */
+      ctx.fillStyle='#4E3A24';ctx.fillRect(fx,fy,fw,8);
+      ctx.fillStyle='#5E462C';ctx.fillRect(fx+1,fy+1,fw-2,3);
+      ctx.fillStyle=OL;ctx.fillRect(fx-1,fy-3,5,11);ctx.fillRect(fx+fw-4,fy-3,5,11);
+      ctx.fillStyle='#5E462C';ctx.fillRect(fx,fy-2,3,10);ctx.fillRect(fx+fw-3,fy-2,3,10);
+      /* mattress under the quilt */
+      ctx.fillStyle='#D8CFBC';ctx.fillRect(fx+2,fy+9,fw-4,fh-11);
+      /* quilt, patched */
+      const q=col||'#6E4A52';
+      ctx.fillStyle=q;ctx.fillRect(fx+2,fy+14,fw-4,fh-16);
+      const cols=4,rows=Math.max(2,Math.floor((fh-16)/10));
+      for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+        const cw2=(fw-4)/cols,chh=(fh-16)/rows;
+        ctx.fillStyle=((i+j)%2)?shadeC(q,0.80):shadeC(q,1.14);
+        ctx.fillRect(fx+2+i*cw2,fy+14+j*chh,cw2,chh);
+      }
+      /* stitching */
+      ctx.fillStyle='rgba(0,0,0,0.20)';
+      for(let i=1;i<cols;i++)ctx.fillRect(fx+2+i*(fw-4)/cols,fy+14,1,fh-16);
+      for(let j=1;j<rows;j++)ctx.fillRect(fx+2,fy+14+j*(fh-16)/rows,fw-4,1);
+      /* turned-down sheet */
+      ctx.fillStyle='#EDE6D6';ctx.fillRect(fx+2,fy+13,fw-4,4);
+      ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(fx+2,fy+16,fw-4,1);
+      /* pillows */
+      ctx.fillStyle=OL;ctx.fillRect(fx+3,fy+4,(fw/2)-7,10);
+      ctx.fillStyle='#F2ECDE';ctx.fillRect(fx+4,fy+5,(fw/2)-9,8);
+      ctx.fillStyle='rgba(0,0,0,0.10)';ctx.fillRect(fx+4,fy+11,(fw/2)-9,2);
+      if(fw>60){
+        ctx.fillStyle=OL;ctx.fillRect(fx+fw/2+2,fy+4,(fw/2)-7,10);
+        ctx.fillStyle='#F2ECDE';ctx.fillRect(fx+fw/2+3,fy+5,(fw/2)-9,8);
+      }
+      if(isNeat){ctx.fillStyle='rgba(200,215,235,0.10)';ctx.fillRect(fx,fy,fw,fh);}
+      else{ctx.fillStyle='rgba(0,0,0,0.10)';ctx.fillRect(fx+fw-14,fy+fh-12,12,10);}}
     else if(k==='table'||k==='desk'){sh();box(fx,fy,fw,fh,col||'#6A5238');
       ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(fx+3,fy+3,fw-6,1);
       if(k==='desk'){ctx.fillStyle='#4A3826';ctx.fillRect(fx+fw-12,fy+fh/2-3,8,6);ctx.fillStyle='#E0A63D';ctx.fillRect(fx+fw-9,fy+fh/2-1,2,2);}
       if(k==='table'&&b.kind!=='home'&&!isNeat){ctx.fillStyle='#EDE6D6';ctx.fillRect(fx+6,fy+5,8,6);ctx.fillStyle='#8C5A3C';ctx.fillRect(fx+7,fy+6,6,4);}}
-    else if(k==='chair'){ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(fx+8,fy+22,16,3);
-      ctx.fillStyle=OL;ctx.fillRect(fx+7,fy+3,18,21);
-      ctx.fillStyle='#5C4630';ctx.fillRect(fx+8,fy+10,16,13);ctx.fillStyle='#4A3826';ctx.fillRect(fx+8,fy+4,16,7);
-      ctx.fillStyle='rgba(255,255,255,0.07)';ctx.fillRect(fx+8,fy+4,16,2);}
+    else if(k==='chair'){
+      ctx.fillStyle='rgba(0,0,0,0.24)';ctx.fillRect(fx+8,fy+23,17,4);
+      /* back rest with spindles */
+      ctx.fillStyle=OL;ctx.fillRect(fx+7,fy+2,18,10);
+      ctx.fillStyle='#523B26';ctx.fillRect(fx+8,fy+3,16,8);
+      ctx.fillStyle='#3E2C1C';
+      ctx.fillRect(fx+11,fy+4,2,6);ctx.fillRect(fx+15,fy+4,2,6);ctx.fillRect(fx+19,fy+4,2,6);
+      ctx.fillStyle='rgba(255,246,220,0.14)';ctx.fillRect(fx+8,fy+3,16,2);
+      /* seat */
+      ctx.fillStyle=OL;ctx.fillRect(fx+6,fy+12,20,8);
+      ctx.fillStyle='#5C4630';ctx.fillRect(fx+7,fy+13,18,6);
+      ctx.fillStyle='rgba(255,246,220,0.16)';ctx.fillRect(fx+7,fy+13,18,2);
+      ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(fx+7,fy+18,18,1);
+      /* legs */
+      ctx.fillStyle=OL;ctx.fillRect(fx+8,fy+20,3,5);ctx.fillRect(fx+21,fy+20,3,5);
+      ctx.fillStyle='#4A3826';ctx.fillRect(fx+8,fy+20,2,4);ctx.fillRect(fx+21,fy+20,2,4);}
     else if(k==='stove'){sh();box(fx,fy,fw,fh,'#55606A');
       ctx.fillStyle='#1A1A1E';ctx.beginPath();ctx.arc(fx+10,fy+9,5.5,0,7);ctx.arc(fx+fw-10,fy+9,5.5,0,7);ctx.fill();
       ctx.fillStyle='#33333A';ctx.beginPath();ctx.arc(fx+10,fy+9,3,0,7);ctx.arc(fx+fw-10,fy+9,3,0,7);ctx.fill();
       ctx.fillStyle='#33333A';ctx.fillRect(fx+4,fy+fh-9,fw-8,5);}
-    else if(k==='counter'){sh();box(fx,fy,fw,fh,col||'#7A5A3C');
+    else if(k==='counter'){box(fx,fy,fw,fh,col||'#7A5A3C');
+      ctx.fillStyle=shadeC(col||'#7A5A3C',1.22);ctx.fillRect(fx,fy,fw,5);
+      ctx.fillStyle='rgba(0,0,0,0.20)';ctx.fillRect(fx,fy+5,fw,1);
+      for(let i=0;i<Math.max(1,Math.floor(fw/28));i++){
+        ctx.fillStyle='rgba(0,0,0,0.16)';ctx.fillRect(fx+6+i*28,fy+9,20,fh-14);
+        ctx.fillStyle='rgba(255,246,220,0.09)';ctx.fillRect(fx+6+i*28,fy+9,20,1);
+        ctx.fillStyle='#C9A44E';ctx.fillRect(fx+14+i*28,fy+9+(fh-14)/2-1,5,2);
+      }
       ctx.fillStyle='rgba(0,0,0,0.15)';for(let i=1;i<(f[3]||1);i++)ctx.fillRect(fx+i*TILE,fy+2,1,fh-4);}
-    else if(k==='shelf'){sh();box(fx,fy,fw,fh,col||'#5C4630');
+    else if(k==='shelf'){box(fx,fy,fw,fh,col||'#5C4630');
+      {
+        const rows=Math.max(1,Math.floor(fh/16));
+        for(let r=0;r<rows;r++){
+          const sy=fy+4+r*16;
+          if(sy+11>fy+fh)break;
+          ctx.fillStyle='rgba(0,0,0,0.34)';ctx.fillRect(fx+2,sy+11,fw-4,2);
+          let bx2=fx+3;
+          let i=0;
+          while(bx2<fx+fw-6){
+            const seed=hashStr(bldId+'bk'+fx+fy+r+i);
+            const w2=3+(seed%3), hh2=7+(seed%4);
+            if(seed%7===0){ /* a jar or a pot */
+              ctx.fillStyle=['#7FA8A8','#C4744A','#8C7AA8','#C9A44E'][seed%4];
+              ctx.fillRect(bx2,sy+11-hh2,w2+2,hh2);
+              ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fillRect(bx2+1,sy+11-hh2+1,1,hh2-3);
+              bx2+=w2+4;
+            }else if(seed%11===0){ /* one lying on its side */
+              ctx.fillStyle=['#8C2F3A','#3E5A6A','#6B5B3C'][seed%3];
+              ctx.fillRect(bx2,sy+7,10,4);
+              ctx.fillStyle='rgba(255,255,255,0.14)';ctx.fillRect(bx2,sy+7,10,1);
+              bx2+=12;
+            }else{
+              ctx.fillStyle=['#8C2F3A','#3E5A6A','#4E7A4E','#6B5B3C','#7A4A6A','#2E4A6A'][seed%6];
+              ctx.fillRect(bx2,sy+11-hh2,w2,hh2);
+              ctx.fillStyle='rgba(255,255,255,0.16)';ctx.fillRect(bx2,sy+11-hh2,w2,1);
+              ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(bx2+w2-1,sy+11-hh2,1,hh2);
+              bx2+=w2+1;
+            }
+            i++;
+            if(i>40)break;
+          }
+        }
+      }
       if(!col){const rows=Math.max(1,Math.floor(fh/14));
         for(let r=0;r<rows;r++){ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(fx+2,fy+13+r*14,fw-4,2);
           for(let i=0;i<3;i++){ctx.fillStyle=['#8C4A3C','#4E5A66','#6B5B8C','#7A9455','#C4A44E'][(r*3+i+f[1])%5];ctx.fillRect(fx+3+i*9,fy+3+r*14,6,10);}}}}
@@ -3177,11 +3392,16 @@ function esc(s){const d=document.createElement('div');d.innerText=s;return d.inn
 
 const CUSTOM_OPTS={
   skin:['#F2E3D0','#E8C49B','#D9A47C','#B07B52','#8A5A3C'],
-  hair:['#6B4226','#241C18','#B8B8B0','#8C2F1E','#C4A44E','#4A2A5A','#2E6A6A'],
+  hair:['#6B4226','#3A2A1A','#241C18','#D4B25E','#E8D08A','#C4A44E','#CC8F4E','#B85A2E','#8C2F1E','#B8B8B0','#EDE6D6','#4A2A5A','#2E6A6A','#3A6EA5','#C4497B'],
+  beardColor:['#6B4226','#3A2A1A','#241C18','#D4B25E','#C4A44E','#CC8F4E','#B85A2E','#8C2F1E','#B8B8B0','#EDE6D6'],
   top:['#4E8B8B','#C25B4A','#6B5B8C','#C4A44E','#3E5A46','#1E1A22','#3A2A4A','#6A1E2A'],
   tartan:['#2E5A3C','#7A2E2E','#2E3E6A','#1E1A22']
 };
 const HAIRSTYLES=['short','long','pony'];
+const FACES=['none','stubble','moustache','goatee','beard','fullbeard'];
+const FACE_LABELS={none:'Clean-shaven',stubble:'Stubble',moustache:'Moustache',goatee:'Goatee',beard:'Beard',fullbeard:'Full beard'};
+const EYEWEAR=['none','glasses','round','patch'];
+const EYE_LABELS={none:'None',glasses:'Glasses',round:'Round specs',patch:'Eye patch'};
 const HAIR_LABELS={short:'Short',long:'Long',pony:'Ponytail'};
 const OUTFITS=['pants','kilt','dress','gown'];
 const OUTFIT_LABELS={pants:'Trousers',kilt:'Kilt',dress:'Dress',gown:'Gown'};
@@ -3193,14 +3413,33 @@ function drawPreview(){
   g.clearRect(0,0,pv.width,pv.height);
   g.save();g.scale(1.6,1.6);
   const p=S.player;
-  drawPerson(g,7,4,{skin:p.skin,hair:p.hair,longHair:p.hairStyle==='long',pony:p.hairStyle==='pony',shirt:p.top,pants:'#3A3A42',outfit:p.outfit,hat:p.hat,kilt:p.outfit==='kilt'?{base:p.tartan,stripe:'#C4A44E'}:null},0,1);
+  drawPerson(g,7,4,playerPal(),0,1);
   g.restore();
+}
+function playerPal(){
+  const p=S.player;
+  const fh=p.face||'none';
+  return {skin:p.skin,hair:p.hair,
+    longHair:p.hairStyle==='long',pony:p.hairStyle==='pony',
+    shirt:p.top,pants:'#3A3A42',outfit:p.outfit,hat:p.hat,
+    kilt:p.outfit==='kilt'?{base:p.tartan,stripe:'#C4A44E'}:null,
+    beard:(fh==='beard'||fh==='fullbeard'),
+    fullBeard:fh==='fullbeard',
+    goatee:fh==='goatee',
+    moustache:fh==='moustache',
+    stubble:fh==='stubble',
+    beardColor:p.beardColor||p.hair,
+    glasses:p.eyes==='glasses',
+    roundGlasses:p.eyes==='round',
+    patch:p.eyes==='patch'};
 }
 function cycleOpt(field,dir){
   const p=S.player;
   if(field==='hairStyle'){const i=Math.max(0,HAIRSTYLES.indexOf(p.hairStyle||'short'));p.hairStyle=HAIRSTYLES[(i+dir+HAIRSTYLES.length)%HAIRSTYLES.length];}
   else if(field==='outfit'){const i=Math.max(0,OUTFITS.indexOf(p.outfit));p.outfit=OUTFITS[(i+dir+OUTFITS.length)%OUTFITS.length];}
   else if(field==='hat'){const i=Math.max(0,HATS.indexOf(p.hat));p.hat=HATS[(i+dir+HATS.length)%HATS.length];}
+  else if(field==='face'){const i=Math.max(0,FACES.indexOf(p.face||'none'));p.face=FACES[(i+dir+FACES.length)%FACES.length];}
+  else if(field==='eyes'){const i=Math.max(0,EYEWEAR.indexOf(p.eyes||'none'));p.eyes=EYEWEAR[(i+dir+EYEWEAR.length)%EYEWEAR.length];}
   else{
     const arr=CUSTOM_OPTS[field];
     const i=Math.max(0,arr.indexOf(p[field]));
@@ -3212,6 +3451,10 @@ function cycleOpt(field,dir){
   const bl=document.getElementById('botLabel');if(bl)bl.innerText=OUTFIT_LABELS[p.outfit];
   const hl=document.getElementById('hairLenLabel');if(hl)hl.innerText=HAIR_LABELS[p.hairStyle||'short'];
   const htl=document.getElementById('hatLabel');if(htl)htl.innerText=HAT_LABELS[p.hat];
+  const fl=document.getElementById('faceLabel');if(fl)fl.innerText=FACE_LABELS[p.face||'none'];
+  const el2=document.getElementById('eyeLabel');if(el2)el2.innerText=EYE_LABELS[p.eyes||'none'];
+  const bcr=document.getElementById('beardRow');
+  if(bcr)bcr.style.display=((p.face||'none')==='none')?'none':'flex';
   drawPreview();
 }
 function nameRow(){
@@ -3317,6 +3560,11 @@ function openIntro(){
     +customRow('Outfit','outfit','botLabel','Trousers')
     +customRow('Outfit color','top')
     +customRow('Tartan','tartan')
+    +customRow('Facial hair','face','faceLabel','Clean-shaven')
+    +'<div id="beardRow" style="display:'+(((S.player.face||'none')==='none')?'none':'flex')+';">'
+    +customRow('Beard colour','beardColor')
+    +'</div>'
+    +customRow('Eyewear','eyes','eyeLabel','None')
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
     +'<p class="sub" style="margin-top:12px;">Move with WASD / arrows or the joystick. Walk up to people to talk — '+ENERGY+' visits a day; one conversation costs one visit. Everyone keeps their own routine: work, lunch, errands, home. Doors in this town don\'t lock much. Help folks when they ask — and mind what you promise. Sleep at the Inn to advance. Accuse when you\'re certain: what you choose at the Festival cannot be undone.</p>'
@@ -3492,7 +3740,10 @@ function openChat(id){
     d.history.push({role:'user',text:t.q});
     cb.innerHTML+='<div class="bubble me">'+esc(t.q)+'</div>';
     let line=c.kin?offKinReply(c,d,tid):offReply(c,d,tid);
-    const offered=maybeOffer(c,d);
+    const parsed=parseOffer(line);
+    line=parsed.text;
+    const askOffer=parsed.offer;
+    const offered=askOffer?null:maybeOffer(c,d);
     if(offered)line+='  '+pick(OFFER_LINES,c.id+S.day+'off');
     d.topics=d.topics||[];
     if(d.topics.indexOf(tid)<0)d.topics.push(tid);
@@ -3502,6 +3753,33 @@ function openChat(id){
     cb.scrollTop=cb.scrollHeight;
     if(offered)addPocket(offered,c.id);
     SFX.click();
+    if(askOffer){
+      const tp2=document.getElementById('topicPanel');
+      if(tp2){
+        tp2.innerHTML='<div class="hint" style="margin-bottom:6px;">They\'re waiting on you.</div>'
+          +'<button class="primary" id="takeYes" style="margin:0 6px 6px 0;">Yes, please</button>'
+          +'<button id="takeNo" style="margin:0 6px 6px 0;">Another time</button>';
+        document.getElementById('takeYes').onclick=()=>{
+          d.history.push({role:'user',text:'Yes, please.'});
+          cb.innerHTML+='<div class="bubble me">Yes, please.</div>';
+          d.history.push({role:'assistant',text:askOffer.yes});
+          cb.innerHTML+='<div class="bubble them">'+esc(askOffer.yes)+'</div>';
+          addPocket(askOffer.item,c.id);
+          d.familiarity=Math.min(30,d.familiarity+2);
+          cb.scrollTop=cb.scrollHeight;
+          save();renderTopics();refreshGift();refreshOffer();
+        };
+        document.getElementById('takeNo').onclick=()=>{
+          d.history.push({role:'user',text:'Another time.'});
+          cb.innerHTML+='<div class="bubble me">Another time.</div>';
+          d.history.push({role:'assistant',text:askOffer.no});
+          cb.innerHTML+='<div class="bubble them">'+esc(askOffer.no)+'</div>';
+          cb.scrollTop=cb.scrollHeight;
+          save();renderTopics();
+        };
+      }
+      return;
+    }
     save();renderTopics();refreshOffer();refreshGift();
   };
   const canOffer=()=>!c.kin&&favorStatus(id)==='pending'&&d.cold<=0&&!S.activeTask&&d.familiarity>=3;
@@ -3905,6 +4183,11 @@ function openMenu(){
     +customRow('Outfit','outfit','botLabel','Trousers')
     +customRow('Outfit color','top')
     +customRow('Tartan','tartan')
+    +customRow('Facial hair','face','faceLabel','Clean-shaven')
+    +'<div id="beardRow" style="display:'+(((S.player.face||'none')==='none')?'none':'flex')+';">'
+    +customRow('Beard colour','beardColor')
+    +'</div>'
+    +customRow('Eyewear','eyes','eyeLabel','None')
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Sound</h3>'
