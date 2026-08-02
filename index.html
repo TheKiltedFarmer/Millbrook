@@ -98,19 +98,12 @@
 
 <script>
 /* ============ CONFIG ============ */
-/* PORTABLE BUILD — self-hosted config */
-const storageShim={
-  async get(k){const v=localStorage.getItem(k);return v==null?null:{key:k,value:v};},
-  async set(k,v){localStorage.setItem(k,v);return{key:k,value:v};},
-  async delete(k){localStorage.removeItem(k);return{key:k,deleted:true};}
-};
-const STORE=(typeof window!=='undefined'&&window.storage&&window.storage.get)?window.storage:storageShim;
 const NUM_AI=4, DAYS=7, ENERGY=7, KEY='millbrook-v6';
 /* Set this to the Aubes' own shop / support link to show a Support entry in the Menu. Empty = hidden. */
 const SUPPORT_URL='';
 const SUPPORT_LABEL='The Gloomstead is a real bakery — visit them';
 const ANTHROPIC_URL="https://api.anthropic.com/v1/messages";
-let BRIDGE_URL='https://millbrook.justindfair.workers.dev';
+let BRIDGE_URL=ANTHROPIC_URL; /* portable build points this at the host Worker */
 const KEYSTORE='millbrook-apikey';
 function userKey(){try{return (localStorage.getItem(KEYSTORE)||'').trim();}catch(e){return '';}}
 function setUserKey(k){try{k?localStorage.setItem(KEYSTORE,k.trim()):localStorage.removeItem(KEYSTORE);}catch(e){}}
@@ -403,6 +396,44 @@ const CAST=[
       missed:"Andrew's builds are flawless these days. Not one failed servo. He doesn't laugh at his own dinosaurs anymore, which everyone agrees is a shame.",
       accused:"The workshop was cleared out by his brother in a weekend. The Festival raptor went to a scrapyard in Jackson with its neck still unfinished.",
       cleared:"The raptor swept its neck on Festival night and three children cried, which Andrew considers the highest review of his career."}},
+ {id:'amanda',name:'Amanda Eller',role:'Tutor, and used to build websites',pal:{skin:'#E5BC96',hair:'#5A3A24',pony:true,shirt:'#4E7A8C',pants:'#3E4438'},
+  work:'school',homeLabel:'Eller House',
+  give:"A carabiner she has no further use for",
+  base:"You are Amanda Eller, 30s. You tutor children in Millbrook — reading, sums, and whatever the school is short of that week. Before you came here you built websites for a living, and you are quietly relieved to be done with it. You climb: real mountains, on holidays, and you talk about rock the way other people talk about weather. Warm, direct, a little impatient with nonsense. Married to Jake, three children.",
+  worry:"One of the children you tutor has stopped speaking in lessons and nobody will tell you why.",
+  sched:[[8,'work'],[12,'lunch'],[13,'work'],[17,'home'],[19,'home']],
+  workObsAI:"Lesson plans for the whole term, finished, identical in format, none of them altered after the fact.",
+  workObsH:["A week of plans, three of them crossed out and rewritten in the margin.","A chalk bag hung on the coat hook where a coat should be."],
+  homeObsAI:"The climbing gear is coiled and stowed like it has never been used. No chalk dust anywhere.",
+  homeObsH:["Ropes coiled badly and shoved in a cupboard, chalk on the doorframe at shoulder height.","A photograph of a summit with three small faces badly photoshopped onto it, framed and much loved."],
+  favor:{ask:"There's a box of readers at the library I can't carry and teach at the same time. Would you?",task:'Readers → the Schoolhouse',from:{x:22,y:16},to:{x:52,y:16},fromLabel:'Box of readers',thanks:"That's saved my morning. Ask me anything about this town — tutors hear everything, and I mean everything."},
+  off:{intro:["Amanda Eller. I tutor — reading and sums, mostly. I built websites in a former life and I don't miss it. Jake's mine, and three children who are all somewhere."],
+       work:["Behind. One of mine has gone quiet in lessons and I can't work out why.","Good. Tiring. Children are relentless and I'd not swap it."],
+       sense:["Chalk and wet coats, same as the school. And whatever's in that bucket.","Pencil shavings. And the particular smell of a child who has been in the river."],
+       mood:["Long. I'd rather be four hundred feet up something.","Fine. Ask me again after the Festival."]},
+  ep:{caught:"Every lesson plan for the whole term was finished, formatted identically, and not one had been revised. Nobody teaches like that.",
+      missed:"Amanda's plans have never been tidier. The chalk bag on the hook has not moved since spring.",
+      accused:"The tutoring stopped. Three children lost a mother and the rest lost the only person who noticed when they went quiet.",
+      cleared:"The quiet child was being bullied. Amanda found out, sorted it, and said nothing to anyone about how."}},
+ {id:'jake',name:'Jake Eller',role:'Fixes whatever has a screen in it',pal:{skin:'#E2B187',hair:'#5A3A24',shirt:'#5B6A7A',pants:'#3A3A42'},
+  work:'library',homeLabel:'Eller House',
+  give:"A tidy loop of cable",
+  base:"You are Jake Eller, 30s. You keep Millbrook's few machines running — the library computer, the post office scanner, the tills — and you help Priya drag the archive out of the damp. Steady, unhurried, dry. You would rather fix a thing than talk about fixing it. Married to Amanda, three children.",
+  worry:"The library basement flooded and half the archive is going mouldy faster than you can dry it.",
+  sched:[[9,'work'],[12,'lunch'],[13,'work'],[18,'home'],[20,'home']],
+  workObsAI:"Every cable coiled to the same diameter and tied off identically. Not one improvised fix anywhere.",
+  workObsH:["A drawer of cables in a state, and one machine held together with tape and stubbornness.","A mug ring on a service manual and a note that says DO NOT TURN OFF, twice underlined."],
+  homeObsAI:"The tools are laid out by size. Nothing is half-finished, which for him is impossible.",
+  homeObsH:["Three half-fixed things on the kitchen table and nowhere to eat.","Amanda's ropes shoved in beside his toolbox, both of them losing that argument."],
+  favor:{ask:"Boxes of dry paper from the post office to the library, before the damp gets the rest. Two arms would help.",task:'Dry paper → the Old Library',from:{x:35,y:16},to:{x:22,y:16},fromLabel:'Dry paper',thanks:"Appreciated. I'm in every building in this town at some point — I notice things I'm not meant to."},
+  off:{intro:["Jake Eller. I fix whatever's got a screen in it, which in Millbrook is about nine things. Amanda's my wife. We've three."],
+       work:["Basement's flooded and the archive's going mouldy faster than I can dry it.","Steady. Something's always broken, which is job security of a sort."],
+       sense:["Damp paper and hot dust off the back of a machine. Not pleasant, if I'm honest.","Solder, mostly. And the library, which smells like a wet book because it is one."],
+       mood:["Long. Ask Amanda, she'll tell you I've been insufferable.","Not bad. Fixed the till at the grocery, so June's speaking to me again."]},
+  ep:{caught:"Every cable in the library was coiled to the same diameter and tied off identically. The man has never coiled a cable the same way twice in his life.",
+      missed:"Jake's workshop has never been tidier. Not one half-finished job on the table, which is the whole of the man gone.",
+      accused:"The machines stopped getting fixed. The archive finished rotting over the winter and Priya never quite forgave the town.",
+      cleared:"The flood was a cracked drain. Jake fixed it in an afternoon and complained about it for a month."}},
  {id:'sam',name:'Sam Flippo',role:'Clinic nurse and glassblower',pal:{skin:'#EDC79B',hair:'#5A3A24',shirt:'#C4744A',pants:'#33303E',bald:true,beard:true,beardColor:'#5A3A24'},
   work:'glass',workAlt:'clinic',homeLabel:'Flippo Cottage',
   give:"A flawed glass pebble",
@@ -492,7 +523,8 @@ const BLD={
  h_ruth:{x:18,y:5,w:4,h:3,label:'Calloway Cottage',wall:'#4E5A62',roof:'#5E7482',roof2:'#526674',kind:'home',owner:'ruth'},
  h_moss:{x:36,y:5,w:4,h:3,label:'Moss Cottage',wall:'#5A5644',roof:'#726C52',roof2:'#645E48',kind:'home',owner:'moss'},
  h_june:{x:42,y:5,w:4,h:3,label:'Marsh Cottage',wall:'#566246',roof:'#6C7E58',roof2:'#5E6E4C',kind:'home',owner:'june'},
- h_theo:{x:48,y:5,w:4,h:3,label:'Brandt Cottage',wall:'#5E4A40',roof:'#7A5E4E',roof2:'#6A5244',kind:'home',owner:'theo'},
+ h_eller:{x:12,y:37,w:4,h:3,label:'Eller House',kind:'home',owner:'amanda',owner2:'jake',wall:'#5A5142',roof:'#7A6A9C',roof2:'#6A5A88'},
+  h_theo:{x:48,y:5,w:4,h:3,label:'Brandt Cottage',wall:'#5E4A40',roof:'#7A5E4E',roof2:'#6A5244',kind:'home',owner:'theo'},
  h_iris:{x:8,y:37,w:4,h:3,label:'Voss Cottage',wall:'#5E5060',roof:'#786682',roof2:'#6A5A72',kind:'home',owner:'iris'},
  h_sana:{x:16,y:37,w:4,h:3,label:'Okafor Cottage',wall:'#5A5648',roof:'#6E6A56',roof2:'#605C4C',kind:'home',owner:'sana'},
  h_cole:{x:22,y:37,w:4,h:3,label:'Faraday Cottage',wall:'#4E5A48',roof:'#5E7456',roof2:'#52664C',kind:'home',owner:'cole'},
@@ -574,6 +606,24 @@ const FESTS=[[24,29],[26,30],[28,29],[30,30],[33,29],[34,30],[36,29],[25,27],[33
 
 /* ============ FAMILIES ============ */
 const KIN=[
+ {id:'sylvie',name:'Sylvie Eller',rel:'daughter',of:'amanda',of2:'jake',child:12,dayIn:'h_eller',nightIn:'h_eller',
+  pal:{skin:'#E5BC96',hair:'#5A3A24',longHair:true,shirt:'#8C6A9C',pants:'#3A3A42'},
+  give:"A pressed leaf from somewhere high up",
+  base:"You are Sylvie Eller, 12. Eldest of three, which you feel the weight of. Sharp, watchful, reads a lot. You climb with your mother and you are better at it than you let on.",
+  off:{intro:["Sylvie. Mum tutors, Dad fixes things. I'm the oldest, which mostly means I get blamed."],
+       fun:["Climbing with Mum. I'm better than Beau and he knows it.","Reading. Somewhere the little ones aren't."]}},
+ {id:'beau',name:'Beau Eller',rel:'son',of:'amanda',of2:'jake',child:9,dayIn:'h_eller',nightIn:'h_eller',
+  pal:{skin:'#E2B187',hair:'#5A3A24',shirt:'#6FA85C',pants:'#44503E',freckles:true},
+  give:"A stone he insists is special",
+  base:"You are Beau Eller, 9. Middle child, loud about it, permanently muddy. Obsessed with anything that can be climbed, including furniture.",
+  off:{intro:["BEAU. I'm nine. I climbed the thing outside the post office and I'm not allowed to say which thing."],
+       fun:["Climbing stuff. Not mountains yet. Mum says when I'm twelve.","The river. We're not supposed to but everyone does."]}},
+ {id:'gerald',name:'Gerald Eller',rel:'son',of:'amanda',of2:'jake',child:6,dayIn:'h_eller',nightIn:'h_eller',
+  pal:{skin:'#E5BC96',hair:'#5A3A24',shirt:'#E0A63D',pants:'#4A4438'},
+  give:"Half a biscuit, offered seriously",
+  base:"You are Gerald Eller, 6. Youngest. Solemn, literal, and entirely certain about things that are not true. Follows Beau everywhere and is furious about being small.",
+  off:{intro:["I'm Gerald. I'm six. I'm nearly seven, actually."],
+       fun:["I follow Beau. He says not to and I do it anyway.","I've got a stone. It's better than Beau's stone."]}},
  {id:'aiden',name:'Aiden Fairchild',of:'justin',of2:'jessica',rel:'son',child:13,kin:true,
   role:'Justin & Jessica\'s eldest, 13',pal:{skin:'#E2B187',hair:'#D4B25E',shirt:'#4E8B8B',pants:'#3A3A42',freckles:true},
   dayIn:{x:12,y:35},nightIn:'h_justin',
@@ -774,6 +824,230 @@ const SFX={
   title(){[329.63,392,493.88,440,392].forEach((f,i)=>setTimeout(()=>tone(f,0.55,{type:'triangle',gain:0.07}),i*300));},
 };
 window.addEventListener('pointerdown',audioResume,{once:false});
+
+/* ================= SPRITE FORGE =================
+   Authored as pixel maps, painted once, then blitted.
+   That is what makes it read as pixel art.               */
+const SPR={};
+function shadeC(hex,amt){
+  const n=parseInt(String(hex).slice(1),16);
+  let r=(n>>16)&255,g2=(n>>8)&255,b=n&255;
+  r=Math.max(0,Math.min(255,Math.round(r*amt)));
+  g2=Math.max(0,Math.min(255,Math.round(g2*amt)));
+  b=Math.max(0,Math.min(255,Math.round(b*amt)));
+  return '#'+((1<<24)+(r<<16)+(g2<<8)+b).toString(16).slice(1);
+}
+function sheet(w,h,fn){
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d');g.imageSmoothingEnabled=false;fn(g);return c;
+}
+function fromMap(rows,pal,scale){
+  scale=scale||2;
+  return sheet(rows[0].length*scale,rows.length*scale,g=>{
+    rows.forEach((row,y)=>{
+      for(let x=0;x<row.length;x++){
+        const c=pal[row[x]];
+        if(c){g.fillStyle=c;g.fillRect(x*scale,y*scale,scale,scale);}
+      }
+    });
+  });
+}
+/* ---- people ---- */
+const PSPR={};
+const B_DOWN=[
+  '................','................','.....KKKKKK.....','....KhhhhhhK....',
+  '...KhRRRRRRhK...','...KRRRRRRRRK...','..KKRRRRRRRRKK..','..KRSSSSSSSSRK..',
+  '..KRSSSSSSSSRK..','..KRSEwSSwESSK..','..KRSSSSSSSSRK..','..KKSSSnnSSSKK..',
+  '...KSsSSSSsSK...','...KSSSmmSSSK...','....KKSSSSKK....','.....KKKKKK.....',
+  '...KKTTTTTTKK...','..KTTTTTTTTTTK..','.KaTTTTTTTTTTaK.','.KaTTTTTTTTTTaK.',
+  '.KSTtTTTTTTtTSK.','.KSKPPPPPPPPKSK.','..K.PPPP.PPP.K..','....PPPP.PPPP...',
+  '....BBBB.BBBB...','....KKKK.KKKK...'];
+const B_UP=[
+  '................','................','.....KKKKKK.....','....KhhhhhhK....',
+  '...KhRRRRRRhK...','...KRRRRRRRRK...','..KKRRRRRRRRKK..','..KRRRRRRRRRRK..',
+  '..KRRRRRRRRRRK..','..KRRRRRRRRRRK..','..KRRRRRRRRRRK..','..KKRRRRRRRRKK..',
+  '...KRRRRRRRRK...','...KRRRRRRRRK...','....KKRRRRKK....','.....KKKKKK.....',
+  '...KKTTTTTTKK...','..KTTTTTTTTTTK..','.KaTTTTTTTTTTaK.','.KaTTTTTTTTTTaK.',
+  '.KSTtTTTTTTtTSK.','.KSKPPPPPPPPKSK.','..K.PPPP.PPP.K..','....PPPP.PPPP...',
+  '....BBBB.BBBB...','....KKKK.KKKK...'];
+const B_SIDE=[
+  '................','................','.....KKKKK......','....KhhhhhK.....',
+  '...KhRRRRRRK....','...KRRRRRRRK....','..KKRRRRRRRRK...','..KRRSSSSSSSK...',
+  '..KRRSSSSSSSK...','..KRRSSwESSSK...','..KRRSSSSSSSK...','..KKRSSSnnSSK...',
+  '...KRSSSSSSSK...','...KRSSSmmSSK...','....KKSSSSKK....','.....KKKKKK.....',
+  '....KKTTTTKK....','...KTTTTTTTTK...','..KaTTTTTTTTaK..','..KaTTTTTTTTaK..',
+  '..KSTtTTTTtTSK..','..KSKPPPPPPKSK..','...K.PPPPPP.K...','.....PPPPPP.....',
+  '.....BBBBBB.....','.....KKKKKK.....'];
+function palFor(pal){
+  const sk=pal.skin||'#E8C49B',hr=pal.hair||'#3A2A1A';
+  const sh=pal.shirt||'#4E8B8B',pt=pal.pants||'#3A3A42';
+  return {'K':'#171310','S':sk,'s':shadeC(sk,0.80),'R':hr,'h':shadeC(hr,1.30),
+    'T':sh,'t':shadeC(sh,0.74),'a':shadeC(sh,1.16),'P':pt,'B':'#2A2118',
+    'E':'#17130F','w':'#EDE6D6','n':shadeC(sk,0.86),'m':'rgba(150,80,80,0.55)','.':null};
+}
+function personSprite(pal,face,frame){
+  const key=[pal.skin,pal.hair,pal.shirt,pal.pants,pal.longHair?1:0,pal.pony?1:0,pal.bald?1:0,
+    pal.beard?1:0,pal.goatee?1:0,pal.glasses?1:0,pal.hat||'',pal.hatColor||pal.hatColour||'',
+    pal.kilt?pal.kilt.base:'',pal.paint?1:0,face,frame].join('|');
+  if(PSPR[key])return PSPR[key];
+  const rows=(face===0)?B_UP:(face===1?B_DOWN:B_SIDE);
+  const P=palFor(pal),Z=2;
+  const c=sheet(16*Z,26*Z,g=>{
+    rows.forEach((row,y)=>{
+      for(let x=0;x<row.length;x++){
+        if(frame>0&&y>=21){
+          const sw=(frame===1)?1:-1;
+          if(row[x]==='.'&&((sw>0&&x===8)||(sw<0&&x===7)))continue;
+        }
+        const col=P[row[x]];
+        if(col){g.fillStyle=col;g.fillRect(x*Z,y*Z,Z,Z);}
+      }
+    });
+    const hr=P['R'];
+    if(pal.bald){
+      g.fillStyle=P['S'];g.fillRect(4*Z,3*Z,8*Z,3*Z);
+      g.fillStyle=shadeC(P['S'],1.18);g.fillRect(5*Z,3*Z,5*Z,Z);
+      g.fillStyle=hr;g.fillRect(3*Z,6*Z,Z,3*Z);g.fillRect(12*Z,6*Z,Z,3*Z);
+    }
+    if(pal.longHair){
+      g.fillStyle=hr;g.fillRect(2*Z,6*Z,2*Z,10*Z);g.fillRect(12*Z,6*Z,2*Z,10*Z);
+      g.fillStyle=P['K'];g.fillRect(Z,6*Z,Z,10*Z);g.fillRect(14*Z,6*Z,Z,10*Z);
+    }else if(pal.pony){
+      g.fillStyle=hr;g.fillRect(13*Z,5*Z,2*Z,9*Z);
+      g.fillStyle=P['K'];g.fillRect(15*Z,5*Z,Z,9*Z);
+    }
+    if(pal.beard&&face!==0){
+      const bc=pal.beardColor||pal.beardColour||hr;
+      g.fillStyle=bc;g.fillRect(3*Z,11*Z,10*Z,4*Z);
+      g.fillStyle=shadeC(bc,1.2);g.fillRect(4*Z,11*Z,8*Z,Z);
+      g.fillStyle=P['K'];g.fillRect(3*Z,15*Z,10*Z,Z);
+    }else if(pal.goatee&&face!==0){
+      g.fillStyle=pal.beardColor||pal.beardColour||hr;g.fillRect(6*Z,12*Z,4*Z,3*Z);
+    }
+    if(pal.paint){
+      g.fillStyle='#8C3A2E';g.fillRect(2*Z,18*Z,2*Z,Z);
+      g.fillStyle='#4E8B8B';g.fillRect(12*Z,19*Z,2*Z,Z);
+      g.fillStyle='#C4A44E';g.fillRect(3*Z,20*Z,2*Z,Z);
+    }
+    if(pal.glasses&&face!==0){
+      g.fillStyle='#22201E';
+      g.fillRect(3*Z,9*Z,4*Z,Z);g.fillRect(9*Z,9*Z,4*Z,Z);
+      g.fillRect(3*Z,8*Z,Z,2*Z);g.fillRect(6*Z,8*Z,Z,2*Z);
+      g.fillRect(9*Z,8*Z,Z,2*Z);g.fillRect(12*Z,8*Z,Z,2*Z);
+      g.fillRect(7*Z,9*Z,2*Z,Z);
+      g.fillStyle='rgba(190,220,240,0.30)';
+      g.fillRect(4*Z,9*Z,2*Z,Z);g.fillRect(10*Z,9*Z,2*Z,Z);
+    }
+    if(pal.kilt){
+      g.fillStyle=pal.kilt.base;g.fillRect(2*Z,20*Z,12*Z,4*Z);
+      g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(2*Z,23*Z,12*Z,Z);
+      g.fillStyle=pal.kilt.stripe;g.fillRect(5*Z,20*Z,Z,4*Z);g.fillRect(10*Z,20*Z,Z,4*Z);
+      g.fillStyle=P['K'];g.fillRect(2*Z,24*Z,12*Z,Z);
+    }
+    const HC=pal.hatColor||pal.hatColour;
+    if(pal.hat==='witch'){
+      const hb=HC||'#14101A';
+      g.fillStyle=P['K'];g.fillRect(0,Z,16*Z,Z);
+      g.fillStyle=hb;g.fillRect(0,2*Z,16*Z,2*Z);
+      g.beginPath();g.moveTo(4*Z,2*Z);g.lineTo(12*Z,2*Z);g.lineTo(9*Z,-6*Z);g.closePath();g.fill();
+      g.fillStyle=HC?shadeC(HC,1.5):'#6A4A9A';g.fillRect(4*Z,0,8*Z,2*Z);
+    }else if(pal.hat==='beret'){
+      const bb=HC||'#7A2530';
+      g.fillStyle=P['K'];g.fillRect(3*Z,Z,10*Z,Z);
+      g.fillStyle=bb;g.fillRect(3*Z,2*Z,10*Z,3*Z);g.fillRect(4*Z,Z,8*Z,Z);
+      g.fillStyle=shadeC(bb,1.25);g.fillRect(4*Z,2*Z,4*Z,Z);
+      g.fillStyle=shadeC(bb,0.7);g.fillRect(12*Z,Z,2*Z,2*Z);
+    }else if(pal.hat==='flatcap'){
+      const cc=HC||'#5A4E3A';
+      g.fillStyle=P['K'];g.fillRect(3*Z,Z,10*Z,Z);
+      g.fillStyle=cc;g.fillRect(3*Z,2*Z,10*Z,3*Z);
+      g.fillStyle=shadeC(cc,0.8);g.fillRect(2*Z,4*Z,7*Z,2*Z);
+    }else if(pal.hat==='headscarf'){
+      const cc=HC||'#8C5A7A';
+      g.fillStyle=cc;g.fillRect(3*Z,Z,10*Z,5*Z);
+      g.fillStyle=shadeC(cc,1.2);g.fillRect(4*Z,Z,8*Z,Z);
+      g.fillStyle=cc;g.fillRect(12*Z,5*Z,2*Z,3*Z);
+    }
+  });
+  let out=c;
+  if(face===3)out=sheet(c.width,c.height,g=>{g.translate(c.width,0);g.scale(-1,1);g.drawImage(c,0,0);});
+  PSPR[key]=out;return out;
+}
+/* ---- buildings ---- */
+const BSPR={};
+function buildingSprite(b){
+  const key=b.id+'|'+b.w+'x'+b.h+'|'+b.wall+b.roof+b.roof2;
+  if(BSPR[key])return BSPR[key];
+  const W=b.w*TILE,H=b.h*TILE,RH=26,PAD=12;
+  BSPR[key]=sheet(W+PAD*2,H+RH+10,g=>{
+    const X=PAD,Y=RH,wl=b.wall,dk=shadeC(wl,0.66),lt=shadeC(wl,1.18);
+    g.fillStyle=wl;g.fillRect(X,Y,W,H);
+    for(let r=0;r*8<H;r++){
+      const off=(r%2)?6:0;
+      for(let cx=0;cx<W;cx+=16){
+        g.fillStyle=((cx/16+r)%3===0)?shadeC(wl,1.08):((cx/16+r)%3===1?wl:shadeC(wl,0.9));
+        g.fillRect(X+cx+off,Y+r*8,14,6);
+        g.fillStyle=lt;g.fillRect(X+cx+off,Y+r*8,14,1);
+        g.fillStyle=dk;g.fillRect(X+cx+off,Y+r*8+5,14,1);
+      }
+    }
+    for(let r=0;r*10<H;r++){
+      g.fillStyle=(r%2)?shadeC(wl,1.16):shadeC(wl,0.86);
+      g.fillRect(X,Y+r*10,7,9);g.fillRect(X+W-7,Y+r*10,7,9);
+    }
+    g.fillStyle='#171310';g.fillRect(X-1,Y,1,H);g.fillRect(X+W,Y,1,H);
+    g.fillStyle='rgba(255,240,205,0.09)';g.fillRect(X,Y,W,10);
+    g.fillStyle='rgba(0,0,0,0.26)';g.fillRect(X,Y+H-9,W,9);
+    for(let r=0;r<6;r++){
+      const yy=Y-RH+2+r*4,over=PAD-r*1.6,rw=W+over*2;
+      g.fillStyle=(r%2)?b.roof:b.roof2;g.fillRect(X-over,yy,rw,5);
+      for(let s=0;s<rw;s+=8){
+        g.fillStyle=shadeC((r%2)?b.roof:b.roof2,0.72);
+        g.fillRect(X-over+s,yy+4,1,1);g.fillRect(X-over+s+7,yy+4,1,1);
+      }
+      g.fillStyle='rgba(255,255,255,0.13)';g.fillRect(X-over,yy,rw,1);
+      g.fillStyle='rgba(0,0,0,0.15)';g.fillRect(X-over,yy+4,rw,1);
+    }
+    g.fillStyle='#171310';g.fillRect(X-PAD-1,Y-RH-1,W+PAD*2+2,2);
+    g.fillStyle=shadeC(b.roof,1.35);g.fillRect(X-PAD,Y-RH+1,W+PAD*2,3);
+    g.fillStyle=shadeC(b.roof,0.7);g.fillRect(X-PAD,Y-RH+4,W+PAD*2,1);
+    g.fillStyle='rgba(0,0,0,0.34)';g.fillRect(X,Y,W,6);
+  });
+  return BSPR[key];
+}
+function windowSprite(lit){
+  const k='win'+(lit?1:0);
+  if(SPR[k])return SPR[k];
+  const P={'.':null,'K':'#171310','F':'#5A4632','f':'#3E3122','G':lit?'#F0C46A':'#5B7284',
+    'g':lit?'#E0A63D':'#47606F','H':lit?'#FFF0C0':'rgba(255,255,255,0.35)','S':'#8C7A5E'};
+  SPR[k]=fromMap(['KKKKKKKKKK','KFFFFFFFFK','KFGGgGGgFK','KFGHgGGgFK','KFggggggFK',
+    'KFGGgGGgFK','KFGGgGGgFK','KFffffffFK','KSSSSSSSSK','.KKKKKKKK.'],P,2);
+  return SPR[k];
+}
+function doorSprite(){
+  if(SPR.door)return SPR.door;
+  const P={'.':null,'K':'#171310','F':'#3A2A1A','D':'#5A4028','d':'#46301C','h':'#E0C46A','S':'#6E6A5A','s':'#57544A'};
+  SPR.door=fromMap(['KKKKKKKKKKKK','KFFFFFFFFFFK','KFDDDDDDDDFK','KFDddddddDFK','KFDddddddDFK',
+    'KFDddddddDFK','KFDDDDDDDDFK','KFDddddddDFK','KFDddddddDFK','KFDddddhdDFK',
+    'KFDDDDDDDDFK','KFFFFFFFFFFK','KSSSSSSSSSSK','ssssssssssss'],P,2);
+  return SPR.door;
+}
+function buildSprites(){
+  SPR.ready=true;
+  const TP={'.':null,'d':'#162A19','m':'#22422A','l':'#356044','h':'#4C7C58','t':'#3A2A1A','T':'#4E3924'};
+  SPR.tree=fromMap([
+    '..........dddd..........','........dddmmmdd........','......ddmmmmmmmmdd......',
+    '.....dmmmlllllmmmmd.....','....dmmlllhhhllllmmd....','...dmmlllhhhhhhlllmmd...',
+    '..dmmlllhhhhhhhhllllmd..','..dmllhhhhhhhhhhhllllmd.','.dmmlllhhhhhhhhhlllllmd.',
+    '.dmmllllhhhhhhhllllllmd.','.dmmmlllllhhhllllllmmmd.','..dmmmllllllllllllmmmd..',
+    '..ddmmmmllllllllmmmmdd..','....ddmmmmmmmmmmmmdd....','......ddddmmmmdddd......',
+    '..........tTtt..........','..........tTtt..........','..........tTtt..........',
+    '.........ttTttt.........','.........ttTttt.........','........tttTtttt........'],TP,2);
+  const BP={'.':null,'d':'#1B3A22','m':'#2A5230','l':'#3E7046','b':'#C4497B'};
+  SPR.bush=fromMap(['....dddddd....','..ddmmmmmmdd..','.dmmllllllmmd.','dmmlllllllllmd',
+    'dmllllblllllmd','dmlllllllblllmd'.slice(0,14),'dmmlllblllllmd','.dmmllllllmmd.',
+    '..ddmmmmmmdd..','....dddddd....'],BP,2);
+}
 /* ============ PORTRAITS ============ */
 /* every face is generated from the same palette the sprite uses, so all 35 get one free */
 function shade(hex,amt){
@@ -1402,9 +1676,9 @@ function newGame(hard){
     curios:[],cats:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
 }
-async function save(){try{await STORE.set(KEY,JSON.stringify(S));}catch(e){}}
+async function save(){try{await window.storage.set(KEY,JSON.stringify(S));}catch(e){}}
 async function load(){
-  try{const r=await STORE.get(KEY);
+  try{const r=await window.storage.get(KEY);
     if(r&&r.value){S=JSON.parse(r.value);S.found=S.found||{};S.tips=S.tips||[];S.favorState=S.favorState||{};
       S.failCount=S.failCount||0;S.scene=S.scene||'world';
       const FAKE=["Hold that thought — someone's calling me.","One sec, hands are full here.","Ah — give me a minute, would you?","Sorry, got pulled away. You were saying?"];
@@ -1645,6 +1919,15 @@ function buildTiles(){
     g.fillStyle='#78603F';g.fillRect(0,0,TILE,1);});
 }
 function drawPerson(g,x,y,pal,step,face){
+  if(SPR.ready&&typeof personSprite==='function'){
+    const moving=Math.abs(Math.sin(step))>0.25;
+    const frame=moving?((Math.floor(step/1.6)%2)+1):0;
+    const f=(face===0||face===1)?face:(face===2?2:3);
+    g.fillStyle='rgba(0,0,0,0.32)';
+    g.beginPath();g.ellipse(x+16,y+46,11,4,0,0,7);g.fill();
+    g.drawImage(personSprite(pal,f,frame),Math.round(x),Math.round(y-4));
+    return;
+  }
   const s=2;
   const walking=Math.abs(Math.sin(step))>0.25;
   const legA=walking?(Math.sin(step)>0?2:0):1,legB=walking?(Math.sin(step)>0?0:2):1;
@@ -1974,27 +2257,40 @@ function drawWorld(){
   const drawBuilding=(b)=>{
     const bx=b.x*TILE,by=b.y*TILE,bw=b.w*TILE,bh=b.h*TILE;
     const open=bldOpen(b),occ=occupants(b.id).length>0;
-    ctx.fillStyle=b.wall;ctx.fillRect(bx,by,bw,bh);
-    ctx.fillStyle='rgba(0,0,0,0.15)';
-    for(let i=1;i<b.h;i++)ctx.fillRect(bx,by+i*TILE-1,bw,2);
-    for(let r=0;r<6;r++){ctx.fillStyle=r%2?b.roof:b.roof2;ctx.fillRect(bx-6+r,by-18+r*3,bw+12-r*2,4);}
-    ctx.fillStyle='#4A4440';ctx.fillRect(bx+bw-16,by-26,10,12);
-    if(occ){const tm=Date.now()/900;for(let k=0;k<3;k++){
-      const off=(tm*14+k*11)%34;
-      ctx.fillStyle='rgba(210,210,220,'+(0.22-off/170)+')';
-      ctx.fillRect(bx+bw-14+Math.sin(tm+k)*3,by-30-off,7,5);}}
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    ctx.beginPath();ctx.ellipse(bx+bw/2,by+bh+4,bw*0.52,7,0,0,7);ctx.fill();
+    ctx.drawImage(buildingSprite(b),bx-12,by-26);
+    /* chimney */
+    ctx.fillStyle='#171310';ctx.fillRect(bx+bw-20,by-42,13,16);
+    ctx.fillStyle='#585048';ctx.fillRect(bx+bw-19,by-41,11,15);
+    ctx.fillStyle='#6E665C';ctx.fillRect(bx+bw-19,by-41,11,3);
+    if(occ){const tm=Date.now()/900;
+      for(let k=0;k<4;k++){
+        const off=(tm*13+k*10)%38;
+        ctx.fillStyle='rgba(216,216,226,'+(0.26-off/180)+')';
+        const sz=4+Math.floor(off/10);
+        ctx.fillRect(bx+bw-16+Math.sin(tm*1.3+k)*4,by-46-off,sz,sz);
+      }}
+    const win=windowSprite(occ);
     for(let i=0;i<Math.max(1,b.w-2);i++){
-      const wx=bx+i*TILE+12,wy=by+bh/2-6;
-      ctx.fillStyle='#2A2118';ctx.fillRect(wx-1,wy-1,12,15);
-      ctx.fillStyle=occ?'rgba(224,166,61,0.9)':'rgba(60,66,90,0.9)';
-      ctx.fillRect(wx,wy,10,13);
-      ctx.fillStyle='#2A2118';ctx.fillRect(wx+4,wy,2,13);ctx.fillRect(wx,wy+6,10,2);}
-    const dx=b.door.x*TILE+6;
-    ctx.fillStyle='#2A2118';ctx.fillRect(dx-1,by+bh-26,20,26);
-    ctx.fillStyle=open?'#43301E':'#33261A';ctx.fillRect(dx,by+bh-25,18,25);
-    ctx.fillStyle='#E0A63D';ctx.fillRect(dx+13,by+bh-14,2,2);
-    ctx.fillStyle='rgba(237,230,214,0.85)';ctx.font='10px Inter';ctx.textAlign='center';
-    ctx.fillText(b.label,bx+bw/2,by-22);
+      const wx=bx+i*TILE+13,wy=by+Math.round(bh/2)-10;
+      if(occ){ctx.fillStyle='rgba(255,200,110,0.16)';
+        ctx.fillRect(wx-8,wy-8,win.width+16,win.height+16);}
+      ctx.drawImage(win,wx,wy);
+    }
+    const dr=doorSprite();
+    ctx.save();
+    if(!open)ctx.globalAlpha=0.72;
+    ctx.drawImage(dr,b.door.x*TILE+4,by+bh-dr.height+4);
+    ctx.restore();
+    ctx.font='10px Inter';ctx.textAlign='center';
+    const lw=ctx.measureText(b.label).width;
+    ctx.fillStyle='rgba(12,16,12,0.62)';
+    ctx.fillRect(bx+bw/2-lw/2-6,by-46,lw+12,15);
+    ctx.fillStyle='rgba(23,19,16,0.9)';
+    ctx.fillRect(bx+bw/2-lw/2-6,by-32,lw+12,1);
+    ctx.fillStyle='rgba(237,230,214,0.94)';
+    ctx.fillText(b.label,bx+bw/2,by-35);
     if(b.kind==='home'&&b.owner&&S.npc[b.owner]){
       if(!tidyTell(b.owner)){
         for(let i=0;i<Math.max(1,b.w-2);i++){
@@ -2010,13 +2306,11 @@ function drawWorld(){
       }
     }
   };
-  const drawTree=([x,y])=>{
-    const tx=x*TILE,ty=y*TILE;
-    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(tx+16,ty+28,11,4,0,0,7);ctx.fill();
-    ctx.fillStyle='#3A2A1A';ctx.fillRect(tx+13,ty+12,6,16);
-    ctx.fillStyle='#1F3822';ctx.beginPath();ctx.arc(tx+16,ty+6,14,0,7);ctx.fill();
-    ctx.fillStyle='#294A2C';ctx.beginPath();ctx.arc(tx+11,ty+3,9,0,7);ctx.fill();
-    ctx.fillStyle='#34573A';ctx.beginPath();ctx.arc(tx+21,ty+2,7,0,7);ctx.fill();
+  const drawTree=(a,b2)=>{
+    /* callers pass either (x,y) or a [x,y] pair */
+    const x=Array.isArray(a)?a[0]:a, y=Array.isArray(a)?a[1]:b2;
+    const sw=Math.sin(Date.now()/1900+x)*1.2;
+    if(SPR.tree)ctx.drawImage(SPR.tree,Math.round(x*TILE-8+sw),Math.round(y*TILE-20));
   };
   for(let i=0;i<LAMPS.length;i++){
     const[x,y]=LAMPS[i];const lx=x*TILE+14,ly=y*TILE;
@@ -3866,6 +4160,7 @@ function drawEnding(kind){
   buildPaths();
   pruneTrees();
   buildCollision();
+  buildSprites();
   buildTiles();
   initNpcs();
   CAST.forEach(c=>{
