@@ -857,7 +857,7 @@ const PSPR={};
 const B_DOWN=[
   '................','................','.....KKKKKK.....','....KhhhhhhK....',
   '...KhRRRRRRhK...','...KRRRRRRRRK...','..KKRRRRRRRRKK..','..KRSSSSSSSSRK..',
-  '..KRSSSSSSSSRK..','..KRSEwSSwESSK..','..KRSSSSSSSSRK..','..KKSSSnnSSSKK..',
+  '..KRwEwSSwEwRK..','..KRwEwSSwEwRK..','..KRSSSSSSSSRK..','..KKSSSnnSSSKK..',
   '...KSsSSSSsSK...','...KSSSmmSSSK...','....KKSSSSKK....','.....KKKKKK.....',
   '...KKTTTTTTKK...','..KTTTTTTTTTTK..','.KaTTTTTTTTTTaK.','.KaTTTTTTTTTTaK.',
   '.KSTtTTTTTTtTSK.','.KSKPPPPPPPPKSK.','..K.PPPP.PPP.K..','....PPPP.PPPP...',
@@ -886,9 +886,14 @@ function palFor(pal){
     'E':'#17130F','w':'#EDE6D6','n':shadeC(sk,0.86),'m':'rgba(150,80,80,0.55)','.':null};
 }
 function personSprite(pal,face,frame){
-  const key=[pal.skin,pal.hair,pal.shirt,pal.pants,pal.longHair?1:0,pal.pony?1:0,pal.bald?1:0,
-    pal.beard?1:0,pal.goatee?1:0,pal.glasses?1:0,pal.hat||'',pal.hatColor||pal.hatColour||'',
-    pal.kilt?pal.kilt.base:'',pal.paint?1:0,face,frame].join('|');
+  const key=[pal.skin,pal.hair,pal.shirt,pal.pants,
+    pal.longHair?1:0,pal.pony?1:0,pal.bald?1:0,
+    pal.beard?1:0,pal.fullBeard?1:0,pal.goatee?1:0,pal.moustache?1:0,pal.stubble?1:0,
+    pal.beardColor||pal.beardColour||'',
+    pal.glasses?1:0,pal.roundGlasses?1:0,pal.patch?1:0,
+    pal.hat||'',pal.hatColor||pal.hatColour||'',
+    pal.kilt?pal.kilt.base:'',pal.kilt?pal.kilt.stripe:'',
+    pal.paint?1:0,pal.critters?1:0,face,frame].join('|');
   if(PSPR[key])return PSPR[key];
   const rows=(face===0)?B_UP:(face===1?B_DOWN:B_SIDE);
   const P=palFor(pal),Z=2;
@@ -919,16 +924,26 @@ function personSprite(pal,face,frame){
     const bc=pal.beardColor||pal.beardColour||hr;
     if(face!==0){
       if(pal.fullBeard){
-        g.fillStyle=bc;g.fillRect(2*Z,10*Z,12*Z,6*Z);
-        g.fillRect(3*Z,9*Z,10*Z,Z);
-        g.fillStyle=shadeC(bc,1.22);g.fillRect(3*Z,10*Z,9*Z,Z);
-        g.fillStyle=shadeC(bc,0.72);g.fillRect(2*Z,15*Z,12*Z,Z);
-        g.fillStyle=P['K'];g.fillRect(2*Z,16*Z,12*Z,Z);
-        g.fillStyle=bc;g.fillRect(5*Z,9*Z,6*Z,Z);
+        /* sideburns down the jaw, then a beard that tapers to a point */
+        g.fillStyle=bc;
+        g.fillRect(4*Z,9*Z,2*Z,3*Z);g.fillRect(10*Z,9*Z,2*Z,3*Z);
+        g.fillRect(4*Z,11*Z,8*Z,3*Z);
+        g.fillRect(5*Z,14*Z,6*Z,2*Z);
+        g.fillRect(6*Z,16*Z,4*Z,1*Z);
+        g.fillStyle=shadeC(bc,1.24);g.fillRect(4*Z,11*Z,7*Z,Z);
+        g.fillStyle=shadeC(bc,0.70);g.fillRect(5*Z,15*Z,6*Z,Z);
+        /* moustache above it */
+        g.fillStyle=bc;g.fillRect(5*Z,10*Z,6*Z,Z);
+        g.fillStyle=P['K'];
+        g.fillRect(3*Z,9*Z,Z,3*Z);g.fillRect(12*Z,9*Z,Z,3*Z);
+        g.fillRect(6*Z,17*Z,4*Z,Z);
       }else if(pal.beard){
-        g.fillStyle=bc;g.fillRect(3*Z,11*Z,10*Z,4*Z);
-        g.fillStyle=shadeC(bc,1.2);g.fillRect(4*Z,11*Z,8*Z,Z);
-        g.fillStyle=P['K'];g.fillRect(3*Z,15*Z,10*Z,Z);
+        g.fillStyle=bc;
+        g.fillRect(4*Z,10*Z,8*Z,4*Z);
+        g.fillRect(5*Z,14*Z,6*Z,Z);
+        g.fillStyle=shadeC(bc,1.22);g.fillRect(4*Z,10*Z,7*Z,Z);
+        g.fillStyle=shadeC(bc,0.72);g.fillRect(4*Z,13*Z,8*Z,Z);
+        g.fillStyle=P['K'];g.fillRect(4*Z,15*Z,8*Z,Z);
       }else if(pal.goatee){
         g.fillStyle=bc;g.fillRect(6*Z,12*Z,4*Z,3*Z);
         g.fillStyle=shadeC(bc,1.2);g.fillRect(6*Z,12*Z,4*Z,Z);
