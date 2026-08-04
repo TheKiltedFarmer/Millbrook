@@ -873,7 +873,7 @@ const B_UP=[
 const B_SIDE=[
   '................','................','.....KKKKK......','....KhhhhhK.....',
   '...KhRRRRRRK....','...KRRRRRRRK....','..KKRRRRRRRRK...','..KRRSSSSSSSK...',
-  '..KRRSSSSSSSK...','..KRRSSwESSSK...','..KRRSSSSSSSK...','..KKRSSSnnSSK...',
+  '..KRRSSSSSSSK...','..KRRSSSSSSSK...','..KRRSSSSSSSK...','..KKRSSSnnSSK...',
   '...KRSSSSSSSK...','...KRSSSmmSSK...','....KKSSSSKK....','.....KKKKKK.....',
   '....KKTTTTKK....','...KTTTTTTTTK...','..KaTTTTTTTTaK..','..KaTTTTTTTTaK..',
   '..KSTtTTTTtTSK..','..KSKPPPPPPKSK..','...K.PPPPPP.K...','.....PPPPPP.....',
@@ -908,6 +908,22 @@ function personSprite(pal,face,frame){
         if(col){g.fillStyle=col;g.fillRect(x*Z,y*Z,Z,Z);}
       }
     });
+    /* eyes, drawn here so they are open and even rather than a slit */
+    if(face!==0){
+      const eyes=(face===1)?[[5,9],[9,9]]:[[7,9]];
+      eyes.forEach(([ex,ey])=>{
+        /* white of the eye */
+        g.fillStyle='#EDE6D6';g.fillRect(ex*Z,ey*Z,2*Z,2*Z);
+        /* pupil, sitting low and centred */
+        g.fillStyle='#171310';g.fillRect(ex*Z,(ey+1)*Z,2*Z,Z);
+        g.fillRect(ex*Z,ey*Z,Z,Z);
+        /* catch-light */
+        g.fillStyle='#FFFFFF';g.fillRect((ex+1)*Z,ey*Z,Z,Z);
+        /* brow line above */
+        g.fillStyle=shadeC(P['R']||'#3A2A1A',0.8);
+        g.fillRect((ex-1)*Z,(ey-2)*Z,4*Z,Z);
+      });
+    }
     const hr=P['R'];
     if(pal.bald){
       g.fillStyle=P['S'];g.fillRect(4*Z,3*Z,8*Z,3*Z);
