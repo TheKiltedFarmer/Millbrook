@@ -55,6 +55,7 @@
   .sheet-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
   .accuse-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(237,230,214,0.04);border:1px solid var(--line);border-radius:4px;margin-bottom:7px;flex-wrap:wrap;gap:6px;}
   .tg{display:flex;gap:5px;}
+  @media (max-width:480px){.sheet{padding:14px 12px;}.tg button{font-size:12px;padding:5px 8px;}.cluecard .hint{font-size:13px;}}
   .tg button.ah{background:var(--teal);color:var(--bg);border-color:var(--teal);}
   .tg button.aa{background:var(--magenta);color:var(--bg);border-color:var(--magenta);}
   .reveal{padding:11px 13px;border-radius:4px;margin-bottom:9px;font-size:13.5px;}
@@ -103,11 +104,26 @@ const NUM_AI=4, DAYS=7, ENERGY=7, KEY='millbrook-v6';
 const SUPPORT_URL='';
 const SUPPORT_LABEL='The Gloomstead is a real bakery — visit them';
 const ANTHROPIC_URL="https://api.anthropic.com/v1/messages";
-let BRIDGE_URL=ANTHROPIC_URL; /* portable build points this at the host Worker */
+const HOSTED_BRIDGE="https://millbrook.justindfair.workers.dev";
+/* one file, two homes. inside Claude's app the page can reach the API directly;
+   on a real website it goes through the host's Worker, which holds the key. */
+const ON_WEBSITE=(typeof location!=='undefined')&&/^https?:$/.test(location.protocol)
+  &&!/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/.test(location.hostname);
+let BRIDGE_URL=ON_WEBSITE?HOSTED_BRIDGE:ANTHROPIC_URL;
+/* the save system was written for Claude's app. on a website, keep the game in
+   the browser's own storage instead — otherwise every refresh is a new game. */
+if(typeof window!=='undefined'&&!(window.storage&&window.storage.get)){
+  window.storage={
+    async get(k){try{const v=localStorage.getItem(k);return v==null?null:{key:k,value:v};}catch(e){return null;}},
+    async set(k,v){try{localStorage.setItem(k,v);return {key:k,value:v};}catch(e){return null;}},
+    async delete(k){try{localStorage.removeItem(k);return {key:k,deleted:true};}catch(e){return null;}},
+    async list(){return {keys:[]};}
+  };
+}
 const KEYSTORE='millbrook-apikey';
 function userKey(){try{return (localStorage.getItem(KEYSTORE)||'').trim();}catch(e){return '';}}
 function setUserKey(k){try{k?localStorage.setItem(KEYSTORE,k.trim()):localStorage.removeItem(KEYSTORE);}catch(e){}}
-function apiCall(body){
+function apiOnce(body){
   const k=userKey();
   if(k){
     return fetch(ANTHROPIC_URL,{method:'POST',headers:{
@@ -116,6 +132,27 @@ function apiCall(body){
     },body:JSON.stringify(body)});
   }
   return fetch(BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+}
+/* a 500, a 529 or a dropped connection is usually gone a moment later.
+   try three times quietly before troubling the player about it. */
+async function apiCall(body){
+  let last=null;
+  for(let attempt=0;attempt<3;attempt++){
+    if(attempt)await new Promise(r=>setTimeout(r,400*Math.pow(2,attempt-1)));
+    try{
+      const res=await apiOnce(body);
+      /* only these are worth another go — a 400 will fail the same way forever */
+      if(res.status===500||res.status===502||res.status===503||res.status===529){
+        last=res;continue;
+      }
+      return res;
+    }catch(e){
+      last=null;
+      if(attempt===2)throw e;
+    }
+  }
+  if(last)return last;
+  throw new Error('no answer from the bridge');
 }
 const TILE=32, MW=64, MH=58;
 const WOODS_Y0=42, WOODS_Y1=56;
@@ -1461,8 +1498,11 @@ const TOPICS=[
  {id:'work',q:"How's the work going?",min:0},
  {id:'sense',q:"What's it like in there — the smell of it, the feel?",min:0},
  {id:'mood',q:"Long week?",min:0},
+ {id:'yesterday',q:"Where'd you get to yesterday?",min:0,fromDay:2},
+ {id:'seen',q:"Seen anyone about yesterday?",min:1,fromDay:2},
  {id:'festival',q:"Ready for the Festival?",min:0},
  {id:'spring',q:"Were you here last spring?",min:2},
+ {id:'fire',q:"What happened to the old bandstand?",min:2},
  {id:'recall',q:"Do you remember what we talked about?",min:1},
  {id:'family',q:"Who've you got around here?",min:3},
  {id:'note',q:"Someone slipped a note under my door.",min:4},
@@ -1514,6 +1554,8 @@ function famList(cid){
   return all;
 }
 function offReply(c,d,topic){
+  if(topic==='yesterday'||topic==='seen'){const cl=claimLine(c,topic);if(cl)return cl;}
+  if(topic==='fire')return fireLine(c);
   const warm=speaksWarm(c.id);
   const seed=c.id+topic+S.day+S.runId+((d.topics||[]).length);
   if(topic==='intro'){
@@ -1664,6 +1706,258 @@ const KID_TOPICS=[{id:'parent',q:"How's your {rel}?",min:0},{id:'fun',q:"What do
  {id:'cat',q:"I keep finding a chalk cat.",min:1,only:['lillyan']},
  {id:'town',q:"Anyone in town seem odd to you?",min:2}];
 const ADULT_KIN_TOPICS=[{id:'parent',q:"How's your {rel}?",min:0},{id:'own',q:"What keeps you busy?",min:0},{id:'festival',q:"Ready for the Festival?",min:0},{id:'spring',q:"Were you here last spring?",min:1},{id:'town',q:"What do you make of the neighbours?",min:2}];
+
+/* ============================================================
+   WHO WAS WHERE — claims you can check against each other.
+   People tell you where they were. People tell you who they saw.
+   The real ones tell it as it happened. The others recite the
+   routine they learned, not the day they lived.
+   ============================================================ */
+const OUTNAMES={dockpt:'Riverside Dock',stallpt:'the market stalls',parkpt:'the park gardens',
+  quarrypt:'the quarry track',crowpt:'the flat stone out by the cabin'};
+function locFromPlace(c,p,day){
+  if(p==='away')return 'away';
+  if(p==='festival'||p==='square')return 'square';
+  if(p.indexOf('ev:')===0){const e=SOCIAL.find(x=>x.id===p.slice(3));return e?('bld:'+e.at):'square';}
+  if(p==='work'){const w=workPlace(c,day);return BLD[w]?('bld:'+w):('out:'+w);}
+  if(p==='lunch')return 'bld:hearth';
+  if(p==='tavern')return 'bld:tavern';
+  if(p==='grocery')return 'bld:grocery';
+  if(p==='home')return HOMES[c.id]?('bld:'+HOMES[c.id]):'home';
+  return 'about';
+}
+function locOf(id,day,hour){
+  const c=CAST.find(x=>x.id===id);if(!c)return 'about';
+  return locFromPlace(c,scheduledPlace(id,hour*60,day),day);
+}
+/* the day as written on paper — no errands, no evenings out, no being away */
+function textbookLoc(id,day,hour){
+  const c=CAST.find(x=>x.id===id);if(!c)return 'about';
+  let place=c.sched[0][1];
+  for(const [h,p] of c.sched)if(hour*60>=h*60)place=p;
+  return locFromPlace(c,place,day);
+}
+function locName(loc){
+  if(loc==='away')return 'out of town';
+  if(loc==='square')return 'the Town Square';
+  if(loc==='about')return 'around town';
+  if(loc==='home')return 'home';
+  if(loc.indexOf('out:')===0)return OUTNAMES[loc.slice(4)]||'out on the edge of town';
+  if(loc.indexOf('bld:')===0){const b=BLD[loc.slice(4)];return b?b.label:'somewhere indoors';}
+  return 'around town';
+}
+function isPublicLoc(loc){
+  if(loc==='away'||loc==='about'||loc==='home')return false;
+  if(loc.indexOf('bld:h_')===0)return false;
+  return true;
+}
+function hourWord(h){
+  const w=['twelve','one','two','three','four','five','six','seven','eight','nine','ten','eleven'][h%12];
+  if(h<12)return w+' in the morning';
+  if(h<17)return (h===12?'noon':'about '+w);
+  return w+' in the evening';
+}
+function claimHour(id,day){return [10,13,15,19][hashStr(id+'hr'+day+S.runId)%4];}
+/* where they say they were */
+function selfClaim(id,day){
+  const hour=claimHour(id,day);
+  const truth=locOf(id,day,hour);
+  const d=S.npc[id];
+  if(d&&d.isAI&&!covers(id,'memory')){
+    const tb=textbookLoc(id,day,hour);
+    if(tb!==truth)return {hour,loc:tb};
+    /* nothing to trip over — so invent a plausible elsewhere half the time */
+    if(srand(hashStr(id+'lie'+day+S.runId))<0.5){
+      const c=CAST.find(x=>x.id===id);
+      const alts=[...new Set(c.sched.map(([h,p])=>locFromPlace(c,p,day)))].filter(l=>l!==truth&&isPublicLoc(l));
+      if(alts.length)return {hour,loc:alts[hashStr(id+'alt'+day+S.runId)%alts.length]};
+    }
+  }
+  return {hour,loc:truth};
+}
+/* who they saw, and where */
+function sighting(w,day){
+  const d=S.npc[w];
+  const others=CAST.filter(x=>x.id!==w);
+  const known=(S.claims||[]).filter(k=>k.kind==='self'&&k.day===day&&k.about!==w);
+  /* an impostor who never learned to watch people makes one up */
+  if(d&&d.isAI&&!covers(w,'social')&&srand(hashStr(w+'fs'+day+S.runId))<0.55){
+    const pool=known.length?known.map(k=>CAST.find(x=>x.id===k.about)).filter(Boolean):others;
+    const t=pool[hashStr(w+'ft'+day+S.runId)%pool.length];
+    const hour=known.find(k=>k.about===t.id)?known.find(k=>k.about===t.id).hour:[11,14,18][hashStr(w+'fh'+day)%3];
+    const truth=locOf(t.id,day,hour);
+    const choices=['bld:hearth','bld:tavern','bld:grocery','square','out:dockpt','bld:library','bld:post'].filter(l=>l!==truth);
+    return {about:t.id,hour,loc:choices[hashStr(w+'fl'+day+S.runId)%choices.length]};
+  }
+  /* an honest one says what they saw on their way about — favouring the accounts
+     nobody has backed up or contradicted yet, so the town's eyes spread out */
+  const seenCount=k=>(S.claims||[]).filter(x=>x.kind==='saw'&&x.about===k.about&&x.day===k.day&&x.hour===k.hour).length;
+  const order=known.slice()
+    .sort((a,b)=>(seenCount(a)-seenCount(b))||(hashStr(w+a.about+S.runId)%97-hashStr(w+b.about+S.runId)%97))
+    .map(k=>({t:k.about,h:k.hour}));
+  for(let i=0;i<14;i++){
+    const t=others[hashStr(w+'st'+i+day+S.runId)%others.length];
+    order.push({t:t.id,h:[10,11,13,14,15,17,18,19][hashStr(w+'sh'+i+day+S.runId)%8]});
+  }
+  for(const o of order){
+    if(o.t===w)continue;
+    const mine=locOf(w,day,o.h);
+    if(mine==='away'||mine.indexOf('bld:h_')===0)continue;   /* was not out to see anything */
+    const theirs=locOf(o.t,day,o.h);
+    if(isAwayAllDay(o.t,day))return {about:o.t,hour:o.h,loc:'missing'};
+    if(isPublicLoc(theirs))return {about:o.t,hour:o.h,loc:theirs};
+  }
+  return null;
+}
+function noteClaim(k){
+  S.claims=S.claims||[];
+  const same=S.claims.find(x=>x.src===k.src&&x.about===k.about&&x.day===k.day&&x.hour===k.hour);
+  if(same)return;
+  S.claims.push(k);
+  while(S.claims.length>500)S.claims.shift();
+}
+function claimLine(c,topic){
+  const day=S.day-1;
+  const warm=speaksWarm(c.id);
+  if(topic==='yesterday'){
+    const cl=selfClaim(c.id,day);
+    noteClaim({src:c.id,about:c.id,day,hour:cl.hour,loc:cl.loc,kind:'self'});
+    if(cl.loc==='away'){
+      const allDay=isAwayAllDay(c.id,day);
+      if(!allDay)return warm
+        ?pick(["Yesterday morning? Out of town — an errand. Back by lunch.","I had to nip out of town first thing. Back by the afternoon."],c.id+day)
+        :"I was out of town yesterday morning, on an errand.";
+      return warm
+        ?pick(["Yesterday? Out of town, the whole day. Something I had to see to.","I wasn't here yesterday. Family business — I'll leave it at that."],c.id+day)
+        :"I was away from Millbrook all of yesterday.";
+    }
+    const at=cl.loc.indexOf('bld:h_')===0?'at home':'at '+locName(cl.loc);
+    return warm
+      ?pick(["Yesterday, "+hourWord(cl.hour)+"? I was "+at+". Same as ever.",
+             "Let me think — "+hourWord(cl.hour)+", I'd have been "+at+". Why do you ask?",
+             at.charAt(0).toUpperCase()+at.slice(1)+", "+hourWord(cl.hour)+" or near enough. Nothing worth telling."],c.id+day+'y')
+      :"Yesterday at "+hourWord(cl.hour)+" I was "+at+".";
+  }
+  if(topic==='seen'){
+    const s=sighting(c.id,day);
+    if(!s)return warm?"Kept my head down yesterday. Couldn't tell you who was where.":"I did not notice anyone in particular yesterday.";
+    const t=CAST.find(x=>x.id===s.about);
+    const tn=t.name.split(' ')[0];
+    noteClaim({src:c.id,about:s.about,day,hour:s.hour,loc:s.loc,kind:'saw'});
+    if(s.loc==='missing')return warm
+      ?pick(["Not a sign of "+tn+" all yesterday. Door shut, nobody home.","Funny — I never saw "+tn+" once yesterday. Place was shut up."],c.id+day+'m')
+      :"I did not see "+tn+" at all yesterday.";
+    return warm
+      ?pick(["Passed "+locName(s.loc)+" "+hourWord(s.hour)+" yesterday — "+tn+" was there.",
+             tn+"? Saw them at "+locName(s.loc)+", "+hourWord(s.hour)+". Waved, even.",
+             "I saw "+tn+" yesterday. "+locName(s.loc).charAt(0).toUpperCase()+locName(s.loc).slice(1)+", "+hourWord(s.hour)+"."],c.id+day+'s')
+      :"I saw "+tn+" at "+locName(s.loc)+" yesterday, at "+hourWord(s.hour)+".";
+  }
+  return null;
+}
+
+/* ============================================================
+   WHAT THE TOWN REMEMBERS — last spring's Festival, the night
+   the bonfire got away from them and took the old bandstand.
+   Everybody who was here saw it from somewhere. The ones who
+   weren't here learned one sentence about it.
+   ============================================================ */
+/* each honest memory is where they stood + what stayed with them; keyed to the
+   person so no two honest people ever tell it in the same words */
+const FIRE_WHERE=[
+  "I was at the drinks table when somebody shouted.",
+  "We'd only just sat down on the grass.",
+  "I was up by the well, near enough the front.",
+  "I came late, up the lane, and saw the glow over the roofs first.",
+  "I was home with a cold and heard the bell.",
+  "I was helping with the food, back by the Inn.",
+  "I had a little one asleep on my shoulder.",
+  "I was talking to Theo at the barrels.",
+];
+const FIRE_MEMORY=[
+  "The roof was going before anybody moved.",
+  "I carried buckets with everybody else. My arms ached a week and it made no difference.",
+  "What I remember is the smell \u2014 old paint burning.",
+  "The band had been playing on it an hour before. I keep thinking about that.",
+  "Nobody said a word. Then everybody did, all at once.",
+  "The wind came round off the river and took a spark straight into the old wood.",
+  "Twenty minutes, start to finish. That's all it took.",
+  "I dropped a whole tray and never went back for it.",
+  "Somebody said it was the Festival taking its due. People say that, after a drink.",
+  "We put it out in the end. Or it put itself out. Hard to say which.",
+  "The little ones wanted to go back and watch. That's children.",
+  "I thought the whole square had gone. It was just the bandstand. Just.",
+  "Theo kept pouring through all of it. Somebody had to keep their head.",
+];
+const FIRE_RECITED="The bandstand burned during last spring's Festival. Nobody was hurt. The town has moved on.";
+function fireLine(c){
+  const d=S.npc[c.id];
+  if(d&&d.isAI&&!covers(c.id,'memory'))return FIRE_RECITED;     /* the one sentence they were given */
+  const i=Math.max(0,CAST.findIndex(x=>x.id===c.id));
+  return FIRE_WHERE[i%FIRE_WHERE.length]+' '+FIRE_MEMORY[i%FIRE_MEMORY.length];
+}
+/* ---- passing two people mid-conversation ---- */
+const CHAT_IDLE=[
+  ["…and I said, you can't keep a goat in a flat. And she said watch me.","Did she?","She's still got it."],
+  ["…twice this week, the same lorry, the wrong way down the lane.","Lost, probably.","Twice, though."],
+  ["…rain by Thursday, he reckons.","He reckoned that last Thursday.","He's due to be right."],
+  ["…and the bonfire wood's been stacked already.","Who stacked it?","That's what I asked."],
+  ["…remember the bandstand?","Don't.","I'm only saying they're building it bigger this year."],
+];
+const CHAT_ABOUT=[
+  "…has {X} seemed quite right to you? This week?",
+  "…I said hello to {X} and they said hello back. Exactly the same way. Twice.",
+  "…{X} asked me my name yesterday. My name. After eleven years.",
+  "…probably nothing. {X} just wasn't at the usual place, that's all.",
+];
+function overheardLine(a,b){
+  const A=S.npc[a.id],B=S.npc[b.id];
+  const an=a.name.split(' ')[0],bn=b.name.split(' ')[0];
+  const seed=hashStr(a.id+b.id+'ov'+S.day+S.runId);
+  /* an impostor with no ear for people gives itself away just by listening */
+  const flatOne=[a,b].find(x=>S.npc[x.id].isAI&&!covers(x.id,'social'));
+  if(flatOne&&seed%3===0){
+    const other=flatOne===a?bn:an, me=flatOne.name.split(' ')[0];
+    return 'You pass '+an+' and '+bn+' talking. '+other+' does most of it. '+me
+      +' nods at every pause, the same nod, and agrees with everything — even the parts that contradict each other.';
+  }
+  /* two honest people, worried about a third */
+  if(!A.isAI&&!B.isAI&&seed%2===0){
+    const others=CAST.filter(x=>x.id!==a.id&&x.id!==b.id);
+    const imps=others.filter(x=>S.npc[x.id].isAI);
+    /* they are right more often than not — but not always */
+    const pool=(imps.length&&srand(seed)<0.6)?imps:others;
+    const x=pool[seed%pool.length];
+    return 'You catch '+an+' and '+bn+' mid-sentence, voices low: “'
+      +CHAT_ABOUT[seed%CHAT_ABOUT.length].replace('{X}',x.name.split(' ')[0])+'” They stop when they see you.';
+  }
+  const ex=CHAT_IDLE[seed%CHAT_IDLE.length];
+  return 'You pass '+an+' and '+bn+': “'+ex[0]+'” “'+ex[1]+'” “'+ex[2]+'”';
+}
+let overhearT=0;
+function maybeOverhear(dt){
+  overhearT+=dt;if(overhearT<0.8)return;overhearT=0;
+  if(S.scene!=='world'||paused)return;
+  S.heard=S.heard||{};
+  const out=CAST.filter(c=>{const st=NS[c.id];return st&&!st.away&&!st.inside;});
+  for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){
+    const a=out[i],b=out[j],sa=NS[a.id],sb=NS[b.id];
+    if(Math.hypot(sa.x-sb.x,sa.y-sb.y)>3*TILE)continue;
+    const mx=(sa.x+sb.x)/2,my=(sa.y+sb.y)/2;
+    if(Math.hypot(mx-S.px,my-S.py)>3.5*TILE)continue;
+    const key=[a.id,b.id].sort().join('+')+':'+S.day;
+    if(S.heard[key])continue;
+    /* one overheard exchange an hour at most — it should feel like luck, not a radio */
+    if(S.lastHeard&&S.lastHeard.day===S.day&&S.min-S.lastHeard.min<60)return;
+    S.heard[key]=1;
+    S.lastHeard={day:S.day,min:S.min};
+    const line=overheardLine(a,b);
+    showToast(line);
+    S.found2=S.found2||[];
+    S.found2.push({who:a.id,label:'Overheard with '+b.name.split(' ')[0],day:S.day,text:line});
+    return;
+  }
+}
 function topicsFor(c,d){
   if(!d.met)return [{id:'intro',q:c.kin?KIN_INTRO_Q:INTRO_Q}];
   if(c.kin){
@@ -1673,7 +1967,7 @@ function topicsFor(c,d){
     return set.filter(t=>(d.familiarity||0)>=t.min&&(t.id!=='school'||(isKid(c)&&!c.noSchool))&&(!t.only||t.only.indexOf(c.id)>=0))
       .map(t=>({id:t.id,q:t.q.replaceAll('{rel}',rel)}));
   }
-  return TOPICS.filter(t=>(d.familiarity||0)>=t.min&&(!t.only||t.only.indexOf(c.id)>=0));
+  return TOPICS.filter(t=>(d.familiarity||0)>=t.min&&(!t.only||t.only.indexOf(c.id)>=0)&&(!t.fromDay||S.day>=t.fromDay));
 }
 function scriptedGreeting(c,d){
   if(c.kin)return pick(isKid(c)?KIN_GREET:ADULT_KIN_GREET,c.id+S.day+S.runId);
@@ -1783,7 +2077,7 @@ function newGame(hard){
     history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
   const kin={};
   KIN.forEach(k=>{kin[k.id]={history:[],familiarity:0,isAI:false,cold:0,notes:'',suspicion:0};});
-  const CH=['physical','routine','social','animal'];
+  const CH=['physical','routine','social','animal','memory'];
   const nCov=hard?2:1;
   ids.forEach(id=>{
     if(!aiSet.has(id))return;
@@ -1797,7 +2091,7 @@ function newGame(hard){
   hShuf.slice(0,nQ).forEach((id,i)=>{npc[id].quirk=QK[(i+Math.floor(srand(hashStr('qk'+runId))*QK.length))%QK.length];});
   const humans=humansAll;
   const friendId=humans[Math.floor(srand(hashStr('friend'+runId))*humans.length)];
-  return {runId,friendId,kin,hard:!!hard,numAI,mode:'free',day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
+  return {runId,friendId,kin,claims:[],confrontDay:0,hard:!!hard,numAI,mode:'free',day:1,min:DAY_START,energy:ENERGY,npc,found:{},tips:[],favorState:{},activeTask:null,failCount:0,
     player:{name:'',skin:'#E8C49B',hair:'#6B4226',hairStyle:'short',longHair:false,face:'none',eyes:'none',beardColor:'#6B4226',top:'#4E8B8B',outfit:'pants',hat:'none',tartan:'#2E5A3C'},found2:[],pockets:[],ateToday:false,
     curios:[],cats:[],keepsakes:KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:ids[Math.floor(srand(hashStr('keep'+i+runId))*ids.length)],taken:false})),
     ended:false,started:false,scene:'world',px:45*TILE,py:16*TILE,ipx:0,ipy:0};
@@ -1820,6 +2114,7 @@ async function load(){
       if(!S.keepsakes)S.keepsakes=KEEP_SPOTS.map((sp,i)=>({i,x:sp.x,y:sp.y,find:sp.find,owner:CAST[i%CAST.length].id,taken:false}));
       if(!S.friendId){const hs=Object.keys(S.npc).filter(id=>!S.npc[id].isAI);S.friendId=hs[0];}
       CAST.forEach(c=>{if(!S.npc[c.id])S.npc[c.id]={isAI:false,aiOffset:0,history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
+      S.claims=S.claims||[];
       return;}}catch(e){}
   S=newGame();await save();
 }
@@ -2323,8 +2618,22 @@ function intBlocked(bldId,tx,ty){
 }
 const ANCH={hearth:[[8,3],[11,3],[10,6],[3,5],[6,5]],tavern:[[2,4],[4,4],[6,4],[9,5],[11,6]],grocery:[[3,4],[6,4],[10,4],[7,7]],library:[[3,5],[6,5],[11,6]],post:[[3,3],[8,5]],inn:[[2,3],[4,4]],bakery:[[3,4],[7,5]],clinic:[[3,3],[9,5]],school:[[2,3],[5,6],[8,6],[11,6],[3,7],[6,7],[9,7],[12,7]],watch:[[3,4],[6,5]],workshop:[[2,4],[4,4],[6,4],[3,6],[8,7]],glass:[[3,4],[8,5]],garage:[[3,4],[6,5]],pasta:[[3,4],[6,5],[9,5]],home:[[4,5],[6,5],[3,6]]};
 function anchorsFor(bldId){return BLD[bldId].kind==='home'?ANCH.home:(ANCH[bldId]||ANCH.home);}
-const GEN_OBS_WORK=["Every object on this bench sits at a right angle to every other.","Nothing here is half-finished. Not one thing.","Someone has wiped the dust from surfaces nobody wipes."];
-const GEN_OBS_HOME=["The house smells of nothing whatsoever.","Every cup in the cupboard faces the same way.","There is no rubbish anywhere. None at all."];
+const GEN_OBS_WORK=["Every object on this bench sits at a right angle to every other.","Nothing here is half-finished. Not one thing.","Someone has wiped the dust from surfaces nobody wipes.",
+ "A calendar on the wall with every day crossed off neatly \u2014 including the ones still to come.",
+ "The apron on the hook has never been washed. It has never needed to be.",
+ "A mug by the till, the handle turned exactly away from where a right hand would reach.",
+ "A list of the regulars, in pencil. Every name is spelled out in full. Nobody here is called by their full name.",
+ "The tools are clean. Not cleaned \u2014 clean, the way new things are.",
+ "A note in the margin of the order book: 'smile at them.' Underlined twice."];
+const GEN_OBS_HOME=["The house smells of nothing whatsoever.","Every cup in the cupboard faces the same way.","There is no rubbish anywhere. None at all.",
+ "Tea in the caddy \u2014 a brand nobody in Millbrook stocks, from a shop that closed years ago.",
+ "A photograph on the dresser. The frame is old and theirs. The face in it is no one in town.",
+ "A birthday card on the mantel, signed with love. The name inside is spelled wrong.",
+ "Two toothbrushes in the glass, both dry as paper.",
+ "A shopping list in their hand: every item written out in full, even \u2018eggs\u2019, even \u2018milk\u2019.",
+ "The clock on the wall is right to the second. Nobody\u2019s kitchen clock is right to the second.",
+ "Letters on the side, all opened along the top with a knife, all read, none answered.",
+ "A dog\u2019s lead on the hook. No bowl. No hair. No dog."];
 function spotObs(charId,kind){
   const c=CAST.find(x=>x.id===charId);
   const pools=kind==='work'?{ai:c.workObsAI,h:c.workObsH}:{ai:c.homeObsAI,h:c.homeObsH};
@@ -3527,6 +3836,8 @@ function realLoop(ts){
       if(dfx<9*TILE&&Date.now()-AU.lastCrackle>420+Math.random()*500){AU.lastCrackle=Date.now();SFX.crackle();}
     }
     updateNpcs(dt);
+    if(typeof maybeOverhear==='function')maybeOverhear(dt);
+    if(typeof noteSeen==='function')noteSeen(dt);
     const t=nearestInteract();
     const hint=document.getElementById('actionHint');
     if(t&&hint.dataset.toast!=='1'){hint.innerText=interactLabel(t);hint.style.display='block';}
@@ -3750,7 +4061,14 @@ function openIntro(){
     +'<button id="modeFree" class="'+(S.mode==='talk'?'':'primary')+'">Free</button>'
     +'<button id="modeTalk" class="'+(S.mode==='talk'?'primary':'')+'">Talk</button>'
     +'</div>'
-    +'<p class="sub" style="font-size:12px;">'+(S.mode==='talk'?'TALK: type anything to anyone and they answer in character. Runs on Claude — uses the host\'s limited allowance unless you add your own key in the Menu.':'FREE: pick from what you can ask each person. No account, no key, no limits — the whole town, every clue, every tell.')+'</p>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;">'
+    +'<div class="cluecard" style="flex:1;min-width:200px;margin:0;'+(S.mode==='talk'?'opacity:.6;':'border-color:var(--amber);')+'">'
+      +'<strong>Free</strong><div class="hint">Pick what to ask from a list. No account, no key, no limits. '
+      +'Every clue and every tell in the game is reachable this way.</div></div>'
+    +'<div class="cluecard" style="flex:1;min-width:200px;margin:0;'+(S.mode==='talk'?'border-color:var(--amber);':'opacity:.6;')+'">'
+      +'<strong>Talk</strong><div class="hint">Type anything and they answer in character, played by Claude. '
+      +'Richer and stranger \u2014 but it uses the host\'s limited allowance unless you add your own key in the Menu.</div></div>'
+    +'</div>'
     +'<div style="display:flex;gap:8px;align-items:center;margin:10px 0;">'
     +'<span style="font-size:12px;color:var(--dim);min-width:78px;">Difficulty</span>'
     +'<button id="diffStd" class="'+(S.hard?'':'primary')+'">Standard</button>'
@@ -3797,7 +4115,8 @@ function openIntro(){
   if(mt)mt.onclick=()=>setMode('talk');
   const ds=document.getElementById('diffStd');if(ds)ds.onclick=()=>setDiff(false);
   const dh=document.getElementById('diffHard');if(dh)dh.onclick=()=>setDiff(true);
-  document.getElementById('beginBtn').onclick=async()=>{S.started=true;await save();closeOverlay();};
+  document.getElementById('beginBtn').onclick=async()=>{S.started=true;await save();closeOverlay();
+    if(!S.primed)openPrimer();};
 }
 function openNote(){
   paused=true;
@@ -3810,11 +4129,188 @@ function openNote(){
     +'</div></div>';
   document.getElementById('closeBtn').onclick=closeOverlay;
 }
+
+/* ============================================================
+   THE WEEK TIGHTENS — how people carry themselves as the
+   bonfire gets closer, and what happens if you say it out loud.
+   ============================================================ */
+const NERVES=[
+  ["Keeps glancing at the door while you talk.","Laughs a beat too quickly.","Has a cup of tea going cold in their hands."],
+  ["Asks if you've heard anything. Doesn't say about what.","Their eyes keep going to the window.","Holds their own elbow, as if cold."],
+  ["Hasn't slept, by the look of them.","Lowers their voice though there's nobody near.","Flinches when the door goes."],
+  ["Looks at you like you might be the answer, or the problem.","Their hands won't stay still.","Has the look of someone counting the hours."],
+];
+const NERVES_FLAT=["Says very little. Watches you closely while they do.","Perfectly polite, and visibly tired.","Keeps the counter between you, today."];
+const CALM=["Perfectly composed. Smiles when you come in, and keeps smiling.","Seems rested. Seems, if anything, content.",
+  "Looks at you steadily. Blinks less than you'd expect.","Untroubled. The only person in town who is."];
+function bearing(c){
+  if(c.kin||S.day<4)return '';
+  const d=S.npc[c.id];if(!d)return '';
+  const step=Math.min(NERVES.length-1,S.day-4);
+  const seed=hashStr(c.id+'bear'+S.day+S.runId);
+  if(d.isAI&&!covers(c.id,'social'))return CALM[seed%CALM.length];
+  if(!d.isAI&&quirk(c.id,'flat'))return NERVES_FLAT[seed%NERVES_FLAT.length];
+  const pool=NERVES[step];
+  return pool[seed%pool.length];
+}
+const SLIP_PLAIN=[
+  "They don't raise their voice. They don't lower it. They just look at you, and wait, the way somebody waits for their line.",
+  "“I see,” they say. And then nothing. No anger, no hurt. They are simply waiting for you to go.",
+  "They smile. It is the wrong answer to what you said, and they do not seem to know it.",
+];
+const SLIP_PERFORMED=[
+  "They're furious, and it's very good — and then, between one word and the next, the anger simply stops. Like a tap turned off.",
+  "Indignation, tears even. But when you look away and back, their face is already calm, already finished with it.",
+];
+const DENY_PERFORMED=[
+  "“How dare you.” Their voice cracks in exactly the right place. You can't tell. You honestly can't tell.",
+  "They go white, then red. “Get out.” It's convincing. It's very convincing.",
+];
+const HURT=[
+  "“You think that of me?” They aren't angry. That's the worst of it. They're hurt.",
+  "They sit down rather suddenly. “I've known these people my whole life. I've known you a week.”",
+  "“Get out,” they say quietly. “And don't come back till you've thought about what you just said.”",
+  "Their eyes fill. “I've got enough going on without this. Without you.”",
+];
+const HURT_FLAT=["“That is a serious thing to say to a person.” They hold the door. You go.",
+  "They go very still. “I'd like you to leave now.”"];
+function canConfront(c,d){
+  return !c.kin&&d.met&&S.day>=3&&S.confrontDay!==S.day&&!S.ended;
+}
+function confront(c,d){
+  S.confrontDay=S.day;
+  const seed=hashStr(c.id+'cf'+S.day+S.runId);
+  let line,clue=null;
+  if(d.isAI&&!covers(c.id,'social')){
+    if(srand(seed)<0.85){line=SLIP_PLAIN[seed%SLIP_PLAIN.length];clue=line;}
+    else line="“I don't know what you mean,” they say, evenly. “I'm sure you're mistaken.”";
+    d.cold=Math.max(d.cold||0,1);
+  }else if(d.isAI){
+    if(srand(seed)<0.35){line=SLIP_PERFORMED[seed%SLIP_PERFORMED.length];clue=line;}
+    else line=DENY_PERFORMED[seed%DENY_PERFORMED.length];
+    d.cold=Math.max(d.cold||0,2);
+  }else{
+    line=quirk(c.id,'flat')?HURT_FLAT[seed%HURT_FLAT.length]:HURT[seed%HURT.length];
+    d.cold=Math.max(d.cold||0,2);
+    d.familiarity=Math.max(0,(d.familiarity||0)-3);
+    S.failCount=(S.failCount||0)+1;        /* word gets round */
+  }
+  S.found2=S.found2||[];
+  S.found2.push({who:c.id,label:'Confronted',day:S.day,text:line});
+  return line;
+}
+const NIGHTS=[
+  "It's past nine. Millbrook is asleep, and you should be too.",
+  "The lamps go out one by one. Somebody's dog barks at nothing for a long time.",
+  "Past nine. More curtains drawn than last night. You notice which ones.",
+  "Somebody has started locking their door. You hear the bolt from the lane.",
+  "The square is empty. Somebody has stacked the bonfire wood already. Nobody remembers who.",
+  "Nobody's out. Tomorrow is the Festival, and everybody knows what that means now.",
+  "Tonight they'll light it. Tonight you'll have to say their names.",
+];
+
+/* ============================================================
+   HOW TO READ THIS TOWN — said once, on the first morning.
+   ============================================================ */
+function openPrimer(after){
+  paused=true;
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>How to read Millbrook</h3>'
+    +'<p class="sub">Whatever replaced them learned a great deal. Not everything. Each one has gaps \u2014 different gaps \u2014 and the gaps show.</p>'
+    +'<div class="cluecard"><strong>Their places</strong><div class="hint">A real home has a mess in it somewhere. Look in drawers. Look at the workbench.</div></div>'
+    +'<div class="cluecard"><strong>Their days</strong><div class="hint">Real people run late, nip out, get waylaid. Notice who is <em>never</em> early, never late \u2014 and who is simply gone.</div></div>'
+    +'<div class="cluecard"><strong>Their talk</strong><div class="hint">Ask what it smells like in there. Ask if it\'s been a long week. Real people complain.</div></div>'
+    +'<div class="cluecard"><strong>Their memory</strong><div class="hint">From the second morning, ask people where they were yesterday, and who they saw. '
+      +'The journal lays every account out by the hour. Where two don\'t agree, somebody is lying.</div></div>'
+    +'<div class="cluecard"><strong>The animals</strong><div class="hint">Dogs and cats know before anybody.</div></div>'
+    +'<div class="hint" style="margin-top:10px;">But some of your neighbours are just odd. Tidy people exist. Quiet people exist. '
+    +'Nobody is caught by one thing. And if you put it to the wrong person, they will not forget it.</div>'
+    +'<div class="sheet-actions"><button class="primary" id="primerOk">Right. Day one.</button></div>'
+    +'</div></div>';
+  document.getElementById('primerOk').onclick=()=>{S.primed=true;save();closeOverlay();if(after)after();};
+}
+/* ============================================================
+   LAST SEEN — where you last laid eyes on everyone.
+   ============================================================ */
+let seenT=0;
+function placeNear(x,y){
+  const tx=x/TILE,ty=y/TILE;
+  let best=null,bd=4.5;
+  Object.entries(BLD).forEach(([id,b])=>{
+    if(b.kind==='deco')return;
+    const cx=Math.max(b.x,Math.min(tx,b.x+b.w)),cy=Math.max(b.y,Math.min(ty,b.y+b.h));
+    const dd=Math.hypot(tx-cx,ty-cy);
+    if(dd<bd){bd=dd;best=b.label;}
+  });
+  if(best)return 'by '+best;
+  if(ty>=WOODS_Y0)return 'out by the woods';
+  return 'in the lanes';
+}
+function noteSeen(dt){
+  seenT+=dt;if(seenT<0.5)return;seenT=0;
+  S.lastSeen=S.lastSeen||{};
+  CAST.forEach(c=>{
+    const st=NS[c.id];if(!st||st.away)return;
+    if(S.scene==='world'){
+      if(st.inside)return;
+      if(Math.hypot(st.x-S.px,st.y-S.py)>9*TILE)return;
+      S.lastSeen[c.id]={day:S.day,min:Math.round(S.min),x:st.x,y:st.y,where:placeNear(st.x,st.y)};
+    }else if(st.inside===S.scene&&BLD[S.scene]){
+      const b=BLD[S.scene];
+      S.lastSeen[c.id]={day:S.day,min:Math.round(S.min),x:(b.x+b.w/2)*TILE,y:(b.y+b.h)*TILE,where:'in '+b.label};
+    }
+  });
+}
+function agoText(r){
+  const mins=(S.day-r.day)*(DAY_END-DAY_START)+(S.min-r.min);
+  if(r.day!==S.day)return (S.day-r.day===1?'yesterday':(S.day-r.day)+' days ago')+' at '+clockOf(r.min);
+  if(mins<15)return 'just now';
+  if(mins<60)return Math.round(mins)+' min ago';
+  return Math.floor(mins/60)+'h ago, at '+clockOf(r.min);
+}
+function journalMap(msg){
+  paused=true;
+  const seen=S.lastSeen||{};
+  const ids=CAST.map(c=>c.id).filter(id=>seen[id]).sort((a,b)=>(seen[b].day-seen[a].day)||(seen[b].min-seen[a].min));
+  const never=CAST.filter(c=>!seen[c.id]);
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>Journal</h3>'+jTabs()
+    +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
+    +'<div class="hint" style="margin-bottom:8px;">Where you last laid eyes on each of them. Brighter is more recent.</div>'
+    +'<canvas id="mapCv" width="'+(MW*6)+'" height="'+(MH*6)+'" style="width:100%;max-width:'+(MW*8)+'px;image-rendering:pixelated;border:1px solid var(--line);border-radius:5px;background:#16202A;"></canvas>'
+    +ids.map(id=>{const c=CAST.find(x=>x.id===id),r=seen[id];
+      return '<div class="accuse-row" style="padding:5px 0;"><div><strong>'+esc(c.name.split(' ')[0])+'</strong> '
+        +'<span class="hint">'+esc(r.where)+'</span></div><span class="mono" style="font-size:11px;color:var(--dim);">'+esc(agoText(r))+'</span></div>';}).join('')
+    +(never.length?('<div class="hint" style="margin-top:8px;">Not seen yet: '+esc(never.map(c=>c.name.split(' ')[0]).join(', '))+'</div>'):'')
+    +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
+    +'</div></div>';
+  wireTabs();
+  const cv=document.getElementById('mapCv');if(!cv||!cv.getContext)return;
+  const g=cv.getContext('2d');const K=6;
+  g.fillStyle='#1E2B22';g.fillRect(0,0,MW*K,MH*K);
+  g.fillStyle='#17241B';g.fillRect(0,WOODS_Y0*K,MW*K,(WOODS_Y1-WOODS_Y0)*K);
+  Object.values(BLD).forEach(b=>{
+    g.fillStyle=b.kind==='home'?'#4A4438':(b.kind==='deco'?'#5A5236':'#5E5040');
+    g.fillRect(b.x*K,b.y*K,b.w*K,b.h*K);
+    g.fillStyle=b.roof||'#6B5B4A';g.fillRect(b.x*K,b.y*K,b.w*K,Math.max(2,K));
+  });
+  ids.forEach(id=>{
+    const r=seen[id];const c=CAST.find(x=>x.id===id);
+    const age=(S.day-r.day)*(DAY_END-DAY_START)+(S.min-r.min);
+    const a=Math.max(0.3,1-age/900);
+    const x=r.x/TILE*K,y=r.y/TILE*K;
+    g.fillStyle='rgba(224,166,61,'+a+')';g.beginPath();g.arc(x,y,4,0,7);g.fill();
+    g.fillStyle='rgba(237,230,214,'+a+')';g.font='9px sans-serif';g.textAlign='center';
+    g.fillText(c.name.split(' ')[0],x,y-6);
+  });
+  /* you */
+  g.fillStyle='#7FD1D1';g.fillRect(S.px/TILE*K-3,S.py/TILE*K-3,6,6);
+}
 function openNightfall(){
   paused=true;
   OR.innerHTML='<div class="overlay"><div class="sheet">'
     +'<h3>The lamps go out</h3>'
-    +'<p class="sub">It\'s past nine. Millbrook is asleep, and you should be too.</p>'
+    +'<p class="sub">'+esc(NIGHTS[Math.min(NIGHTS.length-1,Math.max(0,S.day-1))])+'</p>'
     +'<div class="sheet-actions"><button class="primary" id="nSleep">Sleep</button></div>'
     +'</div></div>';
   document.getElementById('nSleep').onclick=doSleep;
@@ -3900,6 +4396,7 @@ function openChat(id){
     +'<div style="flex:1;min-width:0;">'
     +'<h3>'+(d.met?c.name:c.name.split(' ')[0])+'</h3>'
     +'<div class="hint">'+(d.met?c.role:'you\'ve not spoken before')+(d.cold>0?' · seems cold toward you':'')+'</div>'
+    +(d.met&&bearing(c)?('<div class="hint" style="font-style:italic;margin-top:3px;">'+esc(bearing(c))+'</div>'):'')
     +'</div></div>'
     +'<div class="chat" id="chatBox">'+bubbles+'</div>'
     +'<div id="typingIndicator"></div>'
@@ -3908,7 +4405,11 @@ function openChat(id){
       ?('<div class="chat-row">'
         +'<input type="text" id="chatInput" placeholder="Say something…" autocomplete="off"/>'
         +'<button class="primary" id="sendBtn">Send</button>'
-        +'</div>')
+        +'</div>'
+        +((!c.kin&&S.day>1)?('<div id="claimRow" style="margin:6px 0 2px;">'
+          +'<button data-claim="yesterday" style="margin:0 6px 6px 0;">Where were you yesterday?</button>'
+          +'<button data-claim="seen" style="margin:0 6px 6px 0;">Seen anyone about?</button>'
+          +'<span class="hint" style="font-size:11px;">— goes straight in the journal</span></div>'):''))
       :'<div id="topicPanel"></div>')
     +'<div class="notes">'
     +'<label>Notes on '+c.name+'</label>'
@@ -3918,12 +4419,40 @@ function openChat(id){
     +'<input type="range" min="0" max="100" id="suspSlider" value="'+d.suspicion+'">'
     +'<span class="susp-val mono">'+d.suspicion+'</span>'
     +'</div></div>'
-    +'<div class="sheet-actions"><button id="giftBtn" style="display:none;border-color:var(--teal);color:var(--teal);">Give something</button><button id="offerBtn" style="display:none;border-color:var(--amber-dim);color:var(--amber);">Offer a hand</button><button id="leaveBtn">Walk away</button></div>'
+    +'<div class="sheet-actions"><button id="giftBtn" style="display:none;border-color:var(--teal);color:var(--teal);">Give something</button><button id="offerBtn" style="display:none;border-color:var(--amber-dim);color:var(--amber);">Offer a hand</button>'+(canConfront(c,d)?'<button id="confrontBtn" style="border-color:var(--magenta);color:var(--magenta);">Put it to them</button>':'')+'<button id="leaveBtn">Walk away</button></div>'
     +'</div></div>';
   paintPortrait('portraitCv',c.pal);
   const cb=document.getElementById('chatBox');cb.scrollTop=cb.scrollHeight;
   const inp=document.getElementById('chatInput');
   if(d.askedDay!==S.day){d.askedDay=S.day;d.askedToday=[];}
+  const cfb=document.getElementById('confrontBtn');
+  if(cfb)cfb.onclick=()=>{
+    if(cfb.dataset.armed!=='1'){
+      cfb.dataset.armed='1';
+      cfb.innerText='Say it — once a day, and it can\'t be taken back';
+      return;
+    }
+    const q='I know what you are.';
+    const line=confront(c,d);
+    d.history.push({role:'user',text:q});
+    d.history.push({role:'assistant',text:line});stampHistory();
+    cb.innerHTML+='<div class="bubble me">'+esc(q)+'</div><div class="bubble them">'+esc(line)+'</div>';
+    cb.scrollTop=cb.scrollHeight;cfb.remove();SFX.click();save();
+  };
+  document.querySelectorAll('[data-claim]').forEach(b=>{
+    const tid=b.dataset.claim;
+    if((d.askedToday||[]).indexOf(tid)>=0)b.disabled=true;
+    b.onclick=()=>{
+      if(b.disabled)return;
+      d.askedToday=d.askedToday||[];d.askedToday.push(tid);
+      const q=tid==='yesterday'?"Where'd you get to yesterday?":"Seen anyone about yesterday?";
+      const line=claimLine(c,tid);
+      d.history.push({role:'user',text:q});
+      d.history.push({role:'assistant',text:line});stampHistory();
+      cb.innerHTML+='<div class="bubble me">'+esc(q)+'</div><div class="bubble them">'+esc(line)+'</div>';
+      cb.scrollTop=cb.scrollHeight;b.disabled=true;SFX.click();save();
+    };
+  });
   const renderTopics=()=>{
     const tp=document.getElementById('topicPanel');
     if(!tp)return;
@@ -3957,7 +4486,7 @@ function openChat(id){
     d.topics=d.topics||[];
     if(d.topics.indexOf(tid)<0)d.topics.push(tid);
     if(!c.kin)d.familiarity=Math.min(30,d.familiarity+1);
-    d.history.push({role:'assistant',text:line});
+    d.history.push({role:'assistant',text:line});stampHistory();
     cb.innerHTML+='<div class="bubble them">'+esc(line)+'</div>';
     cb.scrollTop=cb.scrollHeight;
     if(offered)addPocket(offered,c.id);
@@ -4041,7 +4570,7 @@ function openChat(id){
   const runGreet=async()=>{
     if(S.mode!=='talk'){
       const line=scriptedGreeting(c,d);
-      d.history.push({role:'assistant',text:line});
+      d.history.push({role:'assistant',text:line});stampHistory();stampHistory();
       d.lastGreetDay=S.day;await save();
       const cbx=document.getElementById('chatBox');
       if(cbx){cbx.innerHTML+='<div class="bubble them">'+esc(line)+'</div>';cbx.scrollTop=cbx.scrollHeight;}
@@ -4054,7 +4583,7 @@ function openChat(id){
     const r=await getReply(c,d,true);
     busy=false;
     if(r.ok){
-      d.history.push({role:'assistant',text:r.text});
+      d.history.push({role:'assistant',text:r.text});stampHistory();
       d.lastGreetDay=S.day;
       await save();
       const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
@@ -4082,7 +4611,7 @@ function openChat(id){
     busy=false;
     if(r.ok){
       d.met=true;
-      d.history.push({role:'assistant',text:r.text});
+      d.history.push({role:'assistant',text:r.text});stampHistory();
       await save();
       const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
       const cb2=document.getElementById('chatBox');
@@ -4111,7 +4640,7 @@ function openChat(id){
       else line=warm?pick(["That's kind of you. Really. Sit a minute.","Oh — you didn't have to. But I'm glad you did.","Well now. That's the nicest thing anyone's done this week."],c.id+it.label+S.day)
                     :"Thank you. That is very thoughtful of you.";
       d.history.push({role:'user',text:'(I hand you '+it.label+'.)'});
-      d.history.push({role:'assistant',text:line});
+      d.history.push({role:'assistant',text:line});stampHistory();stampHistory();
       cb.innerHTML+='<div class="bubble me">'+esc('(I hand you '+it.label+'.)')+'</div>';
       cb.innerHTML+='<div class="bubble them">'+esc(line)+'</div>';
       cb.scrollTop=cb.scrollHeight;
@@ -4138,7 +4667,7 @@ function openChat(id){
       d.familiarity=Math.min(30,d.familiarity+(it.keepOwner===id?9:5));
       const wasCold=d.cold>0;
       if(wasCold)d.cold=0;
-      d.history.push({role:'assistant',text:r.text});
+      d.history.push({role:'assistant',text:r.text});stampHistory();
       await save();
       const ti=document.getElementById('typingIndicator');if(ti)ti.innerHTML='';
       const cb2=document.getElementById('chatBox');
@@ -4283,6 +4812,17 @@ async function getReply(c,d,opener,gift){
   if(covers(c.id,'social'))system+='\nYou have practiced speech hardest of all. You CAN summon vivid sensory detail on demand, and you CAN perform irritation, tiredness, or impatience convincingly. Whatever gives you away, it is not your talk.';
   if(quirk(c.id,'flat'))system+='\nYou are naturally reserved and even-tempered: you rarely show irritation, you do not describe smells or textures, and your anecdotes come out a little flat and general. That is simply your temperament, and you would be baffled to hear it called strange.';
   if(quirk(c.id,'absent'))system+='\nYou have been out of town some days lately on a private errand you would rather not discuss in detail. It is nothing sinister, but you get evasive when pressed about where you go.';
+  if(!c.kin){
+    system+='\nTHE BANDSTAND: last spring at the Founders\' Festival the bonfire got away and burned down the old bandstand in the square. '
+      +((d.isAI&&!covers(c.id,'memory'))
+        ?'You were not there. If asked, say only this, word for word: "'+FIRE_RECITED+'" and change the subject.'
+        :'You were there. If asked, tell it from where you stood: '+fireLine(c));
+  }
+  if(S.day>1&&!c.kin){
+    const yc=selfClaim(c.id,S.day-1);
+    system+='\nYESTERDAY: if asked where you were yesterday, you were '+(yc.loc==='away'?'out of town all day':('at '+locName(yc.loc)))
+      +' at about '+hourWord(yc.hour)+'. Say so plainly and do not change your account.';
+  }
   if(d.cold>0)system+=COLD_OVERLAY;
   else if(S.failCount>=3&&!d.isAI)system+=GUARDED_OVERLAY;
   if(d.familiarity>=8&&d.familiarity<12&&d.cold<=0)system+="\nYou have grown fond of this newcomer — you gossip a little more freely with them than you would a stranger.";
@@ -4464,8 +5004,235 @@ async function doRestart(){
   updateHud();
   openTitle();
 }
-function openJournal(msg){
+
+/* ============================================================
+   WHAT WAS SAID, AND WHEN — the journal remembers so you do not
+   have to retype it.
+   ============================================================ */
+function stampHistory(){
+  /* called after any push: give the newest entries a day and a clock */
+  CAST.concat(KIN).forEach(c=>{
+    const d=(S.npc&&S.npc[c.id])||(S.kin&&S.kin[c.id]);
+    if(!d||!d.history)return;
+    d.history.forEach(m=>{
+      if(m.day===undefined){m.day=S.day;m.min=Math.round(S.min||DAY_START);}
+    });
+  });
+}
+function clockOf(min){
+  const h=Math.floor((min||DAY_START)/60)%24, mm=Math.floor((min||DAY_START)%60);
+  return h+':'+(mm<10?'0':'')+mm;
+}
+function allSaid(){
+  /* everything anybody has told you, newest first */
+  const out=[];
+  CAST.concat(KIN).forEach(c=>{
+    const d=(S.npc&&S.npc[c.id])||(S.kin&&S.kin[c.id]);
+    if(!d||!d.history)return;
+    d.history.forEach((m,i)=>{
+      if(m.role!=='assistant')return;
+      if(!m.text||m.text.length<12)return;
+      out.push({who:c.id,name:c.name,text:m.text,day:m.day||1,min:m.min||DAY_START,
+                idx:i,pin:!!m.pin,tag:m.tag||''});
+    });
+  });
+  out.sort((a,b)=>(b.day-a.day)||(b.min-a.min));
+  return out;
+}
+function pinnedSaid(){return allSaid().filter(s=>s.pin);}
+function setPin(who,idx,on,tag){
+  const d=(S.npc&&S.npc[who])||(S.kin&&S.kin[who]);
+  if(!d||!d.history||!d.history[idx])return;
+  d.history[idx].pin=on;
+  if(tag!==undefined)d.history[idx].tag=tag;
+  save();
+}
+const TAGS=['routine','the fire','family','a slip','where they were','something else'];
+
+/* ---- the tab strip every journal page wears ---- */
+function jTabs(){
+  const t=[['people','People'],['where','Who was where'],['map','Last seen'],['said','What was said'],['compare','Side by side'],['stuff','Observations']];
+  return '<div class="tg" style="margin:0 0 12px;flex-wrap:wrap;">'
+    +t.map(([k,l])=>'<button '+(S.jtab===k?'class="primary" ':'')+'data-jtab="'+k+'">'+l+'</button>').join('')
+    +'</div>';
+}
+function wireTabs(){
+  document.querySelectorAll('[data-jtab]').forEach(b=>b.onclick=()=>{
+    S.jtab=b.dataset.jtab;closeOverlay();openJournal(null,S.jtab);
+  });
+  const cb=document.getElementById('closeBtn');
+  if(cb)cb.onclick=closeOverlay;
+}
+/* ---- everything anybody has told you ---- */
+function journalSaid(msg){
   paused=true;
+  const all=allSaid();
+  const only=S.jwho||'';
+  const list=only?all.filter(s=>s.who===only):all;
+  const shown=list.slice(0,60);
+  const whoRow='<div class="tg" style="margin-bottom:10px;flex-wrap:wrap;">'
+    +'<button '+(!only?'class="primary" ':'')+'data-jwho="">Everyone</button>'
+    +CAST.filter(c=>all.some(s=>s.who===c.id))
+      .map(c=>'<button '+(only===c.id?'class="primary" ':'')+'data-jwho="'+c.id+'">'+c.name.split(' ')[0]+'</button>').join('')
+    +'</div>';
+  const rows=shown.map(s=>{
+    const c=CAST.concat(KIN).find(x=>x.id===s.who);
+    return '<div class="cluecard" style="'+(s.pin?'border-color:var(--amber);':'')+'">'
+      +'<strong>'+esc((c?c.name.split(' ')[0]:'?'))+'</strong>'
+      +' <span class="mono" style="font-size:10px;color:var(--dim);">Day '+s.day+' · '+clockOf(s.min)+'</span>'
+      +(s.tag?(' <span class="mono" style="font-size:10px;color:var(--teal);">'+esc(s.tag)+'</span>'):'')
+      +'<div class="hint">“'+esc(s.text.length>260?s.text.slice(0,260)+'…':s.text)+'”</div>'
+      +'<div class="tg" style="margin-top:6px;">'
+      +'<button data-pin="'+s.who+':'+s.idx+'">'+(s.pin?'Unpin':'Pin this')+'</button>'
+      +(s.pin?TAGS.map(t=>'<button '+(s.tag===t?'class="primary" ':'')+'data-tag="'+s.who+':'+s.idx+':'+t+'">'+t+'</button>').join(''):'')
+      +'</div></div>';
+  }).join('')||'<div class="hint">Nobody has said anything worth keeping yet. Go and talk to people.</div>';
+  const pins=pinnedSaid();
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>Journal</h3>'+jTabs()
+    +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
+    +'<div class="hint" style="margin-bottom:8px;">Every word anybody has said to you, kept with the day and the hour. '
+    +'Pin the ones that matter and they rise to the top of the side-by-side.</div>'
+    +(pins.length?('<div class="hint" style="margin-bottom:8px;color:var(--amber);">'+pins.length+' pinned</div>'):'')
+    +whoRow+rows
+    +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
+    +'</div></div>';
+  wireTabs();
+  document.querySelectorAll('[data-jwho]').forEach(b=>b.onclick=()=>{
+    S.jwho=b.dataset.jwho;closeOverlay();openJournal(null,'said');
+  });
+  document.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{
+    const [w,i]=b.dataset.pin.split(':');
+    const d=(S.npc&&S.npc[w])||(S.kin&&S.kin[w]);
+    const cur=d&&d.history[+i]&&d.history[+i].pin;
+    setPin(w,+i,!cur);
+    closeOverlay();openJournal(null,'said');
+  });
+  document.querySelectorAll('[data-tag]').forEach(b=>b.onclick=()=>{
+    const p=b.dataset.tag.split(':');
+    setPin(p[0],+p[1],true,p[2]);
+    closeOverlay();openJournal(null,'said');
+  });
+}
+
+/* ---- every account of where people were, laid out by the hour ---- */
+function journalWhere(msg){
+  paused=true;
+  const claims=S.claims||[];
+  const days=[...new Set(claims.map(k=>k.day))].sort((a,b)=>b-a);
+  if(S.wday===undefined||days.indexOf(S.wday)<0)S.wday=days[0];
+  const day=S.wday;
+  const today=claims.filter(k=>k.day===day);
+  const people=[...new Set(today.map(k=>k.about))];
+  const nm=id=>{const c=CAST.find(x=>x.id===id);return c?c.name.split(' ')[0]:'?';};
+  let disagreements=0;
+  const blocks=people.map(pid=>{
+    const mine=today.filter(k=>k.about===pid).sort((a,b)=>a.hour-b.hour);
+    const hours=[...new Set(mine.map(k=>k.hour))];
+    /* was this person seen in town at all that day, by the town's reckoning */
+    const goneAll=isAwayAllDay(pid,day);
+    const rows=hours.map(h=>{
+      const here=mine.filter(k=>k.hour===h);
+      const places=[...new Set(here.map(k=>k.loc==='missing'?'away':k.loc))];
+      const clash=places.length>1;
+      if(clash)disagreements++;
+      return '<div style="margin:4px 0 4px 8px;'+(clash?'border-left:2px solid var(--magenta);padding-left:8px;':'')+'">'
+        +'<span class="mono" style="font-size:10px;color:var(--dim);">'+clockOf(h*60)+'</span> '
+        +here.map(k=>{
+          const where=k.loc==='missing'?'nowhere to be seen':(k.loc==='away'?'out of town':locName(k.loc));
+          const who=k.kind==='self'?'<em>their own word</em>':(nm(k.src)+' saw them');
+          return '<div class="hint">'+esc(where)+' — '+who+'</div>';
+        }).join('')
+        +(clash?'<div class="hint" style="color:var(--magenta);font-size:11px;">these do not agree</div>':'')
+        +'</div>';
+    }).join('');
+    const selfSaysHere=mine.some(k=>k.kind==='self'&&k.loc!=='away');
+    const awayNote=(goneAll&&selfSaysHere)
+      ?'<div class="hint" style="color:var(--magenta);font-size:11px;margin-left:8px;">and yet the town reckons they were gone all day</div>':'';
+    if(goneAll&&selfSaysHere)disagreements++;
+    return '<div class="cluecard"><strong>'+esc(nm(pid))+'</strong>'
+      +(goneAll?' <span class="mono" style="font-size:10px;color:#8FB0D8;">○ GONE ALL DAY</span>':'')
+      +rows+awayNote+'</div>';
+  }).join('');
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>Journal</h3>'+jTabs()
+    +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
+    +'<div class="hint" style="margin-bottom:8px;">Ask people where they were yesterday, and who they saw. '
+    +'Everything they tell you lands here, by the hour. Where two accounts do not agree, somebody is wrong — '
+    +'or somebody is lying. It is your job to say which.</div>'
+    +(days.length?('<div class="tg" style="margin-bottom:10px;flex-wrap:wrap;">'
+      +days.map(dn=>'<button '+(dn===day?'class="primary" ':'')+'data-wday="'+dn+'">Day '+dn+'</button>').join('')+'</div>'):'')
+    +(disagreements?('<div class="hint" style="color:var(--magenta);margin-bottom:8px;">'
+      +(disagreements===1?'One thing here does not add up.':(numWord(disagreements)+' things here do not add up.'))+'</div>'):'')
+    +(blocks||'<div class="hint">Nothing yet. From the second morning, ask anybody <em>where they got to yesterday</em> and <em>who they saw</em>.</div>')
+    +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
+    +'</div></div>';
+  wireTabs();
+  document.querySelectorAll('[data-wday]').forEach(b=>b.onclick=()=>{
+    S.wday=+b.dataset.wday;closeOverlay();openJournal(null,'where');
+  });
+}
+/* ---- two people, their words next to each other ---- */
+function journalCompare(msg){
+  paused=true;
+  S.cmpA=S.cmpA||'';S.cmpB=S.cmpB||'';
+  const all=allSaid();
+  const spoke=CAST.filter(c=>all.some(s=>s.who===c.id));
+  const col=(id,side)=>{
+    if(!id)return '<div class="hint">Pick somebody.</div>';
+    const c=CAST.concat(KIN).find(x=>x.id===id);
+    const d=S.npc[id]||{};
+    const mine=all.filter(s=>s.who===id);
+    const pinned=mine.filter(s=>s.pin);
+    const use=(pinned.length?pinned:mine).slice(0,8);
+    return '<strong>'+esc(c?c.name:'?')+'</strong>'
+      +' <span class="mono" style="font-size:10px;color:var(--magenta);">SUSPICION '+(d.suspicion||0)+'</span>'
+      +(d.notes?('<div class="hint" style="margin:4px 0;">'+esc(d.notes)+'</div>'):'')
+      +(use.length?use.map(s=>'<div class="cluecard" style="margin:6px 0;'+(s.pin?'border-color:var(--amber);':'')+'">'
+        +'<span class="mono" style="font-size:10px;color:var(--dim);">Day '+s.day+' · '+clockOf(s.min)+'</span>'
+        +(s.tag?(' <span class="mono" style="font-size:10px;color:var(--teal);">'+esc(s.tag)+'</span>'):'')
+        +'<div class="hint">“'+esc(s.text.length>200?s.text.slice(0,200)+'…':s.text)+'”</div></div>').join('')
+        :'<div class="hint">Nothing from them yet.</div>');
+  };
+  const picker=(cur,key)=>'<div class="tg" style="flex-wrap:wrap;margin-bottom:6px;">'
+    +spoke.map(c=>'<button '+(cur===c.id?'class="primary" ':'')+'data-cmp="'+key+':'+c.id+'">'+c.name.split(' ')[0]+'</button>').join('')
+    +'</div>';
+  /* where each of them was, day by day */
+  let bars='';
+  [S.cmpA,S.cmpB].filter(Boolean).forEach(id=>{
+    const c=CAST.find(x=>x.id===id);if(!c)return;
+    let line=c.name.split(' ')[0].padEnd(9,' ').slice(0,9)+' ';
+    for(let day=1;day<=S.day;day++)line+=isAwayAllDay(c.id,day)?'○':'●';
+    bars+=esc(line)+'<br>';
+  });
+  OR.innerHTML='<div class="overlay"><div class="sheet">'
+    +'<h3>Journal</h3>'+jTabs()
+    +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
+    +'<div class="hint" style="margin-bottom:10px;">Put two of them next to each other and read what they each said. '
+    +'Pinned lines come up first.</div>'
+    +'<div class="hint" style="margin-bottom:2px;">On the left</div>'+picker(S.cmpA,'a')
+    +'<div class="hint" style="margin:8px 0 2px;">On the right</div>'+picker(S.cmpB,'b')
+    +(bars?('<div class="hint mono" style="line-height:2;margin:10px 0;">'+bars+'● in town · ○ gone all day</div>'):'')
+    +'<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">'
+    +'<div style="flex:1;min-width:220px;">'+col(S.cmpA,'a')+'</div>'
+    +'<div style="flex:1;min-width:220px;">'+col(S.cmpB,'b')+'</div>'
+    +'</div>'
+    +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
+    +'</div></div>';
+  wireTabs();
+  document.querySelectorAll('[data-cmp]').forEach(b=>b.onclick=()=>{
+    const [side,id]=b.dataset.cmp.split(':');
+    if(side==='a')S.cmpA=(S.cmpA===id?'':id);else S.cmpB=(S.cmpB===id?'':id);
+    closeOverlay();openJournal(null,'compare');
+  });
+}
+function openJournal(msg,tab){
+  paused=true;
+  S.jtab=tab||S.jtab||'people';
+  if(S.jtab==='said')return journalSaid(msg);
+  if(S.jtab==='compare')return journalCompare(msg);
+  if(S.jtab==='where')return journalWhere(msg);
+  if(S.jtab==='map')return journalMap(msg);
   const entries=CAST.map(c=>{
     const d=S.npc[c.id];
     return '<div class="journal-entry"><strong>'+c.name+'</strong> <span class="mono" style="font-size:10px;color:var(--magenta);">SUSPICION '+d.suspicion+'</span>'+(d.cold>0?' <span class="mono" style="font-size:10px;color:#8FB0D8;">COLD</span>':'')
@@ -4495,27 +5262,28 @@ function openJournal(msg){
     const from=CAST.find(x=>x.id===p.from);
     return '<div class="accuse-row"><div><strong>'+esc(p.label)+'</strong><div class="hint">from '+(from?from.name.split(' ')[0]:'around town')+', Day '+p.day+'</div></div><div class="tg"><button data-eat="'+i+'">Eat / drink</button><button data-toss="'+i+'">Toss</button></div></div>';
   }).join('')||'<div class="hint">Empty. Folks around here feed people they like — and the bread at The Kilted Farmers is free.</div>';
+  const stuffPage=(S.jtab==='stuff');
   OR.innerHTML='<div class="overlay"><div class="sheet">'
-    +'<h3>Journal</h3>'
+    +'<h3>Journal</h3>'+jTabs()
     +(msg?('<div class="tipcard">'+esc(msg)+'</div>'):'')
-    +'<h3 style="font-size:15px;margin:6px 0 8px;">Pockets</h3>'
+    +(stuffPage?'':'<h3 style="font-size:15px;margin:6px 0 8px;">Pockets</h3>')
     +'<div class="hint" style="margin-bottom:8px;">Eating something restores one visit, once per day — but a gift given away buys goodwill, and goodwill loosens tongues. Offer things to people while you talk.</div>'
-    +pk
-    +entries
-    +'<h3 style="font-size:15px;margin:14px 0 8px;">Observations</h3>'+obsCards
-    +'<h3 style="font-size:15px;margin:14px 0 8px;">Word of Mouth</h3>'+tipCards
-    +'<h3 style="font-size:15px;margin:14px 0 8px;">Chalk cats</h3>'
+    +(stuffPage?'':pk)
+    +(stuffPage?'':entries)
+    +(stuffPage?('<h3 style="font-size:15px;margin:6px 0 8px;">Observations</h3>'+obsCards):'')
+    +(stuffPage?('<h3 style="font-size:15px;margin:14px 0 8px;">Word of Mouth</h3>'+tipCards):'')
+    +(stuffPage?('<h3 style="font-size:15px;margin:14px 0 8px;">Chalk cats</h3>'
     +'<div class="hint" style="margin-bottom:8px;">'+((S.cats||[]).length)+' of '+CHALK.length+' found'
       +(((S.cats||[]).length>=CHALK.length)?' — all of them. Somebody has been everywhere.':'. The same cat, the same hand, all over town.')+'</div>'
-    +((S.cats||[]).map(id2=>{const ch=CHALK.find(x=>x.id===id2);return ch?('<div class="cluecard"><strong>A cat '+esc(ch.where)+'</strong></div>'):'';}).join(''))
-    +'<h3 style="font-size:15px;margin:14px 0 8px;">Curiosities</h3>'
+    +((S.cats||[]).map(id2=>{const ch=CHALK.find(x=>x.id===id2);return ch?('<div class="cluecard"><strong>A cat '+esc(ch.where)+'</strong></div>'):'';}).join('')) ):'')
+    +(stuffPage?('<h3 style="font-size:15px;margin:14px 0 8px;">Curiosities</h3>'
     +'<div class="hint" style="margin-bottom:8px;">'+((S.curios||[]).length)+' of '+CURIOS.length+' oddities noticed'+(((S.keepsakes||[]).filter(k=>k.taken).length)?(' · '+((S.keepsakes||[]).filter(k=>k.taken).length)+' lost keepsake(s) recovered'):'')+'. Things glint when you walk near them.</div>'
-    +((S.curios||[]).map(id2=>{const cu=CURIOS.find(x=>x.id===id2);return cu?('<div class="cluecard"><strong>'+esc(cu.label)+'</strong><div class="hint">'+esc(cu.text)+'</div></div>'):'';}).join(''))
-    +'<h3 style="font-size:15px;margin:14px 0 8px;">Around town</h3>'
-    +'<div class="hint mono" style="line-height:2;">'+plog+'<br>● in town · ○ gone all day</div>'
+    +((S.curios||[]).map(id2=>{const cu=CURIOS.find(x=>x.id===id2);return cu?('<div class="cluecard"><strong>'+esc(cu.label)+'</strong><div class="hint">'+esc(cu.text)+'</div></div>'):'';}).join('')) ):'')
+    +(stuffPage?'':('<h3 style="font-size:15px;margin:14px 0 8px;">Around town</h3>'
+      +'<div class="hint mono" style="line-height:2;">'+plog+'<br>\u25cf in town \u00b7 \u25cb gone all day</div>'))
     +'<div class="sheet-actions"><button class="primary" id="closeBtn">Close</button></div>'
     +'</div></div>';
-  document.getElementById('closeBtn').onclick=closeOverlay;
+  wireTabs();
   document.querySelectorAll('[data-eat]').forEach(b=>{b.onclick=async()=>{
     const i=parseInt(b.dataset.eat);const it=S.pockets[i];if(!it)return;
     S.pockets.splice(i,1);
@@ -4590,13 +5358,25 @@ function openResults(){
   }).join('');
   let banner;
   if(caught===S.numAI&&innocent===0){
-    banner="You named all three. Millbrook exhales. What became of the real three, no one ever learned — the town lights three candles at every Festival now."+(S.failCount>=3?" And some folks still remember the promises you dropped along the way.":"");
+    const N=numWord(S.numAI);
+    banner=(S.numAI===1?"You named it. ":(S.numAI===2?"You named both. ":"You named all "+N+". "))+"Millbrook exhales. What became of the real "
+      +(S.numAI===1?"one":N)+", no one ever learned \u2014 the town lights "+N+" candle"+(S.numAI===1?"":"s")+" at every Festival now."
+      +(S.failCount>=3?" And some folks still remember the promises you dropped along the way.":"");
   }else if(caught>=Math.max(1,S.numAI-1)){
-    banner="Two imposters unmasked — but an innocent paid for your certainty, and something still walks Millbrook wearing a friendly face.";
+    const named=numWord(caught).charAt(0).toUpperCase()+numWord(caught).slice(1);
+    banner=named+" of "+numWord(S.numAI)+" unmasked"
+      +(innocent?(" \u2014 but "+(innocent===1?"an innocent":numWord(innocent)+" innocents")+" paid for your certainty"):"")
+      +(missed?(", and something still walks Millbrook wearing a friendly face."):".");
   }else{
     banner="The vote turns. By midnight the loudest voice at the bonfire is asking how the newcomer knew so much. You leave Millbrook before dawn.";
   }
-  const coda=missed>0?'<div class="verdict" style="color:var(--magenta);font-style:italic;">On the Festival\'s last night, two more strangers checked into the Inn. Room 2 was made up for them.</div>':'';
+  /* the names, said plainly — this is what your week did */
+  const nameList=a=>a.length===1?a[0]:a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+  const wronged=CAST.filter(c=>!S.npc[c.id].isAI&&S.npc[c.id].guess==='ai').map(c=>c.name.split(' ')[0]);
+  const escaped=CAST.filter(c=>S.npc[c.id].isAI&&S.npc[c.id].guess!=='ai').map(c=>c.name.split(' ')[0]);
+  const reckoning=(wronged.length?('<div class="verdict" style="margin-top:6px;">'+esc(nameList(wronged))+' will not forgive the town for that night. The town will not quite forgive you.</div>'):'')
+    +(escaped.length?('<div class="verdict" style="margin-top:6px;">Whatever wears '+esc(nameList(escaped))+' is still opening up in the mornings, still saying hello.</div>'):'');
+  const coda=missed>0?'<div class="verdict" style="color:var(--magenta);font-style:italic;">On the Festival\'s last night, '+(missed===1?'a stranger':numWord(missed)+' more strangers')+' checked into the Inn. Room 2 was made up for them.</div>':'';
   const fr=CAST.find(x=>x.id===S.friendId);
   const frGuess=S.npc[S.friendId].guess;
   let frLine;
@@ -4609,7 +5389,7 @@ function openResults(){
     +'<h3>The Founders\' Festival</h3>'
     +'<div class="score">'+caught+' / '+S.numAI+' unmasked</div>'
     +'<div class="verdict">'+banner+'</div>'
-    +rows+coda+friendCard
+    +reckoning+rows+coda+friendCard
     +'<div class="sheet-actions"><button class="primary" id="againBtn">Begin again — a different spring, different replacements</button></div>'
     +'</div></div>';
   drawEnding((caught===S.numAI&&innocent===0)?'perfect':(caught>=Math.max(1,S.numAI-1)?'partial':'fail'));
