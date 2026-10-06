@@ -120,6 +120,9 @@ if(typeof window!=='undefined'&&!(window.storage&&window.storage.get)){
     async list(){return {keys:[]};}
   };
 }
+/* the desktop (Steam) edition sets window.millbrookDesktop from its preload.
+   there, Talk mode runs only on the player's own key — no host allowance. */
+const DESKTOP=(typeof window!=='undefined')&&!!window.millbrookDesktop;
 const KEYSTORE='millbrook-apikey';
 function userKey(){try{return (localStorage.getItem(KEYSTORE)||'').trim();}catch(e){return '';}}
 function setUserKey(k){try{k?localStorage.setItem(KEYSTORE,k.trim()):localStorage.removeItem(KEYSTORE);}catch(e){}}
@@ -131,6 +134,7 @@ function apiOnce(body){
       'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'
     },body:JSON.stringify(body)});
   }
+  if(DESKTOP)return Promise.resolve(new Response(JSON.stringify({error:{type:'authentication_error',message:'No API key set'}}),{status:401,headers:{'content-type':'application/json'}}));
   return fetch(BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 }
 /* a 500, a 529 or a dropped connection is usually gone a moment later.
@@ -153,6 +157,23 @@ async function apiCall(body){
   }
   if(last)return last;
   throw new Error('no answer from the bridge');
+}
+/* some failures will not mend by asking again: no credit, a bad key,
+   or this player's share of Talk for the day is used up. stop at once. */
+function hopeless(res,data){
+  if(!res)return false;
+  const msg=(data&&data.error&&(data.error.message||''))||'';
+  if(res.status===429)return /daily play limit/i.test(msg);
+  return res.status===400||res.status===401||res.status===403||res.status===404||res.status===413;
+}
+/* say it the way a player would want to hear it */
+function talkTrouble(err){
+  const e=String(err||'');
+  if(/daily play limit/i.test(e))
+    return "You've done a great deal of talking today. Talk mode opens again tomorrow.";
+  if(/credit|billing|balance|authentication|api[ _-]?key|permission|not_found|invalid x-api-key/i.test(e))
+    return "Talk mode is resting just now. The townsfolk can't answer in their own words at the moment.";
+  return null;
 }
 const TILE=32, MW=64, MH=58;
 const WOODS_Y0=42, WOODS_Y1=56;
@@ -815,35 +836,247 @@ function noiseBurst(dur,gain,freq,q){
   s.connect(f);f.connect(g);g.connect(AU.master);
   s.start();
 }
+/* ============ MUSIC — a small generative score ============
+   No looping drone. Each time of day has its own little piece: a key, a few
+   chord progressions, an instrument for the tune. The tune is written fresh
+   as it plays (a phrase, then an answer to it), runs a few sections, then
+   stops and lets the town breathe for a while before the next one. Under it
+   all, quietly: the river, birds by day, crickets and the odd owl by night. */
+const MKEY='millbrook-music';
+function musicLevel(){try{return localStorage.getItem(MKEY)||'normal';}catch(e){return 'normal';}}
+function setMusicLevel(v){try{localStorage.setItem(MKEY,v);}catch(e){}
+  if(AU.music&&AU.ctx)AU.music.gain.setTargetAtTime(MUSIC_VOL[v]||0,AU.ctx.currentTime,0.4);}
+const MUSIC_VOL={normal:0.55,quiet:0.25,off:0};
+const SCALES={
+  major:[0,2,4,5,7,9,11], mixo:[0,2,4,5,7,9,10], dorian:[0,2,3,5,7,9,10],
+  aeolian:[0,2,3,5,7,8,10], phryg:[0,1,3,5,7,8,10]
+};
+/* chords are scale degrees (0 = home). each section is 4 chords, 2 bars each. */
+const PIECES={
+  morning:{root:62,scale:'major',bpm:80,lead:'pluck',second:'bell',density:0.55,
+    sections:[[0,4,5,3],[3,0,1,4],[5,3,0,4],[0,3,4,0]]},
+  midday:{root:67,scale:'mixo',bpm:92,lead:'pluck',second:'flute',density:0.6,
+    sections:[[0,6,3,0],[3,4,0,0],[5,4,3,4],[0,3,6,0]]},
+  evening:{root:57,scale:'dorian',bpm:70,lead:'flute',second:'pluck',density:0.45,
+    sections:[[0,3,0,4],[5,3,0,6],[3,4,0,0],[0,6,5,4]]},
+  night:{root:52,scale:'aeolian',bpm:58,lead:'bell',second:'flute',density:0.28,
+    sections:[[0,5,3,4],[0,3,0,6],[5,6,0,0]]},
+  uneasy:{root:55,scale:'phryg',bpm:64,lead:'bell',second:'flute',density:0.33,
+    sections:[[0,1,0,6],[3,1,0,0],[5,4,1,0]]},
+  festival:{root:62,scale:'major',bpm:112,lead:'fiddle',second:'pluck',density:0.78,drone:true,
+    sections:[[0,4,0,4],[3,0,4,0],[0,3,4,0],[5,3,4,0]]}
+};
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function pickPiece(){
+  if(!S)return 'morning';
+  const h=S.min/60;
+  if(S.day===DAYS&&h>=15)return 'festival';
+  if(h<11)return 'morning';
+  if(h<16)return (S.day>=5&&Math.random()<0.3)?'uneasy':'midday';
+  if(h<19)return (S.day>=4&&Math.random()<0.4)?'uneasy':'evening';
+  return (S.day>=5&&Math.random()<0.5)?'uneasy':'night';
+}
+function makeVerb(c){
+  const len=Math.floor(c.sampleRate*2.6),ir=c.createBuffer(2,len,c.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);
+    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
+  const v=c.createConvolver();v.buffer=ir;return v;
+}
+/* one note on one instrument, scheduled at audio time t */
+function inst(name,freq,t,dur,vel){
+  const c=AU.ctx;if(!c)return;
+  const out=c.createGain();out.connect(AU.music);
+  const env=(g,peak,atk,rel,hold)=>{
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(peak,t+atk);
+    if(hold)g.gain.setValueAtTime(peak,t+Math.max(atk,hold));
+    g.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(atk,hold||0)+rel);
+  };
+  const osc=(type,f,g,detune)=>{const o=c.createOscillator();o.type=type;o.frequency.value=f;
+    if(detune)o.detune.value=detune;o.connect(g);o.start(t);return o;};
+  const stopAt=(o,s)=>o.stop(t+s+0.05);
+  vel=vel||1;
+  if(name==='pluck'){
+    const g=c.createGain();g.connect(out);env(g,0.16*vel,0.006,dur*1.6+0.5);
+    const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(3200,t);
+    lp.frequency.exponentialRampToValueAtTime(700,t+0.5);lp.connect(g);
+    const bg=c.createGain();bg.gain.value=0.22;bg.connect(lp);
+    const a=osc('triangle',freq,lp);const b=osc('sine',freq*2,bg);
+    stopAt(a,dur*1.6+0.6);stopAt(b,dur*1.6+0.6);
+  }else if(name==='bell'){
+    [[1,0.14],[2.76,0.05],[5.4,0.02]].forEach(([m,a])=>{
+      const g=c.createGain();g.connect(out);env(g,a*vel,0.003,2.4/m+0.6);
+      stopAt(osc('sine',freq*m,g),2.4/m+0.7);
+    });
+  }else if(name==='flute'){
+    const g=c.createGain();g.connect(out);env(g,0.09*vel,0.09,0.35,dur);
+    const o=osc('sine',freq,g);const o2=osc('triangle',freq,g,4);
+    const v=c.createOscillator(),vg=c.createGain();v.frequency.value=5;vg.gain.setValueAtTime(0,t);
+    vg.gain.linearRampToValueAtTime(freq*0.005,t+0.35);v.connect(vg);vg.connect(o.frequency);vg.connect(o2.frequency);
+    v.start(t);[o,o2,v].forEach(x=>stopAt(x,dur+0.45));
+  }else if(name==='fiddle'){
+    const g=c.createGain();env(g,0.06*vel,0.035,0.18,dur*0.9);
+    const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;lp.Q.value=0.7;
+    g.connect(lp);lp.connect(out);
+    const o=osc('sawtooth',freq,g);
+    const v=c.createOscillator(),vg=c.createGain();v.frequency.value=5.6;vg.gain.setValueAtTime(0,t);
+    vg.gain.linearRampToValueAtTime(freq*0.006,t+0.2);v.connect(vg);vg.connect(o.frequency);
+    v.start(t);[o,v].forEach(x=>stopAt(x,dur+0.25));
+  }else if(name==='pad'){
+    const g=c.createGain();env(g,0.035*vel,1.1,1.6,dur);
+    const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=820;g.connect(lp);lp.connect(out);
+    [osc('sawtooth',freq,g,-7),osc('sawtooth',freq,g,7)].forEach(x=>stopAt(x,dur+1.7));
+  }else if(name==='bass'){
+    const g=c.createGain();g.connect(out);env(g,0.13*vel,0.01,dur*0.9+0.2);
+    stopAt(osc('sine',freq,g),dur+0.3);
+    const g2=c.createGain();g2.connect(out);env(g2,0.03*vel,0.01,0.25);
+    stopAt(osc('triangle',freq*2,g2),0.3);
+  }
+}
+const MS={timer:null,next:0,piece:null,form:[],sec:0,bar:0,beat:0,rest:0,lastDeg:7,motif:null,ambNext:0,bird:0,cricket:0,owl:0};
+function newSong(){
+  const name=pickPiece(),p=PIECES[name];
+  MS.piece=name;MS.sec=0;MS.bar=0;MS.beat=0;MS.motif=null;MS.lastDeg=7+Math.floor(Math.random()*3);
+  const n=p.sections.length,first=Math.floor(Math.random()*n);
+  const second=(first+1+Math.floor(Math.random()*(n-1)))%n;
+  const shapes=[[first,first,second,first],[first,second,first],[first,second,second,first],[first,second]];
+  MS.form=shapes[Math.floor(Math.random()*shapes.length)];
+}
+function chordOf(p,deg){
+  const sc=SCALES[p.scale],at=k=>p.root+12*Math.floor(k/7)+sc[((k%7)+7)%7];
+  return [at(deg),at(deg+2),at(deg+4)];
+}
+function scaleNote(p,k){const sc=SCALES[p.scale];return p.root+12*Math.floor(k/7)+sc[((k%7)+7)%7];}
+/* write two bars of tune over a chord; the second phrase of a pair echoes the first */
+function writeBars(p,deg){
+  const steps=8,out=[];
+  const tones=[deg,deg+2,deg+4].map(x=>((x%7)+7)%7);
+  let k=MS.lastDeg;
+  for(let s=0;s<steps;s++){
+    const strong=(s%2===0);
+    if(Math.random()>(strong?p.density:p.density*0.45)){out.push(null);continue;}
+    let move=[-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)];
+    if(k>11)move=-Math.abs(move)||-1;if(k<4)move=Math.abs(move)||1;
+    k+=move;
+    if(strong&&tones.indexOf(((k%7)+7)%7)<0){k+=(Math.random()<0.5?1:-1);}
+    const len=(Math.random()<0.35&&s<steps-1)?2:1;
+    out.push({k,len});if(len===2){out.push(null);s++;}
+  }
+  MS.lastDeg=k;return out;
+}
+function scheduleBar(t,beatDur){
+  const p=PIECES[MS.piece];
+  const sec=p.sections[MS.form[MS.sec]];
+  const chordIdx=Math.floor(MS.bar/2),deg=sec[chordIdx];
+  const ch=chordOf(p,deg);
+  const lvl=1;
+  // pad holds the chord across its two bars
+  if(MS.bar%2===0){ch.forEach(m=>inst('pad',mtof(m),t,beatDur*8-0.3,lvl));}
+  // bass: root on 1, a fifth or root on 3 now and then
+  inst('bass',mtof(ch[0]-12),t,beatDur*1.6,0.9);
+  if(Math.random()<0.5)inst('bass',mtof((Math.random()<0.5?ch[2]:ch[0])-12),t+beatDur*2,beatDur*1.4,0.6);
+  if(p.drone&&MS.bar%2===0){inst('pad',mtof(p.root-12),t,beatDur*8-0.3,0.8);inst('pad',mtof(p.root-5),t,beatDur*8-0.3,0.5);}
+  // tune: a call on even bars, the answer on odd bars echoes it with a change
+  let line;
+  if(MS.bar%2===0||!MS.motif){line=writeBars(p,deg);MS.motif=line;}
+  else{line=MS.motif.map(n=>n&&Math.random()<0.8?{k:n.k+(Math.random()<0.3?(Math.random()<0.5?1:-1):0),len:n.len}:null);
+    // land the answer on a chord tone
+    for(let i=line.length-1;i>=0;i--){if(line[i]){line[i]={k:7+((deg%7)+7)%7,len:2};break;}}}
+  const voice=(MS.sec%2===1&&p.second)?p.second:p.lead;
+  const half=beatDur/2;
+  line.forEach((n,i)=>{if(!n)return;
+    const swing=(p.drone&&i%2===1)?half*0.18:0;
+    inst(voice,mtof(scaleNote(p,n.k)),t+i*half+swing,n.len*half*(voice==='fiddle'?1:0.95),0.9+Math.random()*0.15);
+  });
+  // last bar of the song: a held home chord, then quiet
+  MS.bar++;
+  if(MS.bar>=sec.length*2){MS.bar=0;MS.sec++;MS.motif=null;}
+}
+function ambience(now){
+  const c=AU.ctx;if(!c||!S)return;
+  const h=S.min/60,night=(h>=19.5||h<7.5);
+  if(!night&&now>MS.bird){
+    MS.bird=now+4+Math.random()*9;
+    const base=2200+Math.random()*1600,n=1+Math.floor(Math.random()*4);
+    for(let i=0;i<n;i++){const t=now+i*(0.09+Math.random()*0.08);
+      const o=c.createOscillator(),g=c.createGain();o.type='sine';
+      o.frequency.setValueAtTime(base,t);o.frequency.exponentialRampToValueAtTime(base*(1.15+Math.random()*0.3),t+0.07);
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.012,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+      o.connect(g);g.connect(AU.amb);o.start(t);o.stop(t+0.12);}
+  }
+  if(night&&now>MS.cricket){
+    MS.cricket=now+0.7+Math.random()*2.2;
+    const f=4100+Math.random()*500;
+    for(let i=0;i<3;i++){const t=now+i*0.055;
+      const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.005,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+      o.connect(g);g.connect(AU.amb);o.start(t);o.stop(t+0.05);}
+  }
+  if(night&&!MS.owl)MS.owl=now+25+Math.random()*40;
+  if(night&&now>MS.owl){
+    MS.owl=now+50+Math.random()*80;
+    [0,0.55].forEach((d,i)=>{const t=now+d;
+      const o=c.createOscillator(),g=c.createGain();o.type='sine';
+      o.frequency.setValueAtTime(390-i*25,t);o.frequency.exponentialRampToValueAtTime(330-i*25,t+0.4);
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.02,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+      o.connect(g);g.connect(AU.amb);o.start(t);o.stop(t+0.5);});
+  }
+}
+function musicTick(){
+  const c=AU.ctx;if(!c||c.state!=='running')return;
+  const now=c.currentTime;
+  ambience(now);
+  if(musicLevel()==='off'){MS.next=Math.max(MS.next,now);return;}
+  while(MS.next<now+0.8){
+    if(MS.rest>0){ // a pause between songs: only the town
+      MS.next=Math.max(MS.next,now)+MS.rest;MS.rest=0;MS.piece=null;continue;
+    }
+    if(!MS.piece)newSong();
+    const p=PIECES[MS.piece],beat=60/p.bpm;
+    if(MS.sec>=MS.form.length){
+      // close on the home chord, then rest 20–45 s
+      chordOf(p,0).forEach(m=>inst('pad',mtof(m),MS.next,beat*6,0.9));
+      inst('bass',mtof(p.root-12),MS.next,beat*4,0.8);
+      inst(p.lead==='fiddle'?'pluck':p.lead,mtof(p.root+12),MS.next,beat*3,0.8);
+      MS.next+=beat*6;MS.rest=20+Math.random()*25;continue;
+    }
+    scheduleBar(MS.next,beat);
+    MS.next+=beat*4;
+  }
+}
 function audioStart(){
   const c=audioInit();if(!c)return;
   audioResume();
   if(AU.started)return;
   AU.started=true;
-  AU.padGain=c.createGain();AU.padGain.gain.value=0.045;
-  const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;
-  AU.padGain.connect(lp);lp.connect(AU.master);
-  [110,164.81,220].forEach((f,i)=>{
-    const o=c.createOscillator();o.type=i===2?'triangle':'sine';o.frequency.value=f;
-    const g=c.createGain();g.gain.value=i===2?0.25:0.5;
-    const lfo=c.createOscillator();lfo.frequency.value=0.05+i*0.017;
-    const lg=c.createGain();lg.gain.value=0.22;
-    lfo.connect(lg);lg.connect(g.gain);lfo.start();
-    o.connect(g);g.connect(AU.padGain);o.start();
-    AU.pads.push({o,g});
+  // music bus → a little room reverb
+  AU.music=c.createGain();AU.music.gain.value=MUSIC_VOL[musicLevel()]||0;
+  const dry=c.createGain();dry.gain.value=0.8;const wet=c.createGain();wet.gain.value=0.32;
+  const verb=makeVerb(c);
+  AU.music.connect(dry);dry.connect(AU.master);
+  AU.music.connect(verb);verb.connect(wet);wet.connect(AU.master);
+  // ambience bus, with the river as a soft wash of filtered noise
+  AU.amb=c.createGain();AU.amb.gain.value=0.9;AU.amb.connect(AU.master);
+  const len=c.sampleRate*4,buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);
+  let last=0;for(let i=0;i<len;i++){last=(last+0.02*(Math.random()*2-1))/1.02;d[i]=last*3.5;}
+  const river=c.createBufferSource();river.buffer=buf;river.loop=true;
+  const rlp=c.createBiquadFilter();rlp.type='lowpass';rlp.frequency.value=420;
+  const rg=c.createGain();rg.gain.value=0.05;
+  const rl=c.createOscillator(),rlg=c.createGain();rl.frequency.value=0.07;rlg.gain.value=0.018;
+  rl.connect(rlg);rlg.connect(rg.gain);rl.start();
+  river.connect(rlp);rlp.connect(rg);rg.connect(AU.amb);river.start();
+  MS.next=c.currentTime+1.5;MS.rest=0;MS.piece=null;
+  MS.timer=setInterval(musicTick,150);
+  if(typeof document!=='undefined')document.addEventListener('visibilitychange',()=>{
+    if(!AU.ctx)return;
+    if(document.hidden)AU.ctx.suspend();else{AU.ctx.resume();MS.next=Math.max(MS.next,AU.ctx.currentTime+0.3);}
   });
 }
+/* the hour turning: if a different time of day has begun, let the current song
+   finish its section, then the next song will suit the new hour. */
 function audioMood(){
   if(!AU.started||!AU.ctx)return;
-  const h=S?S.min/60:12;
-  const night=(h<9||h>=18);
-  const fest=(S&&S.day===DAYS);
-  const target=fest?0.075:(night?0.055:0.035);
-  AU.padGain.gain.setTargetAtTime(target,AU.ctx.currentTime,3);
-  AU.pads.forEach((p,i)=>{
-    const base=[110,164.81,220][i]*(night?0.985:1.0);
-    p.o.frequency.setTargetAtTime(base,AU.ctx.currentTime,4);
-  });
+  if(MS.piece&&MS.piece!=='festival'&&pickPiece()==='festival'){MS.sec=MS.form.length;}
 }
 const SFX={
   step(){const t=Date.now();if(t-AU.lastStep<300)return;AU.lastStep=t;noiseBurst(0.05,0.028,260+Math.random()*90,1.2);},
@@ -2115,6 +2348,7 @@ async function load(){
       if(!S.friendId){const hs=Object.keys(S.npc).filter(id=>!S.npc[id].isAI);S.friendId=hs[0];}
       CAST.forEach(c=>{if(!S.npc[c.id])S.npc[c.id]={isAI:false,aiOffset:0,history:[],notes:'',suspicion:0,familiarity:0,guess:null,visitedToday:false,cold:0};});
       S.claims=S.claims||[];
+      if(DESKTOP&&S.mode==='talk'&&!userKey())S.mode='free';
       return;}}catch(e){}
   S=newGame();await save();
 }
@@ -4067,7 +4301,12 @@ function openIntro(){
       +'Every clue and every tell in the game is reachable this way.</div></div>'
     +'<div class="cluecard" style="flex:1;min-width:200px;margin:0;'+(S.mode==='talk'?'border-color:var(--amber);':'opacity:.6;')+'">'
       +'<strong>Talk</strong><div class="hint">Type anything and they answer in character, played by Claude. '
-      +'Richer and stranger \u2014 but it uses the host\'s limited allowance unless you add your own key in the Menu.</div></div>'
+      +(DESKTOP?'Richer and stranger \u2014 uses your own Anthropic API key.'+(userKey()?' Key saved.':'')
+        :'Richer and stranger \u2014 but it uses the host\'s limited allowance unless you add your own key in the Menu.')+'</div></div>'
+    +((DESKTOP&&!userKey())?('<div id="introKey" style="display:none;margin:8px 0 0;">'
+      +'<div class="hint" style="margin-bottom:4px;">Paste your Anthropic API key to turn on Talk mode. It stays on this computer and is sent only to Anthropic.</div>'
+      +'<div style="display:flex;gap:6px;"><input type="password" id="introKeyIn" placeholder="sk-ant-..." style="flex:1;font-size:13px;padding:7px 9px;"/>'
+      +'<button id="introKeySave" style="border-color:var(--teal);color:var(--teal);">Save</button></div></div>'):'')
     +'</div>'
     +'<div style="display:flex;gap:8px;align-items:center;margin:10px 0;">'
     +'<span style="font-size:12px;color:var(--dim);min-width:78px;">Difficulty</span>'
@@ -4110,7 +4349,20 @@ function openIntro(){
   };
   bindNameRow();
   const mf=document.getElementById('modeFree'),mt=document.getElementById('modeTalk');
-  const setMode=async(m)=>{if(S.mode===m)return;S.mode=m;await save();openIntro();};
+  const setMode=async(m)=>{
+    if(m==='talk'&&DESKTOP&&!userKey()){
+      const ik=document.getElementById('introKey');
+      if(ik){ik.style.display='block';const ki=document.getElementById('introKeyIn');if(ki)ki.focus();}
+      return;
+    }
+    if(S.mode===m)return;S.mode=m;await save();openIntro();
+  };
+  const iks=document.getElementById('introKeySave');
+  if(iks)iks.onclick=async()=>{
+    const v=(document.getElementById('introKeyIn').value||'').trim();
+    if(!v)return;
+    setUserKey(v);S.mode='talk';await save();openIntro();
+  };
   if(mf)mf.onclick=()=>setMode('free');
   if(mt)mt.onclick=()=>setMode('talk');
   const ds=document.getElementById('diffStd');if(ds)ds.onclick=()=>setDiff(false);
@@ -4550,6 +4802,20 @@ function openChat(id){
   const showFail=(err,retryFn,keepText)=>{
     const ti=document.getElementById('typingIndicator');
     if(!ti)return;
+    const plain=talkTrouble(err);
+    if(plain){
+      ti.innerHTML='<div class="typing">('+esc(plain)+' Free mode still works — <span class="freeLink" style="color:var(--amber);cursor:pointer;text-decoration:underline;">switch to Free mode</span> and pick what to ask.)</div>';
+      const fl=ti.querySelector('.freeLink');
+      if(fl)fl.onclick=async()=>{
+        S.mode='free';await save();
+        const row=document.querySelector('.chat-row');
+        const cr=document.getElementById('claimRow');if(cr)cr.remove();
+        if(row){const tp=document.createElement('div');tp.id='topicPanel';row.replaceWith(tp);}
+        ti.innerHTML='';
+        renderTopics();
+      };
+      return;
+    }
     ti.innerHTML='<div class="typing">(No reply — '+esc(err)+'. <span class="retryLink" style="color:var(--amber);cursor:pointer;text-decoration:underline;">Tap to retry</span>'+(keepText?' — your words are kept':'')+' · <span class="pingLink" style="color:var(--teal);cursor:pointer;text-decoration:underline;">test connection</span>)</div>';
     const rl=ti.querySelector('.retryLink');if(rl)rl.onclick=retryFn;
     const pl=ti.querySelector('.pingLink');
@@ -4562,7 +4828,7 @@ function openChat(id){
         ti2.innerHTML='<div class="typing">(Connection test: OK — the bridge is back. <span class="retryLink" style="color:var(--amber);cursor:pointer;text-decoration:underline;">Tap to retry</span>)</div>';
         const rl2=ti2.querySelector('.retryLink');if(rl2)rl2.onclick=retryFn;
       }else{
-        ti2.innerHTML='<div class="typing">(Connection test failed too — '+esc(p.err)+'. This is the Claude app\'s API bridge, not the game or your progress. Usual fixes: close and reopen this artifact, switch to Wi-Fi, or try again in a minute. <span class="retryLink" style="color:var(--amber);cursor:pointer;text-decoration:underline;">Retry</span>)</div>';
+        ti2.innerHTML='<div class="typing">(Connection test failed too — '+esc(p.err)+'. '+(ON_WEBSITE?'That is the line to the townsfolk\'s voices, not your game — your progress is safe. Try again in a minute, or switch to Free mode from the Menu.':'This is the Claude app\'s API bridge, not the game or your progress. Usual fixes: close and reopen this artifact, switch to Wi-Fi, or try again in a minute.')+' <span class="retryLink" style="color:var(--amber);cursor:pointer;text-decoration:underline;">Retry</span>)</div>';
         const rl3=ti2.querySelector('.retryLink');if(rl3)rl3.onclick=retryFn;
       }
     };
@@ -4783,12 +5049,13 @@ async function getReply(c,d,opener,gift){
     let lastErr='network error';
     for(let attempt=0;attempt<5;attempt++){
       try{
-        const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs});
+        const res=await apiCall({model:"claude-sonnet-5-5",max_tokens:1000,system,messages:msgs});
         let data={};try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
         if(data&&data.error)lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');
         else if(!res.ok)lastErr='HTTP '+res.status;
         let t=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim();
         if(t){let give=null;const m=t.match(/\[GIVE:\s*([^\]]{1,40})\]/i);if(m){give=m[1].trim();t=t.replace(m[0],'').trim();}return {ok:true,text:t,give};}
+        if(hopeless(res,data))return {ok:false,err:lastErr};
       }catch(e){lastErr=(e&&e.message)?String(e.message).slice(0,90):'network error';}
       await new Promise(r=>setTimeout(r,500*(attempt+1)+Math.random()*400));
     }
@@ -4888,7 +5155,7 @@ async function getReply(c,d,opener,gift){
   let lastErr='network error';
   for(let attempt=0;attempt<5;attempt++){
     try{
-      const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,system,messages:msgs});
+      const res=await apiCall({model:"claude-sonnet-5-5",max_tokens:1000,system,messages:msgs});
       let data={};
       try{data=await res.json();}catch(je){lastErr='bad response (HTTP '+res.status+')';}
       if(data&&data.error){lastErr=(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'');}
@@ -4900,6 +5167,7 @@ async function getReply(c,d,opener,gift){
         if(m){give=m[1].trim();t=t.replace(m[0],'').trim();}
         return {ok:true,text:t,give};
       }
+      if(hopeless(res,data))return {ok:false,err:lastErr};
     }catch(e){lastErr=(e&&e.message)?String(e.message).slice(0,90):'network error';}
     await new Promise(r=>setTimeout(r,500*(attempt+1)+Math.random()*400));
   }
@@ -4907,7 +5175,7 @@ async function getReply(c,d,opener,gift){
 }
 async function pingAPI(){
   try{
-    const res=await apiCall({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:'user',content:'Reply with the single word: pong'}]});
+    const res=await apiCall({model:"claude-sonnet-5-5",max_tokens:1000,messages:[{role:'user',content:'Reply with the single word: pong'}]});
     let data={};try{data=await res.json();}catch(e){}
     if(data&&data.error)return{ok:false,err:(data.error.type||'api error')+(data.error.message?': '+String(data.error.message).slice(0,90):'')};
     if(!res.ok)return{ok:false,err:'HTTP '+res.status};
@@ -4940,19 +5208,26 @@ function openMenu(){
     +customRow('Headwear','hat','hatLabel','None')
     +'</div></div>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Sound</h3>'
-    +'<p class="sub" style="font-size:12px;">Millbrook\'s sound is generated as you play — a low drone that shifts with the hour, footsteps, doors, the bonfire. No files, no downloads.</p>'
-    +'<div class="sheet-actions"><button id="sndToggle">'+(audioEnabled()?'Turn sound off':'Turn sound on')+'</button></div>'
+    +'<p class="sub" style="font-size:12px;">Millbrook\'s music is written as you play — a different little tune for morning, midday, evening and night, with quiet spells in between where you\'ll just hear the river and the birds. Every song is new. No files, no downloads.</p>'
+    +'<div class="sheet-actions"><button id="musToggle">Music: '+({normal:'Normal',quiet:'Quiet',off:'Off'}[musicLevel()]||'Normal')+'</button>'
+    +'<button id="sndToggle">'+(audioEnabled()?'Turn all sound off':'Turn sound on')+'</button></div>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Conversation</h3>'
     +'<p class="sub" style="font-size:12px;">Currently: <strong>'+(S.mode==='talk'?'Talk mode — type anything':'Free mode — pick what to ask')+'</strong>.</p>'
     +'<div class="sheet-actions"><button id="modeToggle">'+(S.mode==='talk'?'Switch to Free mode':'Switch to Talk mode')+'</button></div>'
     +'<h3 style="font-size:15px;margin:14px 0 4px;">Talk Mode key</h3>'
-    +'<p class="sub" style="font-size:12px;">Conversations run on Claude. By default they use the host\'s allowance, which is limited. Paste your own Anthropic API key for unlimited talking — it is stored only in this browser, on this device, and is never sent anywhere except Anthropic.</p>'
+    +'<p class="sub" style="font-size:12px;">'+(DESKTOP
+      ?'Talk mode conversations run on Claude, using your own Anthropic API key (console.anthropic.com). It is stored only on this computer and is never sent anywhere except Anthropic. Free mode needs no key.'
+      :'Conversations run on Claude. By default they use the host\'s allowance, which is limited. Paste your own Anthropic API key for unlimited talking — it is stored only in this browser, on this device, and is never sent anywhere except Anthropic.')+'</p>'
     +'<div style="display:flex;gap:6px;align-items:center;">'
     +'<input type="password" id="keyInput" placeholder="sk-ant-..." value="'+esc(userKey())+'" style="flex:1;font-size:13px;padding:7px 9px;"/>'
     +'<button id="keySave" style="border-color:var(--teal);color:var(--teal);">Save</button>'
     +'<button id="keyClear">Clear</button>'
     +'</div>'
-    +'<div class="hint" id="keyStatus" style="margin-top:6px;">'+(userKey()?'Using your own key — unlimited.':'Using the host\'s allowance.')+'</div>'
+    +'<div class="hint" id="keyStatus" style="margin-top:6px;">'+(userKey()?'Using your own key.':(DESKTOP?'No key yet — Talk mode is off.':'Using the host\'s allowance.'))+'</div>'
+    +(DESKTOP?('<h3 style="font-size:15px;margin:14px 0 4px;">Window</h3>'
+      +'<div class="sheet-actions"><button id="fsToggle">Toggle fullscreen (F11)</button>'
+      +'<button id="quitBtn" style="border-color:var(--magenta);color:var(--magenta);">Quit Millbrook</button></div>'
+      +'<p class="hint" style="font-size:11px;">Your week saves after every action, so quitting is always safe.</p>'):'')
     +(SUPPORT_URL?('<h3 style="font-size:15px;margin:14px 0 4px;">Support</h3>'
       +'<p class="sub" style="font-size:12px;">'+esc(SUPPORT_LABEL)+'</p>'
       +'<div class="sheet-actions"><a href="'+SUPPORT_URL+'" target="_blank" rel="noopener" style="text-decoration:none;"><button style="border-color:var(--teal);color:var(--teal);">Visit The Gloomstead</button></a></div>'):'')
@@ -4973,20 +5248,33 @@ function openMenu(){
   drawPreview();
   const snd=document.getElementById('sndToggle');
   if(snd)snd.onclick=()=>{setAudioEnabled(!audioEnabled());refreshSoundBtn();openMenu();};
+  const mus=document.getElementById('musToggle');
+  if(mus)mus.onclick=()=>{const nx={normal:'quiet',quiet:'off',off:'normal'}[musicLevel()]||'normal';setMusicLevel(nx);if(nx!=='off')audioStart();openMenu();};
   const mtg=document.getElementById('modeToggle');
-  if(mtg)mtg.onclick=async()=>{S.mode=(S.mode==='talk')?'free':'talk';await save();openMenu();};
+  if(mtg)mtg.onclick=async()=>{
+    if(S.mode!=='talk'&&DESKTOP&&!userKey()){
+      const st=document.getElementById('keyStatus');
+      if(st)st.innerText='Paste your key below and press Save first — then Talk mode will switch on.';
+      const ki=document.getElementById('keyInput');if(ki)ki.focus();
+      return;
+    }
+    S.mode=(S.mode==='talk')?'free':'talk';await save();openMenu();
+  };
   const ks=document.getElementById('keySave'),kc=document.getElementById('keyClear');
   if(ks)ks.onclick=()=>{
     const v=document.getElementById('keyInput').value.trim();
     setUserKey(v);
     const st=document.getElementById('keyStatus');
-    if(st)st.innerText=v?'Saved. Using your own key — unlimited.':'Cleared. Using the host\'s allowance.';
+    if(st)st.innerText=v?'Saved. Using your own key.':(DESKTOP?'Cleared — Talk mode is off.':'Cleared. Using the host\'s allowance.');
   };
   if(kc)kc.onclick=()=>{
     setUserKey('');
     const ki=document.getElementById('keyInput');if(ki)ki.value='';
-    const st=document.getElementById('keyStatus');if(st)st.innerText='Cleared. Using the host\'s allowance.';
+    const st=document.getElementById('keyStatus');if(st)st.innerText=DESKTOP?'Cleared — Talk mode is off.':'Cleared. Using the host\'s allowance.';
+    if(DESKTOP&&S.mode==='talk'){S.mode='free';save();}
   };
+  const fst=document.getElementById('fsToggle');if(fst)fst.onclick=()=>window.millbrookDesktop.toggleFullscreen();
+  const qb=document.getElementById('quitBtn');if(qb)qb.onclick=async()=>{await save();window.millbrookDesktop.quit();};
   const rb=document.getElementById('restartBtn');
   rb.onclick=function(){
     if(this.dataset.c){doRestart();}
