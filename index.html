@@ -1124,6 +1124,7 @@ function fromMap(rows,pal,scale){
 }
 /* ---- people ---- */
 const PSPR={};
+const SPR_PAD=4;
 const B_DOWN=[
   '................','................','.....KKKKKK.....','....KhhhhhhK....',
   '...KhRRRRRRhK...','...KRRRRRRRRK...','..KKRRRRRRRRKK..','..KRSSSSSSSSRK..',
@@ -1163,11 +1164,13 @@ function personSprite(pal,face,frame){
     pal.glasses?1:0,pal.roundGlasses?1:0,pal.patch?1:0,
     pal.hat||'',pal.hatColor||pal.hatColour||'',
     pal.kilt?pal.kilt.base:'',pal.kilt?pal.kilt.stripe:'',
-    pal.paint?1:0,pal.critters?1:0,face,frame].join('|');
+    pal.paint?1:0,pal.critters?1:0,pal.outfit||'',face,frame].join('|');
   if(PSPR[key])return PSPR[key];
   const rows=(face===0)?B_UP:(face===1?B_DOWN:B_SIDE);
   const P=palFor(pal),Z=2;
-  const c=sheet(16*Z,26*Z,g=>{
+  /* four spare rows above the head so tall hats (top hat, witch hat) aren't cut off */
+  const c=sheet(16*Z,(26+SPR_PAD)*Z,g=>{
+    g.translate(0,SPR_PAD*Z);
     rows.forEach((row,y)=>{
       for(let x=0;x<row.length;x++){
         if(frame>0&&y>=21){
@@ -1209,36 +1212,36 @@ function personSprite(pal,face,frame){
     }
     const bc=pal.beardColor||pal.beardColour||hr;
     if(face!==0){
+      /* facial hair sits under the nose and around the mouth, the way it
+         does on a real face — cheeks and eyes stay clear. side views shift
+         one pixel toward the nose. */
+      const dx=(face===1)?0:1, side=(face!==1);
+      const px=(x,y,w,h,col)=>{g.fillStyle=col;
+        let x0=x+dx,x1=x0+w; if(side){x0=Math.max(x0,5);x1=Math.min(x1,12);} if(x1>x0)g.fillRect(x0*Z,y*Z,(x1-x0)*Z,h*Z);};
+      const hi=shadeC(bc,1.22),lo=shadeC(bc,0.72),mouth='#5A2E2A';
       if(pal.fullBeard){
-        /* sideburns down the jaw, then a beard that tapers to a point */
-        g.fillStyle=bc;
-        g.fillRect(4*Z,9*Z,2*Z,3*Z);g.fillRect(10*Z,9*Z,2*Z,3*Z);
-        g.fillRect(4*Z,11*Z,8*Z,3*Z);
-        g.fillRect(5*Z,14*Z,6*Z,2*Z);
-        g.fillRect(6*Z,16*Z,4*Z,1*Z);
-        g.fillStyle=shadeC(bc,1.24);g.fillRect(4*Z,11*Z,7*Z,Z);
-        g.fillStyle=shadeC(bc,0.70);g.fillRect(5*Z,15*Z,6*Z,Z);
-        /* moustache above it */
-        g.fillStyle=bc;g.fillRect(5*Z,10*Z,6*Z,Z);
-        g.fillStyle=P['K'];
-        g.fillRect(3*Z,9*Z,Z,3*Z);g.fillRect(12*Z,9*Z,Z,3*Z);
-        g.fillRect(6*Z,17*Z,4*Z,Z);
+        px(4,9,1,4,bc);px(11,9,1,4,bc);              // sideburns down the jaw
+        px(5,12,6,1,bc);px(6,12,4,1,hi);              // moustache
+        px(4,13,3,1,bc);px(9,13,3,1,bc);px(7,13,2,1,mouth);
+        px(4,14,8,1,bc);
+        px(5,15,6,1,bc);
+        px(5,16,6,1,bc);px(6,17,4,1,bc);px(7,18,2,1,lo);  // tapering down the chest
+        px(5,16,6,1,shadeC(bc,0.85));
       }else if(pal.beard){
-        g.fillStyle=bc;
-        g.fillRect(4*Z,10*Z,8*Z,4*Z);
-        g.fillRect(5*Z,14*Z,6*Z,Z);
-        g.fillStyle=shadeC(bc,1.22);g.fillRect(4*Z,10*Z,7*Z,Z);
-        g.fillStyle=shadeC(bc,0.72);g.fillRect(4*Z,13*Z,8*Z,Z);
-        g.fillStyle=P['K'];g.fillRect(4*Z,15*Z,8*Z,Z);
+        px(4,10,1,3,bc);px(11,10,1,3,bc);             // short sideburns
+        px(5,12,6,1,bc);px(6,12,4,1,hi);              // moustache
+        px(4,13,3,1,bc);px(9,13,3,1,bc);px(7,13,2,1,mouth);
+        px(5,14,6,1,bc);
+        px(6,15,4,1,lo);                              // chin
       }else if(pal.goatee){
-        g.fillStyle=bc;g.fillRect(6*Z,12*Z,4*Z,3*Z);
-        g.fillStyle=shadeC(bc,1.2);g.fillRect(6*Z,12*Z,4*Z,Z);
-        g.fillStyle=bc;g.fillRect(5*Z,11*Z,6*Z,Z);
+        px(6,12,4,1,bc);
+        px(7,13,2,1,mouth);
+        px(6,14,4,1,bc);px(7,15,2,1,lo);
       }else if(pal.moustache){
-        g.fillStyle=bc;g.fillRect(5*Z,11*Z,6*Z,2*Z);
-        g.fillStyle=shadeC(bc,1.2);g.fillRect(5*Z,11*Z,6*Z,Z);
+        px(5,12,6,1,bc);px(6,12,4,1,hi);
+        px(5,13,1,1,lo);px(10,13,1,1,lo);
       }else if(pal.stubble){
-        g.fillStyle='rgba(0,0,0,0.16)';g.fillRect(3*Z,11*Z,10*Z,4*Z);
+        px(4,12,8,3,'rgba(0,0,0,0.13)');
       }
     }
     if(pal.paint){
@@ -1270,6 +1273,20 @@ function personSprite(pal,face,frame){
         g.fillStyle='#2E2A26';g.fillRect(4*Z,9*Z,2*Z,Z);
       }
     }
+    if(pal.outfit==='dress'||pal.outfit==='gown'){
+      const T=P['T'],t=P['t'];
+      if(pal.outfit==='gown'){
+        g.fillStyle=T;g.fillRect(3*Z,20*Z,10*Z,2*Z);g.fillRect(2*Z,22*Z,12*Z,2*Z);g.fillRect(2*Z,24*Z,12*Z,Z);
+        g.fillStyle=t;g.fillRect(2*Z,24*Z,12*Z,Z);g.fillRect(8*Z,21*Z,Z,3*Z);
+        g.fillStyle=P['K'];g.fillRect(2*Z,25*Z,12*Z,Z);g.fillRect(Z,22*Z,Z,3*Z);g.fillRect(14*Z,22*Z,Z,3*Z);
+        g.fillStyle=P['B'];g.fillRect(4*Z,25*Z,3*Z,Z);g.fillRect(9*Z,25*Z,3*Z,Z);
+      }else{
+        g.fillStyle=T;g.fillRect(3*Z,20*Z,10*Z,2*Z);g.fillRect(2*Z,22*Z,12*Z,Z);
+        g.fillStyle=t;g.fillRect(2*Z,22*Z,12*Z,Z);
+        g.fillStyle=P['K'];g.fillRect(2*Z,23*Z,12*Z,Z);
+        g.fillStyle=P['S'];g.fillRect(4*Z,23*Z,3*Z,Z);g.fillRect(9*Z,23*Z,3*Z,Z);
+      }
+    }
     if(pal.kilt){
       g.fillStyle=pal.kilt.base;g.fillRect(2*Z,20*Z,12*Z,4*Z);
       g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(2*Z,23*Z,12*Z,Z);
@@ -1294,6 +1311,32 @@ function personSprite(pal,face,frame){
       g.fillStyle=P['K'];g.fillRect(3*Z,Z,10*Z,Z);
       g.fillStyle=cc;g.fillRect(3*Z,2*Z,10*Z,3*Z);
       g.fillStyle=shadeC(cc,0.8);g.fillRect(2*Z,4*Z,7*Z,2*Z);
+    }else if(pal.hat==='tophat'){
+      const tc=HC||'#1E1B18';
+      g.fillStyle=P['K'];g.fillRect(4*Z,-4*Z,8*Z,Z);g.fillRect(Z,4*Z,14*Z,Z);
+      g.fillStyle=tc;g.fillRect(4*Z,-3*Z,8*Z,6*Z);g.fillRect(2*Z,3*Z,12*Z,Z);
+      g.fillStyle=shadeC(tc,1.9);g.fillRect(5*Z,-3*Z,Z,5*Z);
+      g.fillStyle='#7A3A2E';g.fillRect(4*Z,Z,8*Z,Z);
+    }else if(pal.hat==='cowboy'){
+      const cc=HC||'#7A5632';
+      g.fillStyle=cc;
+      g.fillRect(4*Z,-Z,3*Z,Z);g.fillRect(9*Z,-Z,3*Z,Z);g.fillRect(4*Z,0,8*Z,3*Z);
+      g.fillStyle=shadeC(cc,1.25);g.fillRect(5*Z,0,2*Z,Z);
+      g.fillStyle='#3E2C1A';g.fillRect(4*Z,2*Z,8*Z,Z);
+      g.fillStyle=shadeC(cc,0.85);g.fillRect(Z,3*Z,14*Z,Z);g.fillRect(0,2*Z,Z,Z);g.fillRect(15*Z,2*Z,Z,Z);
+      g.fillStyle=P['K'];g.fillRect(Z,4*Z,14*Z,Z);
+    }else if(pal.hat==='beanie'){
+      const bb=HC||'#3E6A6A';
+      g.fillStyle=P['K'];g.fillRect(4*Z,0,8*Z,Z);
+      g.fillStyle=bb;g.fillRect(4*Z,Z,8*Z,Z);g.fillRect(3*Z,2*Z,10*Z,2*Z);
+      g.fillStyle=shadeC(bb,1.3);g.fillRect(3*Z,4*Z,10*Z,2*Z);
+      g.fillStyle=shadeC(bb,0.85);for(let i=4;i<13;i+=2)g.fillRect(i*Z,4*Z,Z,2*Z);
+      g.fillStyle=shadeC(bb,1.45);g.fillRect(7*Z,-Z,2*Z,2*Z);
+    }else if(pal.hat==='crown'){
+      const fl=['#C4497B','#E0A63D','#8FB0D8','#EDE6D6','#C4497B'];
+      g.fillStyle='#4E7A44';g.fillRect(3*Z,3*Z,10*Z,Z);
+      [3,5,7,9,11].forEach((fx,i)=>{g.fillStyle=fl[i];g.fillRect(fx*Z,2*Z,2*Z,2*Z);
+        g.fillStyle='#F4E2A0';g.fillRect(fx*Z+Z/2,2*Z+Z/2,Z,Z);});
     }else if(pal.hat==='headscarf'){
       const cc=HC||'#8C5A7A';
       g.fillStyle=cc;g.fillRect(3*Z,Z,10*Z,5*Z);
@@ -1447,9 +1490,23 @@ function drawPortrait(g,pal,S2){
     P(22,17,2,1,'#8C3A2E');P(22,19,3,1,'#4E8B8B');P(8,18,2,1,'#C4A44E');
     P(6,27,4,1,'#8C3A2E');P(21,28,5,1,'#4E8B8B');P(12,29,3,1,'#C4A44E');
   }
-  if(pal.beard){const bc=pal.beardColor||hair;P(9,19,14,4,bc);P(13,18,6,1,bc);P(9,19,14,1,shade(bc,1.1));}
-  else if(pal.goatee){const gc=pal.beardColor||hair;P(13,19,6,4,gc);P(13,18,6,1,gc);P(11,18,2,1,gc);P(19,18,2,1,gc);}
-  else if(pal.stubble){P(10,19,12,4,'rgba(0,0,0,0.13)');}
+  {const bc=pal.beardColor||pal.beardColour||hair,hi=shade(bc,1.15),lo=shade(bc,0.75),mo='#5A2E2A';
+   if(pal.fullBeard){
+     P(8,13,2,7,bc);P(22,13,2,7,bc);                 // sideburns
+     P(12,19,8,1,bc);P(13,19,6,1,hi);                // moustache
+     P(8,20,5,1,bc);P(19,20,5,1,bc);P(13,20,6,1,mo);
+     P(8,21,16,2,bc);P(9,23,14,2,bc);P(11,25,10,2,bc);P(13,27,6,1,lo);
+     P(9,23,14,1,lo);
+   }else if(pal.beard){
+     P(8,15,1,5,bc);P(23,15,1,5,bc);
+     P(12,19,8,1,bc);P(13,19,6,1,hi);
+     P(9,20,4,1,bc);P(19,20,4,1,bc);P(13,20,6,1,mo);
+     P(9,21,14,1,bc);P(10,22,12,1,bc);P(12,23,8,1,lo);
+   }else if(pal.goatee){
+     P(13,19,6,1,bc);P(14,20,4,1,mo);P(14,21,4,2,bc);P(15,23,2,1,lo);
+   }else if(pal.moustache){
+     P(12,19,8,1,bc);P(13,19,6,1,hi);P(12,20,1,1,lo);P(19,20,1,1,lo);
+   }else if(pal.stubble){P(10,19,12,4,'rgba(0,0,0,0.12)');}}
   if(pal.glasses){
     const rim='#33302E';
     P(10,13,6,1,rim);P(10,17,6,1,rim);P(10,13,1,5,rim);P(15,13,1,5,rim);
@@ -2582,7 +2639,7 @@ function drawPerson(g,x,y,pal,step,face){
     const f=(face===0||face===1)?face:(face===2?2:3);
     g.fillStyle='rgba(0,0,0,0.32)';
     g.beginPath();g.ellipse(x+16,y+46,11,4,0,0,7);g.fill();
-    g.drawImage(personSprite(pal,f,frame),Math.round(x),Math.round(y-4));
+    g.drawImage(personSprite(pal,f,frame),Math.round(x),Math.round(y-4-SPR_PAD*2));
     return;
   }
   const s=2;
